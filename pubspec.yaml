@@ -1,0 +1,34 @@
+name: edumaster
+description: "Hệ thống Siêu ứng dụng Giáo dục & Ôn tập Song ngữ tích hợp AI Tutor, SM-2, Thi trực tuyến và Từ điển IT"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.2
+  shared_preferences: ^2.5.4
+  sqflite: ^2.4.2
+  path: ^1.9.1
+  flutter_tts: ^4.2.3
+  image_picker: ^1.1.2
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^6.0.7
+  http: ^1.3.0
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/
+    - assets/images/

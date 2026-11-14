@@ -1,0 +1,198 @@
+[
+  {
+    "word": "Algorithm",
+    "phonetic": "/ˈæl.ɡə.rɪ.ðəm/",
+    "vi": "Thuật toán",
+    "def": "A step-by-step procedure for solving a problem or accomplishing a task.",
+    "example": "Dijkstra's algorithm finds the shortest path in a graph."
+  },
+  {
+    "word": "API",
+    "phonetic": "/ˌeɪ.piːˈaɪ/",
+    "vi": "Giao diện lập trình ứng dụng",
+    "def": "Application Programming Interface that enables software systems to communicate.",
+    "example": "The app fetches weather data via a RESTful API."
+  },
+  {
+    "word": "Asynchronous",
+    "phonetic": "/eɪˈsɪŋ.krə.nəs/",
+    "vi": "Bất đồng bộ",
+    "def": "Operations occurring independently of the main program flow.",
+    "example": "Use async/await in Dart for network requests without freezing the UI."
+  },
+  {
+    "word": "Big O Notation",
+    "phonetic": "/bɪɡ oʊ noʊˈteɪ.ʃən/",
+    "vi": "Ký hiệu Big O",
+    "def": "A mathematical notation describing the limiting behavior of an algorithm.",
+    "example": "Quicksort has an average time complexity of O(n log n)."
+  },
+  {
+    "word": "Binary Search",
+    "phonetic": "/ˈbaɪ.nər.i sɜːtʃ/",
+    "vi": "Tìm kiếm nhị phân",
+    "def": "An efficient search algorithm that finds items in a sorted list in O(log n).",
+    "example": "Binary search halves the search space at each comparison."
+  },
+  {
+    "word": "Cache",
+    "phonetic": "/kæʃ/",
+    "vi": "Bộ nhớ đệm",
+    "def": "A hardware or software component storing data for faster subsequent retrieval.",
+    "example": "Redis is commonly used as an in-memory database cache."
+  },
+  {
+    "word": "CI/CD",
+    "phonetic": "/ˌsiː.aɪ ˌsiːˈdiː/",
+    "vi": "Tích hợp và triển khai liên tục",
+    "def": "Continuous Integration and Continuous Delivery/Deployment automation practices.",
+    "example": "GitHub Actions executes automated CI tests on every pull request."
+  },
+  {
+    "word": "Compiler",
+    "phonetic": "/kəmˈpaɪ.lər/",
+    "vi": "Trình biên dịch",
+    "def": "A program translating source code into machine code or bytecode.",
+    "example": "Flutter compiles Dart code to native ARM code on mobile devices."
+  },
+  {
+    "word": "Database",
+    "phonetic": "/ˈdeɪ.tə.beɪs/",
+    "vi": "Cơ sở dữ liệu",
+    "def": "An organized collection of data stored and accessed electronically.",
+    "example": "SQLite is a lightweight self-contained relational database."
+  },
+  {
+    "word": "Deadlock",
+    "phonetic": "/ˈded.lɒk/",
+    "vi": "Tắc nghẽn tiến trình",
+    "def": "A state where two or more threads are unable to proceed due to mutual resource lock.",
+    "example": "Deadlocks can be prevented using proper resource acquisition ordering."
+  },
+  {
+    "word": "Encapsulation",
+    "phonetic": "/ɪnˌkæp.sjəˈleɪ.ʃən/",
+    "vi": "Tính đóng gói",
+    "def": "An OOP principle bundling data with the methods operating on that data.",
+    "example": "Private properties in Dart provide encapsulation using leading underscores."
+  },
+  {
+    "word": "Encryption",
+    "phonetic": "/ɪnˈkrɪp.ʃən/",
+    "vi": "Mã hóa dữ liệu",
+    "def": "The process of encoding information so only authorized parties can read it.",
+    "example": "HTTPS provides transport layer encryption with TLS."
+  },
+  {
+    "word": "Framework",
+    "phonetic": "/ˈfreɪm.wɜːk/",
+    "vi": "Bộ khung phát triển phần mềm",
+    "def": "A platform providing a foundation for software application development.",
+    "example": "Flutter is Google's UI framework for cross-platform apps."
+  },
+  {
+    "word": "Git",
+    "phonetic": "/ɡɪt/",
+    "vi": "Hệ thống quản lý phiên bản Git",
+    "def": "A distributed version control system tracking changes in source code.",
+    "example": "Always create feature branches when working with Git."
+  },
+  {
+    "word": "Inheritance",
+    "phonetic": "/ɪnˈher.ɪ.təns/",
+    "vi": "Tính kế thừa",
+    "def": "A mechanism in OOP where a new class adopts properties of an existing class.",
+    "example": "In Flutter, StatefulWidget inherits from Widget."
+  },
+  {
+    "word": "JSON",
+    "phonetic": "/ˈdʒeɪ.sən/",
+    "vi": "Định dạng trao đổi dữ liệu JSON",
+    "def": "JavaScript Object Notation, a lightweight text-based data interchange format.",
+    "example": "The 300 quiz questions are loaded efficiently from a JSON asset."
+  },
+  {
+    "word": "Memory Leak",
+    "phonetic": "/ˈmem.ər.i liːk/",
+    "vi": "Rò rỉ bộ nhớ",
+    "def": "A failure in a program to release discarded memory, causing degraded performance.",
+    "example": "Always dispose AnimationControllers to prevent memory leaks."
+  },
+  {
+    "word": "Microservices",
+    "phonetic": "/ˌmaɪ.krəʊˈsɜː.vɪ.sɪz/",
+    "vi": "Kiến trúc vi dịch vụ",
+    "def": "An architecture structuring an app as a collection of small autonomous services.",
+    "example": "Microservices communicate via lightweight protocols like gRPC or HTTP."
+  },
+  {
+    "word": "Multithreading",
+    "phonetic": "/ˌmʌl.tiˈθred.ɪŋ/",
+    "vi": "Đa luồng",
+    "def": "The ability of a CPU to execute multiple threads concurrently.",
+    "example": "Dart isolates allow background processing without blocking the main event loop."
+  },
+  {
+    "word": "Polymorphism",
+    "phonetic": "/ˌpɒl.iˈmɔː.fɪ.zəm/",
+    "vi": "Tính đa hình",
+    "def": "The provision of a single interface to entities of different types.",
+    "example": "Polymorphism allows treating different repository implementations uniformly."
+  },
+  {
+    "word": "Query",
+    "phonetic": "/ˈkwɪə.ri/",
+    "vi": "Truy vấn dữ liệu",
+    "def": "A request for data or information from a database table.",
+    "example": "We execute a SELECT query in SQLite to search for terms."
+  },
+  {
+    "word": "Recursion",
+    "phonetic": "/rɪˈkɜː.ʃən/",
+    "vi": "Đệ quy",
+    "def": "A programming method where a function calls itself directly or indirectly.",
+    "example": "Tree traversal algorithms often use recursion with a base case."
+  },
+  {
+    "word": "Refactoring",
+    "phonetic": "/ˌriːˈfæk.tər.ɪŋ/",
+    "vi": "Tái cấu trúc mã nguồn",
+    "def": "Restructuring existing code without changing its external behavior.",
+    "example": "Refactoring widgets into smaller subwidgets improves readability and performance."
+  },
+  {
+    "word": "Repository Pattern",
+    "phonetic": "/rɪˈpɒz.ɪ.tər.i ˈpæt.ən/",
+    "vi": "Mẫu kho lưu trữ",
+    "def": "A design pattern separating business logic from data access layers.",
+    "example": "The repository pattern allows swapping SQLite for Firestore seamlessly."
+  },
+  {
+    "word": "REST",
+    "phonetic": "/rest/",
+    "vi": "Kiến trúc REST",
+    "def": "Representational State Transfer software architectural style.",
+    "example": "REST APIs use standard HTTP verbs like GET, POST, PUT, DELETE."
+  },
+  {
+    "word": "State Management",
+    "phonetic": "/steɪt ˈmæn.ɪdʒ.mənt/",
+    "vi": "Quản lý trạng thái",
+    "def": "Managing the application state across multiple screens and user interactions.",
+    "example": "Provider provides clean and predictable state management in Flutter."
+  },
+  {
+    "word": "Unit Testing",
+    "phonetic": "/ˈjuː.nɪt ˈtes.tɪŋ/",
+    "vi": "Kiểm thử đơn vị",
+    "def": "Testing individual units or components of software in isolation.",
+    "example": "Unit tests ensure SM-2 algorithm calculations produce expected intervals."
+  },
+  {
+    "word": "Widget",
+    "phonetic": "/ˈwɪdʒ.ɪt/",
+    "vi": "Thành phần giao diện Widget",
+    "def": "The fundamental building block of a Flutter user interface.",
+    "example": "In Flutter, everything visual is composed of widgets."
+  }
+]
