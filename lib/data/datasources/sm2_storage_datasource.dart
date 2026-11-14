@@ -18,7 +18,7 @@ class Sm2StorageDataSource {
         description: 'Bộ thẻ ôn luyện kiến thức nền tảng SM-2',
         createdAt: DateTime.now(),
       );
-      await saveDeck(defaultDeck);
+      await prefs.setString(_decksKey, json.encode([defaultDeck.toMap()]));
       await _seedDefaultCards(defaultDeck.id);
       return [defaultDeck];
     }
@@ -33,7 +33,14 @@ class Sm2StorageDataSource {
 
   Future<void> saveDeck(FlashcardDeck deck) async {
     final prefs = await SharedPreferences.getInstance();
-    final decks = await getDecks();
+    final jsonStr = prefs.getString(_decksKey);
+    List<FlashcardDeck> decks = [];
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List<dynamic> list = json.decode(jsonStr);
+        decks = list.map((e) => FlashcardDeck.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      } catch (_) {}
+    }
     final index = decks.indexWhere((d) => d.id == deck.id);
     if (index >= 0) {
       decks[index] = deck;

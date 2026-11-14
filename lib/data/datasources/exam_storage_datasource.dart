@@ -68,7 +68,7 @@ class ExamStorageDataSource {
           ),
         ],
       );
-      await saveRoom(defaultRoom);
+      await prefs.setString(_roomsKey, json.encode([defaultRoom.toMap()]));
       return [defaultRoom];
     }
 
@@ -82,7 +82,14 @@ class ExamStorageDataSource {
 
   Future<void> saveRoom(ExamRoom room) async {
     final prefs = await SharedPreferences.getInstance();
-    final rooms = await getRooms();
+    final jsonStr = prefs.getString(_roomsKey);
+    List<ExamRoom> rooms = [];
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List<dynamic> list = json.decode(jsonStr);
+        rooms = list.map((e) => ExamRoom.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      } catch (_) {}
+    }
     final idx = rooms.indexWhere((r) => r.id.toUpperCase() == room.id.toUpperCase());
     if (idx >= 0) {
       rooms[idx] = room;
