@@ -121,7 +121,7 @@ class _ExamHubScreenState extends State<ExamHubScreen> with SingleTickerProvider
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Phòng thi trực tuyến (#34)'),
+        title: const Text('Phòng thi trực tuyến'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -150,12 +150,7 @@ class _ExamHubScreenState extends State<ExamHubScreen> with SingleTickerProvider
                           'Nhập mã PIN hoặc Quét mã QR',
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Nhận mã phòng thi từ Giảng viên để bắt đầu làm bài.',
-                          style: TextStyle(fontSize: 13, color: AppColors.textSecondaryLight),
-                        ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         Row(
                           children: [
                             Expanded(
@@ -196,7 +191,7 @@ class _ExamHubScreenState extends State<ExamHubScreen> with SingleTickerProvider
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 // Anti-cheat policy reminder
                 Container(
                   padding: const EdgeInsets.all(14),
@@ -211,7 +206,7 @@ class _ExamHubScreenState extends State<ExamHubScreen> with SingleTickerProvider
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Hệ thống tự động phát hiện và ghi nhận vi phạm nếu bạn thoát ứng dụng hoặc chuyển tab trong khi làm bài thi.',
+                          'Lưu ý: Không thoát ứng dụng hoặc chuyển màn hình khi đang làm bài thi.',
                           style: TextStyle(fontSize: 12, height: 1.4),
                         ),
                       ),

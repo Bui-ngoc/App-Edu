@@ -135,7 +135,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> with Single
                   children: [
                     Expanded(
                       child: _buildRateButton(
-                        label: 'Quên hẳn\n(0 điểm)',
+                        label: 'Quên\n(0đ)',
                         color: AppColors.error,
                         onTap: () => _onRate(0),
                       ),
@@ -143,7 +143,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> with Single
                     const SizedBox(width: 8),
                     Expanded(
                       child: _buildRateButton(
-                        label: 'Khó khăn\n(3 điểm)',
+                        label: 'Khó\n(3đ)',
                         color: AppColors.warning,
                         onTap: () => _onRate(3),
                       ),
@@ -151,7 +151,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> with Single
                     const SizedBox(width: 8),
                     Expanded(
                       child: _buildRateButton(
-                        label: 'Nhớ tốt\n(4 điểm)',
+                        label: 'Nhớ tốt\n(4đ)',
                         color: AppColors.primary,
                         onTap: () => _onRate(4),
                       ),
@@ -159,7 +159,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> with Single
                     const SizedBox(width: 8),
                     Expanded(
                       child: _buildRateButton(
-                        label: 'Hoàn hảo\n(5 điểm)',
+                        label: 'Rất tốt\n(5đ)',
                         color: AppColors.success,
                         onTap: () => _onRate(5),
                       ),
@@ -211,7 +211,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> with Single
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
-                'MẶT TRƯỚC (CÂU HỎI / THUẬT NGỮ)',
+                'Thuật ngữ',
                 style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 11),
               ),
             ),
@@ -285,7 +285,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> with Single
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
-                'MẶT SAU (ĐÁP ÁN / GIẢI THÍCH)',
+                'Định nghĩa & Đáp án',
                 style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 11),
               ),
             ),
@@ -311,10 +311,6 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> with Single
               ),
             ],
             const Spacer(),
-            const Text(
-              'Thuật toán SM-2 sẽ tự động xếp lịch lặp lại ngắt quãng tiếp theo',
-              style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
-            ),
           ],
         ),
       ),

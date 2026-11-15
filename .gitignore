@@ -54,3 +54,6 @@ app.*.map.json
 *.jks
 *.keystore
 google-services.json
+key.properties
+**/key.properties
+edumaster-keystore.jks

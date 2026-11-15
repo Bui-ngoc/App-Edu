@@ -257,7 +257,7 @@ class QuizPlayScreen extends StatelessWidget {
                                 const Icon(Icons.auto_awesome, color: AppColors.accent, size: 20),
                                 const SizedBox(width: 8),
                                 const Text(
-                                  'Gia sư AI giải thích lý do sai',
+                                  'AI giải thích đáp án',
                                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                 ),
                                 const Spacer(),

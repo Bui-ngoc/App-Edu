@@ -23,7 +23,7 @@ class ExamResultScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Báo cáo kết quả kỳ thi (#34)'),
+        title: const Text('Kết quả kỳ thi'),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(

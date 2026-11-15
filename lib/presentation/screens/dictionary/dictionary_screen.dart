@@ -92,16 +92,16 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'Nghĩa Tiếng Việt: ${word.vietnamese}',
+                  word.vietnamese,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary),
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('Định nghĩa chuyên ngành:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text('Định nghĩa:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 4),
               Text(word.definition, style: const TextStyle(fontSize: 14, height: 1.4)),
               const SizedBox(height: 14),
-              const Text('Ví dụ ngữ cảnh (Example):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text('Ví dụ:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.all(10),
@@ -127,7 +127,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Từ điển thuật ngữ IT (#35)'),
+        title: const Text('Từ điển thuật ngữ IT'),
         actions: [
           IconButton(
             icon: Icon(
@@ -147,7 +147,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm thuật ngữ IT (SQLite FTS)...',
+                hintText: 'Tìm kiếm thuật ngữ IT...',
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -165,7 +165,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
             ),
           ),
 
-          // Word of the Day Banner (Topic #35 Extension)
+          // Word of the Day Banner
           if (prov.wordOfTheDay != null && !prov.showOnlyBookmarks && _searchController.text.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
@@ -186,7 +186,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'TỪ CỦA NGÀY (WORD OF THE DAY)',
+                              'TỪ CỦA NGÀY',
                               style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary),
                             ),
                             Text(

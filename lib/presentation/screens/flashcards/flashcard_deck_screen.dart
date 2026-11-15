@@ -40,7 +40,7 @@ class _FlashcardDeckScreenState extends State<FlashcardDeckScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Định dạng CSV mỗi dòng:\nfront,back,phonetic,example\n\nVí dụ:\nFlutter,UI Toolkit của Google,/ˈflʌt.ər/,Cross-platform framework',
+                  'Cú pháp mỗi dòng: front,back,phonetic,example\nVí dụ: Widget,UI element,/ˈwɪdʒ.ɪt/,Basic building block',
                   style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
                 ),
                 const SizedBox(height: 12),

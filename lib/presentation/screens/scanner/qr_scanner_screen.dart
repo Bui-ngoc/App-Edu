@@ -107,7 +107,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Text(
-                'Hướng Camera vào mã QR của Phòng thi hoặc Nhóm học tập',
+                'Hướng Camera vào mã QR để quét',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white, fontSize: 14),
               ),

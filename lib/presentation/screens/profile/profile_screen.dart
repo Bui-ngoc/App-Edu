@@ -13,17 +13,19 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _groupController = TextEditingController();
-  final TextEditingController _apiKeyController = TextEditingController();
+  final TextEditingController _nameController    = TextEditingController();
+  final TextEditingController _groupController   = TextEditingController();
+  final TextEditingController _apiKeyController  = TextEditingController();
+  final TextEditingController _proxyUrlController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    final profile = context.read<ProfileProvider>().profile;
-    _nameController.text = profile.name;
-    _groupController.text = profile.currentGroup;
-    _apiKeyController.text = context.read<ProfileProvider>().apiKey;
+    final prov = context.read<ProfileProvider>();
+    _nameController.text     = prov.profile.name;
+    _groupController.text    = prov.profile.currentGroup;
+    _apiKeyController.text   = prov.apiKey;
+    _proxyUrlController.text = prov.proxyUrl;
   }
 
   @override
@@ -31,6 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _nameController.dispose();
     _groupController.dispose();
     _apiKeyController.dispose();
+    _proxyUrlController.dispose();
     super.dispose();
   }
 
@@ -78,24 +81,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<ProfileProvider>();
+    final prov    = context.watch<ProfileProvider>();
     final profile = prov.profile;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Hồ sơ & Cài đặt'),
-      ),
+      appBar: AppBar(title: const Text('Hồ sơ & Cài đặt')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Avatar card with Camera action
+            // ── Avatar ──────────────────────────────────────────────────────
             Center(
               child: Stack(
                 children: [
                   CircleAvatar(
                     radius: 54,
-                    backgroundColor: AppColors.primary.withOpacity(0.15),
+                    backgroundColor: AppColors.primary.withAlpha(38),
                     backgroundImage: (profile.localAvatarPath != null &&
                             File(profile.localAvatarPath!).existsSync())
                         ? FileImage(File(profile.localAvatarPath!))
@@ -131,13 +132,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               profile.name,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            Text(
-              profile.currentGroup,
-              style: const TextStyle(color: AppColors.textSecondaryLight),
-            ),
+            Text(profile.currentGroup,
+                style: const TextStyle(color: AppColors.textSecondaryLight)),
             const SizedBox(height: 20),
 
-            // Stats row
+            // ── Stats row ───────────────────────────────────────────────────
             Row(
               children: [
                 Expanded(
@@ -178,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Form: Edit info
+            // ── Thông tin học viên ──────────────────────────────────────────
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -186,7 +185,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Thông tin học viên',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _nameController,
@@ -210,7 +212,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          prov.updateNameAndGroup(_nameController.text, _groupController.text);
+                          prov.updateNameAndGroup(
+                              _nameController.text, _groupController.text);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Đã cập nhật thông tin thành công!')),
                           );
@@ -224,47 +227,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Gemini API Key Card (Criteria 6: Safe storage without hardcoding)
+            // ── Cấu hình AI (Proxy + Direct Key + Demo Mode) ────────────────
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Header
                     Row(
                       children: [
-                        const Icon(Icons.key_rounded, color: AppColors.accent),
+                        const Icon(Icons.smart_toy_rounded, color: AppColors.accent),
                         const SizedBox(width: 8),
-                        Text('Cấu hình Google Gemini AI Key',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Expanded(
+                          child: Text(
+                            'Cấu hình AI Tutor',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Nhập API Key cá nhân để sử dụng mô hình Gemini trực tiếp. Nếu để trống, hệ thống tự kích hoạt bộ AI Tutor ngoại tuyến thông minh.',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+                    const Divider(height: 20),
+
+                    // Demo Mode toggle
+                    Semantics(
+                      label: 'Bật tắt chế độ Demo AI',
+                      child: SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: Icon(
+                          prov.isDemoMode ? Icons.science_rounded : Icons.science_outlined,
+                          color: prov.isDemoMode ? AppColors.accent : AppColors.textSecondaryLight,
+                        ),
+                        title: const Text('Chế độ Demo',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: const Text(
+                          'Sử dụng dữ liệu mẫu offline, không cần key.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        value: prov.isDemoMode,
+                        onChanged: (v) => prov.setDemoMode(v),
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const Divider(height: 20),
+
+                    // Proxy Server URL
+                    Text('Proxy Server URL',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelLarge
+                            ?.copyWith(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _proxyUrlController,
+                      keyboardType: TextInputType.url,
+                      decoration: const InputDecoration(
+                        labelText: 'Proxy URL',
+                        hintText: 'https://my-proxy.example.com/ask',
+                        prefixIcon: Icon(Icons.dns_rounded),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.save_rounded, size: 18),
+                        label: const Text('Lưu Proxy URL'),
+                        onPressed: () {
+                          prov.saveProxyUrl(_proxyUrlController.text);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Đã lưu Proxy URL!')),
+                          );
+                        },
+                      ),
+                    ),
+                    const Divider(height: 20),
+
+                    // Direct Gemini API Key (fallback)
+                    Text('Gemini API Key',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelLarge
+                            ?.copyWith(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
                     TextField(
                       controller: _apiKeyController,
                       obscureText: true,
                       decoration: const InputDecoration(
                         labelText: 'Gemini API Key',
                         hintText: 'AIzaSy...',
+                        prefixIcon: Icon(Icons.key_rounded),
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.lock_rounded, size: 18),
+                        label: const Text('Lưu khóa AI'),
                         onPressed: () {
                           prov.saveApiKey(_apiKeyController.text);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Đã lưu cấu hình khóa API an toàn!')),
+                            const SnackBar(
+                                content: Text('Đã lưu cấu hình khóa API an toàn!')),
                           );
                         },
-                        child: const Text('Lưu khóa AI'),
                       ),
                     ),
                   ],
@@ -273,7 +344,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Security & Storage Transparency (Criteria 6 requirement)
+            // ── Chính sách bảo mật ──────────────────────────────────────────
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -284,23 +355,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         const Icon(Icons.security_rounded, color: AppColors.secondary),
                         const SizedBox(width: 8),
-                        Text('Chính sách bảo mật & Lưu trữ',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Text('Bảo mật & Quyền riêng tư',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      '• Bộ 300 câu hỏi: Lưu trữ cục bộ trong file JSON assets.\n'
-                      '• Thẻ SM-2 & Bảng điểm: Lưu cục bộ SharedPreferences.\n'
-                      '• Từ điển IT: Lưu trong SQLite FTS database offline.\n'
-                      '• Camera: Chỉ yêu cầu quyền khi quét QR hoặc đổi ảnh đại diện.\n'
-                      '• API Key: Tuyệt đối không hardcode trong mã nguồn.',
-                      style: TextStyle(fontSize: 12, height: 1.5, color: AppColors.textSecondaryLight),
+                      '• Dữ liệu bài học & từ điển được lưu trữ an toàn trên thiết bị.\n'
+                      '• Camera chỉ sử dụng khi quét mã QR hoặc chụp ảnh đại diện.\n'
+                      '• Khóa API cá nhân được lưu trữ cục bộ, tuyệt đối bảo mật.',
+                      style: TextStyle(fontSize: 12, height: 1.6, color: AppColors.textSecondaryLight),
                     ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

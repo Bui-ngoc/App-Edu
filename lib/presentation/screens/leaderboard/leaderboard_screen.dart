@@ -16,10 +16,10 @@ class LeaderboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bảng xếp hạng thi đua (#36)'),
+        title: const Text('Bảng xếp hạng'),
       ),
       body: prov.state == LeaderboardUiState.loading
-          ? const LoadingView(message: 'Đang đồng bộ bảng xếp hạng thời gian thực...')
+          ? const LoadingView(message: 'Đang tải bảng xếp hạng...')
           : prov.state == LeaderboardUiState.error
               ? ErrorViewWithRetry(
                   message: prov.errorMessage,
@@ -64,13 +64,8 @@ class LeaderboardScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 14),
                                 const Text(
-                                  'Thi đua Tích lũy XP & Giữ chuỗi Streak',
+                                  'Tích lũy XP & Chuỗi học tập',
                                   style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 6),
-                                const Text(
-                                  'Cập nhật trực tiếp theo thời gian thực (Realtime Stream / Firestore)',
-                                  style: TextStyle(color: Colors.white70, fontSize: 12),
                                 ),
                               ],
                             ),
@@ -79,7 +74,7 @@ class LeaderboardScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Badges Showcase (Topic #36 Extension)
+                    // Badges Showcase
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -87,7 +82,7 @@ class LeaderboardScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Huy hiệu đạt được (Badges)',
+                              'Huy hiệu đạt được',
                               style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
