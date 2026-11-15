@@ -4,14 +4,15 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/quiz_question.dart';
 import '../../core/errors/app_exception.dart';
+import 'local_ai_engine.dart';
 
 /// EduMaster AI DataSource
 ///
-/// Priority order for AI calls:
-///   1. DEMO MODE  — returns pre-canned bilingual responses (no network, no key)
-///   2. PROXY MODE — POST to a proxy server that holds the real Gemini key
-///   3. DIRECT KEY — calls Gemini API directly with user-entered key
-///   4. OFFLINE    — smart local fallback responses (always works)
+/// Thứ tự ưu tiên xử lý:
+///   1. DEMO MODE  — Dùng bộ não AI Ngoại tuyến thông minh LocalAiEngine (không cần mạng, không cần key)
+///   2. PROXY MODE — Gửi câu hỏi lên Proxy server trung gian giữ khóa
+///   3. DIRECT KEY — Gọi trực tiếp Google Gemini 1.5 Flash API
+///   4. OFFLINE    — Tự động kích hoạt LocalAiEngine xử lý động mọi câu hỏi
 class GeminiAiDataSource {
   // ── SharedPreferences keys ────────────────────────────────────────────────
   static const String _geminiKeyPref  = 'edumaster_gemini_api_key';
@@ -61,11 +62,11 @@ class GeminiAiDataSource {
 
   // ── Main AI entry point ───────────────────────────────────────────────────
 
-  /// Ask AI Tutor — tries proxy → direct key → offline fallback.
+  /// Trả lời câu hỏi học viên — Ưu tiên Proxy/Direct Key, tự động fallback sang LocalAiEngine
   Future<String> askAi(String prompt) async {
     // 1) DEMO MODE
     if (await isDemoMode()) {
-      return _getDemoResponse(prompt);
+      return LocalAiEngine.processQuery(prompt);
     }
 
     // 2) PROXY MODE
@@ -76,11 +77,11 @@ class GeminiAiDataSource {
       } on NetworkTimeoutException {
         rethrow;
       } catch (_) {
-        // proxy failed → fall through to direct key
+        // Proxy lỗi → chuyển sang bước tiếp theo
       }
     }
 
-    // 3) DIRECT KEY
+    // 3) DIRECT KEY (Google Gemini 1.5 Flash)
     final apiKey = await getApiKey();
     if (apiKey != null && apiKey.isNotEmpty) {
       try {
@@ -88,12 +89,13 @@ class GeminiAiDataSource {
       } on NetworkTimeoutException {
         rethrow;
       } catch (_) {
-        return _getSmartLocalTutorResponse(prompt);
+        // Gọi Gemini lỗi / hết quota / mất mạng → dùng LocalAiEngine
+        return LocalAiEngine.processQuery(prompt);
       }
     }
 
-    // 4) OFFLINE FALLBACK
-    return _getSmartLocalTutorResponse(prompt);
+    // 4) OFFLINE / KHÔNG CÓ KEY: Dùng Bộ não AI ngoại tuyến thông minh
+    return LocalAiEngine.processQuery(prompt);
   }
 
   // ── Proxy call ────────────────────────────────────────────────────────────
@@ -113,7 +115,6 @@ class GeminiAiDataSource {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body) as Map<String, dynamic>;
-      // Accept either {"text": "..."} or Gemini-format {"candidates":[...]}
       if (data.containsKey('text')) {
         return data['text'].toString().trim();
       }
@@ -167,12 +168,12 @@ class GeminiAiDataSource {
         }
       }
     }
-    return _getSmartLocalTutorResponse(prompt);
+    return LocalAiEngine.processQuery(prompt);
   }
 
-  // ── Explain wrong answer (uses askAi internally) ──────────────────────────
+  // ── Explain wrong answer ──────────────────────────────────────────────────
 
-  /// AI Explains why an answer was wrong in bilingual quiz
+  /// AI giải thích vì sao câu trả lời bị sai trong bài trắc nghiệm song ngữ
   Future<String> explainWrongAnswer({
     required QuizQuestion question,
     required int selectedIndex,
@@ -205,81 +206,13 @@ class GeminiAiDataSource {
       return await askAi(prompt);
     } catch (_) {
       return isEnglish
-          ? '💡 Explanation:\n- Correct answer: $correctOpt\n'
+          ? '💡 **Explanation:**\n- Correct answer: **$correctOpt**\n'
               '- Why: ${question.explanationEn}\n'
-              '- Tip: Double check definitions before choosing!'
-          : '💡 Giải thích:\n- Đáp án đúng: $correctOpt\n'
+              '- Tip: Double check keywords before selecting!'
+          : '💡 **Giải thích chi tiết:**\n- Đáp án chính xác là: **$correctOpt**\n'
               '- Lý do: ${question.explanationVi}\n'
-              '- Lưu ý: Đọc kỹ từ khóa phân biệt giữa các lựa chọn.';
+              '- Lời khuyên: Đọc kỹ từ khóa phân biệt giữa các lựa chọn để tránh nhầm lẫn.';
     }
-  }
-
-  // ── Demo responses ────────────────────────────────────────────────────────
-
-  String _getDemoResponse(String prompt) {
-    final p = prompt.toLowerCase();
-    if (p.contains('sm-2') || p.contains('flashcard') || p.contains('spaced')) {
-      return '🧠 **[DEMO] SuperMemo SM-2 Algorithm:**\n'
-          '- Quality rating: 0–5 (≥3 = remembered)\n'
-          '- EF starts at 2.5; updates after each review\n'
-          '- Interval grows: 1 → 6 → EF×previous days\n'
-          '- Quality < 3 resets the card to day 1\n\n'
-          '_[Demo mode — no API key needed. Configure in Settings ⚙️]_';
-    }
-    if (p.contains('flutter') || p.contains('dart') || p.contains('widget')) {
-      return '📱 **[DEMO] Flutter Quick Reference:**\n'
-          '- Widget tree = UI description (immutable)\n'
-          '- State management: Provider → ChangeNotifier → notifyListeners()\n'
-          '- Build is called whenever the widget rebuilds\n'
-          '- Dispose controllers in dispose() to avoid leaks\n\n'
-          '_[Demo mode — no API key needed. Configure in Settings ⚙️]_';
-    }
-    if (p.contains('firebase') || p.contains('firestore')) {
-      return '🔥 **[DEMO] Firebase / Firestore:**\n'
-          '- NoSQL document database, real-time sync\n'
-          '- Collection → Document → Fields hierarchy\n'
-          '- StreamBuilder listens to live updates\n'
-          '- Security rules protect read/write access\n\n'
-          '_[Demo mode — no API key needed. Configure in Settings ⚙️]_';
-    }
-    return '🤖 **[DEMO] EduMaster AI Tutor:**\n'
-        '- Chế độ Demo đang bật — phản hồi từ bộ dữ liệu có sẵn.\n'
-        '- Hỏi về: SM-2, Flutter, Firebase, SQLite, MVC...\n'
-        '- Để dùng Gemini thực, tắt Demo Mode trong Cài đặt ⚙️\n\n'
-        '_Demo mode is ON — responses are pre-cached, no network needed._';
-  }
-
-  // ── Smart offline fallback ────────────────────────────────────────────────
-
-  String _getSmartLocalTutorResponse(String prompt) {
-    final pLower = prompt.toLowerCase();
-    if (pLower.contains('sm-2') ||
-        pLower.contains('flashcard') ||
-        pLower.contains('lặp lại')) {
-      return '🧠 **Thuật toán SuperMemo SM-2:**\n'
-          '- Dựa trên 2 biến số chính: **Ease Factor (EF ≥ 1.3)** và **Khoảng ôn tập (Interval tính bằng ngày)**.\n'
-          '- Đánh giá chất lượng nhớ từ 0 - 5. Nếu điểm < 3, thẻ bị coi là quên và reset về ngày thứ 1.\n'
-          '- Điểm ≥ 3 sẽ nhân giãn cách theo hệ số EF.';
-    }
-    if (pLower.contains('mvc') || pLower.contains('kiến trúc')) {
-      return '🏛️ **Kiến trúc MVC (Model - View - Controller):**\n'
-          '- **Model:** Quản lý dữ liệu, logic nghiệp vụ, giao tiếp cơ sở dữ liệu.\n'
-          '- **View:** Giao diện hiển thị cho người dùng (Widgets trong Flutter).\n'
-          '- **Controller / Provider:** Điều phối dữ liệu giữa Model và View.';
-    }
-    if (pLower.contains('sqlite') ||
-        pLower.contains('cơ sở dữ liệu') ||
-        pLower.contains('fts')) {
-      return '💾 **Cơ sở dữ liệu SQLite & FTS:**\n'
-          '- SQLite là CSDL quan hệ nhúng cục bộ, không cần cài đặt server riêng.\n'
-          '- **FTS (Full-Text Search):** Bảng ảo hỗ trợ tìm kiếm toàn văn siêu tốc O(log N) '
-          'thay vì quét toàn bộ bảng LIKE %query%.';
-    }
-    return '🤖 **Trợ lý EduMaster AI Tutor:**\n'
-        '- Bạn đang học tập rất tốt! Để ghi nhớ lâu hơn, hãy kết hợp làm trắc nghiệm song ngữ '
-        'và ôn tập thẻ ghi nhớ SM-2 mỗi ngày.\n'
-        '- *Gợi ý:* Hãy đặt câu hỏi cụ thể về thuật ngữ CNTT, toán học hoặc ngữ pháp tiếng Anh '
-        'để mình giải đáp nhé!';
   }
 
   void dispose() {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../providers/ai_tutor_provider.dart';
+import '../../providers/profile_provider.dart';
 
 class AiChatScreen extends StatefulWidget {
   const AiChatScreen({super.key});
@@ -41,21 +43,170 @@ class _AiChatScreenState extends State<AiChatScreen> {
     _scrollToBottom();
   }
 
+  void _showAiConfigModal() {
+    final prof = context.read<ProfileProvider>();
+    final keyCtrl = TextEditingController(text: prof.apiKey);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final hasKey = prof.apiKey.isNotEmpty;
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.tune_rounded, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Cấu hình Trợ lý AI Tutor',
+                        style: Theme.of(ctx)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Status card
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: hasKey
+                          ? AppColors.success.withAlpha(25)
+                          : AppColors.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: hasKey
+                            ? AppColors.success.withAlpha(80)
+                            : AppColors.primary.withAlpha(80),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          hasKey ? Icons.cloud_done_rounded : Icons.psychology_rounded,
+                          color: hasKey ? AppColors.success : AppColors.primary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                hasKey
+                                    ? 'Chế độ Trực tuyến: Google Gemini 1.5 Flash'
+                                    : 'Chế độ Thông minh: AI Ngoại tuyến Chuyên sâu',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                hasKey
+                                    ? 'Đang kết nối API Gemini trực tiếp.'
+                                    : 'Tự động giải đáp so sánh, thuật toán, toán học không cần mạng.',
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Gemini Key TextField
+                  TextField(
+                    controller: keyCtrl,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Google Gemini API Key',
+                      hintText: 'Dán khóa AIzaSy... vào đây',
+                      prefixIcon: Icon(Icons.key_rounded),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    '💡 Lấy khóa miễn phí trong 1 phút tại Google AI Studio (aistudio.google.com). Nếu để trống, app sẽ dùng Bộ não AI Thông minh Ngoại tuyến.',
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.save_rounded),
+                      label: const Text('Lưu cấu hình AI'),
+                      onPressed: () {
+                        prof.saveApiKey(keyCtrl.text);
+                        Navigator.of(ctx).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đã cập nhật cấu hình AI Tutor!')),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final aiProv = context.watch<AiTutorProvider>();
+    final prof = context.watch<ProfileProvider>();
+    final hasKey = prof.apiKey.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.auto_awesome, color: AppColors.accent, size: 22),
-            SizedBox(width: 8),
-            Text('EduMaster AI Tutor'),
+            const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.auto_awesome, color: AppColors.accent, size: 20),
+                SizedBox(width: 6),
+                Text('EduMaster AI Tutor', style: TextStyle(fontSize: 16)),
+              ],
+            ),
+            Text(
+              hasKey ? 'Gemini 1.5 Flash • Online' : 'AI Thông minh • Offline',
+              style: TextStyle(
+                fontSize: 11,
+                color: hasKey ? AppColors.success : AppColors.accent,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.tune_rounded),
+            tooltip: 'Cài đặt AI',
+            onPressed: _showAiConfigModal,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Làm mới hội thoại',
@@ -72,9 +223,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _buildQuickChip('Thuật toán SM-2 là gì?'),
-                _buildQuickChip('Mô hình MVC trong app'),
                 _buildQuickChip('Phân biệt List và Tuple'),
+                _buildQuickChip('Thuật toán SM-2 là gì?'),
+                _buildQuickChip('So sánh final và const'),
+                _buildQuickChip('Clean Architecture trong Flutter'),
+                _buildQuickChip('Tính điểm thi: đúng 16/20 câu'),
                 _buildQuickChip('Cách dùng SQLite FTS'),
               ],
             ),
@@ -104,7 +257,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   ),
                   SizedBox(width: 12),
                   Text(
-                    'AI Tutor đang suy nghĩ lời giải...',
+                    'AI Tutor đang phân tích & tổng hợp câu trả lời...',
                     style: TextStyle(color: AppColors.textSecondaryLight, fontSize: 13),
                   ),
                 ],
@@ -179,7 +332,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.88),
         decoration: BoxDecoration(
           color: isMe
               ? AppColors.primary
@@ -198,26 +351,40 @@ class _AiChatScreenState extends State<AiChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (!isMe)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 4.0),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6.0),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.smart_toy_rounded, size: 14, color: AppColors.primary),
-                    SizedBox(width: 4),
-                    Text(
-                      'AI Tutor',
+                    const Icon(Icons.smart_toy_rounded, size: 14, color: AppColors.primary),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'EduMaster AI Tutor',
                       style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
+                    ),
+                    const Spacer(),
+                    // Copy to clipboard button
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: msg.text));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã sao chép câu trả lời vào bộ nhớ tạm!'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                      child: const Icon(Icons.copy_rounded, size: 14, color: AppColors.textSecondaryLight),
                     ),
                   ],
                 ),
               ),
-            Text(
+            SelectableText(
               msg.text,
               style: TextStyle(
                 color: isMe ? Colors.white : null,
                 fontSize: 14,
-                height: 1.4,
+                height: 1.45,
               ),
             ),
           ],
