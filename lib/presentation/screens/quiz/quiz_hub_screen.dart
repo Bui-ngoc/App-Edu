@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../providers/quiz_provider.dart';
+import 'mock_exam_setup_sheet.dart';
 import 'quiz_play_screen.dart';
 
 class QuizHubScreen extends StatelessWidget {
@@ -48,7 +49,7 @@ class QuizHubScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
-                          'Ngân hàng 300 câu hỏi',
+                          'Ngân hàng 300 câu hỏi song ngữ',
                           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
@@ -61,14 +62,79 @@ class QuizHubScreen extends StatelessWidget {
                     'Luyện thi & Củng cố kiến thức',
                     style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    '20 khối kiến thức chuyên sâu • Thi thử tính giờ chuẩn 50 câu / 60 phút',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
+            // Feature Banner: Thi thử tính giờ chuẩn
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: AppColors.warning, width: 1.5),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => MockExamSetupSheet.show(context),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.alarm_on_rounded, color: AppColors.warning, size: 30),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Thi thử tính giờ',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                SizedBox(width: 6),
+                                Chip(
+                                  padding: EdgeInsets.zero,
+                                  labelPadding: EdgeInsets.symmetric(horizontal: 6),
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  label: Text('Chuẩn 50c / 60p', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                  backgroundColor: AppColors.warning,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Tùy chọn khối thi, mức độ (Dễ/Vừa/Khó), số câu và số phút theo yêu cầu.',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textSecondaryLight),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
             // Quick Actions: Practice, Exam, Wrong Review
             Text(
-              'Chế độ ôn luyện',
+              'Chế độ ôn luyện khác',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -78,15 +144,8 @@ class QuizHubScreen extends StatelessWidget {
               icon: Icons.menu_book_rounded,
               color: AppColors.primary,
               title: 'Luyện tập tự do',
+              subtitle: 'Làm bài không giới hạn thời gian, có lời giải & AI Tutor',
               onTap: () => _startQuiz(context, grade: 0, mode: QuizMode.practice),
-            ),
-            const SizedBox(height: 12),
-            _buildModeTile(
-              context,
-              icon: Icons.timer_outlined,
-              color: AppColors.warning,
-              title: 'Thi thử tính giờ',
-              onTap: () => _startQuiz(context, grade: 0, mode: QuizMode.exam),
             ),
             const SizedBox(height: 12),
             _buildModeTile(
@@ -94,6 +153,7 @@ class QuizHubScreen extends StatelessWidget {
               icon: Icons.replay_circle_filled_rounded,
               color: AppColors.error,
               title: 'Ôn lại các câu đã làm sai',
+              subtitle: 'Luyện lại danh sách những câu từng chọn sai để ghi nhớ',
               onTap: () => _startQuiz(context, grade: 0, mode: QuizMode.wrongReview),
             ),
 
@@ -109,6 +169,7 @@ class QuizHubScreen extends StatelessWidget {
     required IconData icon,
     required Color color,
     required String title,
+    required String subtitle,
     required VoidCallback onTap,
   }) {
     return Card(
@@ -130,9 +191,19 @@ class QuizHubScreen extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+                    ),
+                  ],
                 ),
               ),
               const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textSecondaryLight),

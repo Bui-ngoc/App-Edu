@@ -3,6 +3,24 @@ import '../entities/flashcard.dart';
 import '../entities/exam.dart';
 import '../entities/dictionary_word.dart';
 import '../entities/leaderboard_entry.dart';
+import '../entities/auth_user.dart';
+
+abstract class IAuthRepository {
+  Future<bool> isLoggedIn();
+  Future<AuthUser?> getCurrentUser();
+  Future<AuthUser> register({
+    required String name,
+    required String email,
+    required String password,
+    required String group,
+  });
+  Future<AuthUser> login({
+    required String email,
+    required String password,
+  });
+  Future<AuthUser> quickDemoLogin();
+  Future<void> logout();
+}
 
 abstract class IQuizRepository {
   Future<List<QuizQuestion>> getAllQuestions();

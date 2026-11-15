@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_strings.dart';
+import 'core/constants/app_colors.dart';
 import 'data/datasources/quiz_local_datasource.dart';
 import 'data/datasources/sm2_storage_datasource.dart';
 import 'data/datasources/exam_storage_datasource.dart';
 import 'data/datasources/dictionary_sqlite_datasource.dart';
 import 'data/datasources/leaderboard_datasource.dart';
 import 'data/datasources/gemini_ai_datasource.dart';
+import 'data/datasources/auth_local_datasource.dart';
 import 'data/repositories/quiz_repository_impl.dart';
 import 'data/repositories/flashcard_repository_impl.dart';
 import 'data/repositories/exam_repository_impl.dart';
 import 'data/repositories/dictionary_repository_impl.dart';
 import 'data/repositories/leaderboard_repository_impl.dart';
 import 'data/repositories/ai_tutor_repository_impl.dart';
+import 'data/repositories/auth_repository_impl.dart';
 import 'presentation/providers/quiz_provider.dart';
 import 'presentation/providers/flashcard_provider.dart';
 import 'presentation/providers/exam_provider.dart';
@@ -21,6 +24,8 @@ import 'presentation/providers/dictionary_provider.dart';
 import 'presentation/providers/leaderboard_provider.dart';
 import 'presentation/providers/profile_provider.dart';
 import 'presentation/providers/ai_tutor_provider.dart';
+import 'presentation/providers/auth_provider.dart';
+import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/main_navigation_screen.dart';
 
 void main() async {
@@ -33,6 +38,7 @@ void main() async {
   final dictionarySqliteDataSource = DictionarySqliteDataSource();
   final leaderboardDataSource = LeaderboardDataSource();
   final geminiAiDataSource = GeminiAiDataSource();
+  final authLocalDataSource = AuthLocalDataSource(leaderboardDataSource: leaderboardDataSource);
 
   // Instantiate repositories (Clean Architecture: Domain interfaces satisfied)
   final quizRepo = QuizRepositoryImpl(dataSource: quizLocalDataSource);
@@ -41,10 +47,14 @@ void main() async {
   final dictionaryRepo = DictionaryRepositoryImpl(dataSource: dictionarySqliteDataSource);
   final leaderboardRepo = LeaderboardRepositoryImpl(dataSource: leaderboardDataSource);
   final aiTutorRepo = AiTutorRepositoryImpl(dataSource: geminiAiDataSource);
+  final authRepo = AuthRepositoryImpl(dataSource: authLocalDataSource);
 
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(authRepo: authRepo),
+        ),
         ChangeNotifierProvider(
           create: (_) => QuizProvider(quizRepo: quizRepo, aiRepo: aiTutorRepo),
         ),
@@ -78,6 +88,7 @@ class EduMasterApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profileProv = context.watch<ProfileProvider>();
+    final authProv = context.watch<AuthProvider>();
 
     return MaterialApp(
       title: AppStrings.appName,
@@ -85,7 +96,15 @@ class EduMasterApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: profileProv.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: const MainNavigationScreen(),
+      home: authProv.isLoading
+          ? const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            )
+          : authProv.isLoggedIn
+              ? const MainNavigationScreen()
+              : const LoginScreen(),
     );
   }
 }

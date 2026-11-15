@@ -71,6 +71,10 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  Future<List<ExamSessionResult>> getRoomResults(String roomId) async {
+    return _examRepo.getResultsForRoom(roomId);
+  }
+
   Future<bool> joinRoom(String roomId) async {
     _state = ExamUiState.loading;
     _errorMessage = '';

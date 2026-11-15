@@ -126,7 +126,45 @@ class ExamStorageDataSource {
     final prefs = await SharedPreferences.getInstance();
     final key = '$_resultsKeyPrefix${roomId.toUpperCase()}';
     final jsonStr = prefs.getString(key);
-    if (jsonStr == null || jsonStr.isEmpty) return [];
+    if (jsonStr == null || jsonStr.isEmpty) {
+      if (roomId.toUpperCase() == 'EXAM100') {
+        final sampleResults = [
+          ExamSessionResult(
+            roomId: 'EXAM100',
+            studentName: 'Đặng Mai Phương',
+            score: 4,
+            totalQuestions: 4,
+            timeSpentSeconds: 320,
+            appSwitchViolations: 0,
+            violationTimestamps: [],
+            submittedAt: DateTime.now().subtract(const Duration(hours: 2)),
+          ),
+          ExamSessionResult(
+            roomId: 'EXAM100',
+            studentName: 'Trần Bảo Long',
+            score: 3,
+            totalQuestions: 4,
+            timeSpentSeconds: 410,
+            appSwitchViolations: 1,
+            violationTimestamps: ['Rời màn hình thi lúc 09:12:15 (Lần 1)'],
+            submittedAt: DateTime.now().subtract(const Duration(hours: 1)),
+          ),
+          ExamSessionResult(
+            roomId: 'EXAM100',
+            studentName: 'Nguyễn Thị Hải Yến',
+            score: 4,
+            totalQuestions: 4,
+            timeSpentSeconds: 290,
+            appSwitchViolations: 0,
+            violationTimestamps: [],
+            submittedAt: DateTime.now().subtract(const Duration(minutes: 30)),
+          ),
+        ];
+        await prefs.setString(key, json.encode(sampleResults.map((e) => e.toMap()).toList()));
+        return sampleResults;
+      }
+      return [];
+    }
     try {
       final List<dynamic> list = json.decode(jsonStr);
       return list.map((e) => ExamSessionResult.fromMap(Map<String, dynamic>.from(e as Map))).toList();

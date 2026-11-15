@@ -23,11 +23,21 @@ class QuizProvider extends ChangeNotifier {
   String get errorMessage => _errorMessage;
 
   List<QuizQuestion> _allQuestions = [];
+  List<QuizQuestion> get allQuestions => _allQuestions;
   List<QuizQuestion> _activeQuestions = [];
   List<QuizQuestion> get activeQuestions => _activeQuestions;
 
-  int _selectedGrade = 0; // 0: All, 8: Grade 8, 11: Grade 11, 12: Grade 12
+  int _selectedGrade = 0; // 0: All, 1..20
   int get selectedGrade => _selectedGrade;
+
+  String _selectedDifficulty = 'all'; // 'all', 'easy', 'medium', 'hard'
+  String get selectedDifficulty => _selectedDifficulty;
+
+  int _examDurationMinutes = 60; // Standard 60 mins
+  int get examDurationMinutes => _examDurationMinutes;
+
+  int _examQuestionCount = 50; // Standard 50 questions
+  int get examQuestionCount => _examQuestionCount;
 
   QuizMode _currentMode = QuizMode.practice;
   QuizMode get currentMode => _currentMode;
@@ -44,6 +54,9 @@ class QuizProvider extends ChangeNotifier {
   int _score = 0;
   int get score => _score;
 
+  int _timeSpentSeconds = 0;
+  int get timeSpentSeconds => _timeSpentSeconds;
+
   // Countdown timer for Exam mode (Topic #32 Extension)
   Timer? _countdownTimer;
   int _secondsRemaining = 0;
@@ -57,6 +70,7 @@ class QuizProvider extends ChangeNotifier {
   String _aiExplanation = '';
   String get aiExplanation => _aiExplanation;
 
+  /// Standard Practice / Wrong Review load
   Future<void> loadQuestions({int grade = 0, QuizMode mode = QuizMode.practice}) async {
     _state = QuizUiState.loading;
     _errorMessage = '';
@@ -67,6 +81,7 @@ class QuizProvider extends ChangeNotifier {
     _score = 0;
     _isTimeUp = false;
     _aiExplanation = '';
+    _timeSpentSeconds = 0;
     notifyListeners();
 
     try {
@@ -83,12 +98,13 @@ class QuizProvider extends ChangeNotifier {
         _state = QuizUiState.empty;
       } else {
         if (mode == QuizMode.exam) {
-          // Shuffle and limit to 20 questions for mock exam
-          _activeQuestions.shuffle();
-          if (_activeQuestions.length > 20) {
-            _activeQuestions = _activeQuestions.sublist(0, 20);
-          }
-          _startTimer(20 * 60); // 20 minutes
+          await startTimedExam(
+            grade: grade,
+            difficulty: 'all',
+            questionCount: 50,
+            durationMinutes: 60,
+          );
+          return;
         }
         _state = QuizUiState.success;
       }
@@ -97,6 +113,105 @@ class QuizProvider extends ChangeNotifier {
       _errorMessage = 'Không thể nạp danh sách câu hỏi: ${e.toString()}';
     }
     notifyListeners();
+  }
+
+  /// Full-featured Timed Exam with filters for Grade, Difficulty, Count and Duration
+  Future<void> startTimedExam({
+    int grade = 0,
+    String difficulty = 'all',
+    int questionCount = 50,
+    int durationMinutes = 60,
+  }) async {
+    _state = QuizUiState.loading;
+    _errorMessage = '';
+    _selectedGrade = grade;
+    _selectedDifficulty = difficulty;
+    _examQuestionCount = questionCount;
+    _examDurationMinutes = durationMinutes;
+    _currentMode = QuizMode.exam;
+    _currentIndex = 0;
+    _userAnswers.clear();
+    _score = 0;
+    _isTimeUp = false;
+    _aiExplanation = '';
+    _timeSpentSeconds = 0;
+    notifyListeners();
+
+    try {
+      _allQuestions = await _quizRepo.getAllQuestions();
+      List<QuizQuestion> pool = List.from(_allQuestions);
+
+      // 1. Filter by Grade if specified
+      if (grade > 0) {
+        pool = pool.where((q) => q.grade == grade).toList();
+      }
+
+      // 2. Filter by Difficulty if specified
+      if (difficulty == 'easy') {
+        pool = pool.where(_isEasyQuestion).toList();
+      } else if (difficulty == 'medium') {
+        pool = pool.where(_isMediumQuestion).toList();
+      } else if (difficulty == 'hard') {
+        pool = pool.where(_isHardQuestion).toList();
+      }
+
+      if (pool.isEmpty) {
+        // Fallback to all questions if specific filter is too restrictive
+        pool = List.from(_allQuestions);
+      }
+
+      // 3. Shuffle pool
+      pool.shuffle();
+
+      // 4. Limit to questionCount
+      final actualCount = pool.length < questionCount ? pool.length : questionCount;
+      _activeQuestions = pool.sublist(0, actualCount);
+
+      if (_activeQuestions.isEmpty) {
+        _state = QuizUiState.empty;
+      } else {
+        _startTimer(durationMinutes * 60);
+        _state = QuizUiState.success;
+      }
+    } catch (e) {
+      _state = QuizUiState.error;
+      _errorMessage = 'Lỗi tạo đề thi thử: ${e.toString()}';
+    }
+    notifyListeners();
+  }
+
+  bool _isEasyQuestion(QuizQuestion q) {
+    if (q.grade <= 5) return true;
+    final text = q.questionVi.toLowerCase();
+    return text.contains('là gì') ||
+        text.contains('khái niệm') ||
+        text.contains('đặc điểm') ||
+        text.contains('cú pháp') ||
+        text.contains('kiểu dữ liệu');
+  }
+
+  bool _isMediumQuestion(QuizQuestion q) {
+    if (q.grade >= 6 && q.grade <= 12) return true;
+    final text = q.questionVi.toLowerCase();
+    return text.contains('sử dụng') ||
+        text.contains('hoạt ảnh') ||
+        text.contains('điều hướng') ||
+        text.contains('trạng thái') ||
+        text.contains('form');
+  }
+
+  bool _isHardQuestion(QuizQuestion q) {
+    if (q.grade >= 13) return true;
+    final text = q.questionVi.toLowerCase();
+    return text.contains('kiến trúc') ||
+        text.contains('clean') ||
+        text.contains('hiệu năng') ||
+        text.contains('tối ưu') ||
+        text.contains('kiểm thử') ||
+        text.contains('thuật toán') ||
+        text.contains('sqlite') ||
+        text.contains('stream') ||
+        text.contains('ai');
   }
 
   void _startTimer(int totalSeconds) {
@@ -110,6 +225,7 @@ class QuizProvider extends ChangeNotifier {
       } else {
         _isTimeUp = true;
         timer.cancel();
+        calculateScore();
         notifyListeners();
       }
     });
@@ -125,15 +241,24 @@ class QuizProvider extends ChangeNotifier {
     _userAnswers[_currentIndex] = optionIndex;
     _aiExplanation = '';
 
-    final question = _activeQuestions[_currentIndex];
-    if (optionIndex == question.correctIndex) {
-      // Correct: remove from wrong set if it was in wrong list
-      _quizRepo.removeWrongQuestionId(question.id);
-    } else {
-      // Wrong: remember ID for "Làm lại câu sai"
-      _quizRepo.saveWrongQuestionId(question.id);
+    // In practice mode, evaluate immediately
+    if (_currentMode != QuizMode.exam) {
+      final question = _activeQuestions[_currentIndex];
+      if (optionIndex == question.correctIndex) {
+        _quizRepo.removeWrongQuestionId(question.id);
+      } else {
+        _quizRepo.saveWrongQuestionId(question.id);
+      }
     }
     notifyListeners();
+  }
+
+  void jumpToQuestion(int index) {
+    if (index >= 0 && index < _activeQuestions.length) {
+      _currentIndex = index;
+      _aiExplanation = '';
+      notifyListeners();
+    }
   }
 
   void nextQuestion() {
@@ -156,11 +281,17 @@ class QuizProvider extends ChangeNotifier {
     _countdownTimer?.cancel();
     int count = 0;
     for (int i = 0; i < _activeQuestions.length; i++) {
-      if (_userAnswers[i] == _activeQuestions[i].correctIndex) {
+      final question = _activeQuestions[i];
+      if (_userAnswers[i] == question.correctIndex) {
         count++;
+        _quizRepo.removeWrongQuestionId(question.id);
+      } else {
+        _quizRepo.saveWrongQuestionId(question.id);
       }
     }
     _score = count;
+    _timeSpentSeconds = (_examDurationMinutes * 60) - _secondsRemaining;
+    if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
     notifyListeners();
   }
 

@@ -6,7 +6,8 @@ import '../../providers/ai_tutor_provider.dart';
 import '../../providers/profile_provider.dart';
 
 class AiChatScreen extends StatefulWidget {
-  const AiChatScreen({super.key});
+  final String? initialPrompt;
+  const AiChatScreen({super.key, this.initialPrompt});
 
   @override
   State<AiChatScreen> createState() => _AiChatScreenState();
@@ -15,6 +16,14 @@ class AiChatScreen extends StatefulWidget {
 class _AiChatScreenState extends State<AiChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialPrompt != null && widget.initialPrompt!.isNotEmpty) {
+      _textController.text = widget.initialPrompt!;
+    }
+  }
 
   @override
   void dispose() {

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../providers/profile_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -76,6 +77,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: AppColors.error),
+            SizedBox(width: 8),
+            Text('Đăng xuất tài khoản'),
+          ],
+        ),
+        content: const Text(
+          'Bạn có chắc chắn muốn đăng xuất khỏi phiên làm việc hiện tại không?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Hủy bỏ'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await context.read<AuthProvider>().logout();
+            },
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -368,6 +404,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       '• Camera chỉ sử dụng khi quét mã QR hoặc chụp ảnh đại diện.\n'
                       '• Khóa API cá nhân được lưu trữ cục bộ, tuyệt đối bảo mật.',
                       style: TextStyle(fontSize: 12, height: 1.6, color: AppColors.textSecondaryLight),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Tài khoản & Đăng xuất ───────────────────────────────────────
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.manage_accounts_rounded, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Tài khoản & Phiên làm việc',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Đang đăng nhập: ${profile.email}',
+                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryLight),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          side: const BorderSide(color: AppColors.error),
+                        ),
+                        icon: const Icon(Icons.logout_rounded, size: 20),
+                        label: const Text(
+                          'Đăng xuất tài khoản',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        onPressed: () => _confirmLogout(context),
+                      ),
                     ),
                   ],
                 ),
