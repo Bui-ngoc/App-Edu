@@ -19,12 +19,14 @@ class AuthRepositoryImpl implements IAuthRepository {
     required String name,
     required String email,
     required String password,
-    required String group,
+    String role = 'student',
+    String group = 'Thành viên EduMaster',
   }) {
     return _dataSource.register(
       name: name,
       email: email,
       password: password,
+      role: role,
       group: group,
     );
   }
@@ -38,7 +40,12 @@ class AuthRepositoryImpl implements IAuthRepository {
   }
 
   @override
-  Future<AuthUser> quickDemoLogin() => _dataSource.quickDemoLogin();
+  Future<AuthUser> quickDemoLogin({String role = 'student'}) =>
+      _dataSource.quickDemoLogin(role: role);
+
+  @override
+  Future<AuthUser> switchRole(String email, String newRole) =>
+      _dataSource.switchRole(email, newRole);
 
   @override
   Future<void> logout() => _dataSource.logout();

@@ -32,4 +32,24 @@ class ExamRepositoryImpl implements IExamRepository {
   Future<List<ExamSessionResult>> getResultsForRoom(String roomId) {
     return _dataSource.getResultsForRoom(roomId);
   }
+
+  @override
+  Future<void> addStudentHistory(String userId, StudentExamHistoryEntry entry) {
+    return _dataSource.addStudentHistory(userId, entry);
+  }
+
+  @override
+  Future<List<StudentExamHistoryEntry>> getStudentHistory(String userId) {
+    return _dataSource.getStudentHistory(userId);
+  }
+
+  @override
+  Future<void> saveLiveSession(LiveStudentSession session) {
+    return _dataSource.saveLiveSession(session);
+  }
+
+  @override
+  Future<List<LiveStudentSession>> getLiveSessions(String roomId) {
+    return _dataSource.getLiveSessions(roomId);
+  }
 }

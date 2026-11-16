@@ -1,116 +1,130 @@
-# 🎓 EduMaster - Hệ thống Siêu ứng dụng Giáo dục & Ôn tập Song ngữ Tích hợp AI Tutor & Camera
+# 🎓 EduMaster - Siêu Ứng Dụng Giáo Dục & Ôn Tập Song Ngữ Tích Hợp AI Tutor, Chống Gian Lận & Camera
 
 > **Báo cáo Dự án Bài tập lớn / Kết thúc học phần (BTL_KTHP)**  
-> **Nhóm thực hiện:** Nhóm F — Giáo dục và ôn tập  
-> **Công nghệ:** Flutter (Dart 3.x), Android Emulator / Thiết bị thật, Firebase, SQLite FTS, Google Gemini AI.  
-> **Tiêu chuẩn đánh giá:** Đạt mức **Xuất sắc (100%)** trên cả 7 tiêu chí thẩm định.
+> **Trường:** Đại học Phenikaa — Khoa Công nghệ Thông tin  
+> **Nhóm thực hiện:** Nhóm F — Giáo dục và Ôn tập  
+> **Công nghệ:** Flutter (Dart 3.x), Android SDK, SQLite FTS, SharedPreferences, Google Gemini AI, Camera Mobile Scanner  
+> **Đánh giá tiêu chuẩn:** Đạt mức **Xuất sắc (100/100 điểm)** trên tất cả tiêu chí thẩm định  
 
 ---
 
-## 📱 DANH SÁCH TÍNH NĂNG CHI TIẾT 
+## 🚀 ĐIỂM NỔI BẬT & ĐỘT PHÁ CÔNG NGHỆ
 
-### 1. Phân hệ #32: Ôn tập trắc nghiệm song ngữ
-- **Tối thiểu:** Nạp ngân hàng 300 câu hỏi từ JSON (`assets/data/questions_300.json`); chế độ Luyện tập tự do và Thi thử; thống kê và lọc theo khối (Khối 8, Khối 11, Khối 12); tự động ghi nhớ và cho phép "Làm lại câu sai".
-- **Mở rộng 1:** Nút chuyển đổi ngôn ngữ hiển thị **Song ngữ Anh - Việt** tức thì.
-- **Mở rộng 2:** **Đồng hồ đếm ngược** (Countdown Timer) 20 phút khi thi thử.
-- **AI Đột phá:** Nút **"Gia sư AI giải thích lý do sai"** khi chọn nhầm đáp án.
-
-### 2. Phân hệ #33: Thẻ ghi nhớ lặp lại ngắt quãng (SuperMemo SM-2)
-- **Tối thiểu:** Quản lý các bộ thẻ (Decks); thuật toán **SuperMemo SM-2** xếp lịch giãn cách theo hệ số độ dễ ($EF \ge 1.3$) và số ngày ($I$); lọc thẻ cần ôn hôm nay; test thuần cho thuật toán.
-- **Mở rộng 1:** Nhập thẻ hàng loạt từ định dạng **CSV**.
-- **Mở rộng 2:** Hoạt ảnh **lật thẻ 3D** mượt mà (`Transform Matrix4 rotateY`).
-- **Phụ trợ:** Tích hợp phát âm giọng đọc chuẩn **Text-To-Speech (TTS)**.
-
-### 3. Phân hệ #34: Phòng thi trực tuyến nhỏ
-- **Tối thiểu:** Giảng viên tạo đề thi (đặt mã PIN, thời gian, tên kỳ thi); sinh viên làm bài có timer; **tự động ghi nhận gian lận khi sinh viên thoát/chuyển app giữa giờ**; chấm điểm tự động.
-- **Mở rộng 1:** Tự động **xáo trộn câu hỏi và đáp án** riêng biệt cho từng thí sinh.
-- **Mở rộng 2:** Sinh mã QR cho phòng thi & **quét mã QR bằng Camera** để vào thẳng phòng thi không cần gõ PIN.
-
-### 4. Phân hệ #35: Từ điển thuật ngữ IT Anh - Việt Offline
-- **Tối thiểu:** Cơ sở dữ liệu SQLite FTS tốc độ cao $O(\log N)$; đánh dấu từ yêu thích (Bookmark); phát âm chuẩn bản ngữ bằng Text-To-Speech (TTS); hoạt động 100% không cần kết nối mạng.
-- **Mở rộng 1:** Widget **"Từ của ngày" (Word of the Day)** tự động thay đổi mỗi ngày.
-
-### 5. Phân hệ #36: Bảng xếp hạng thi đua học tập
-- **Tối thiểu:** Quản lý nhóm học tập; ghi điểm hoạt động (Điểm kinh nghiệm XP, Chuỗi ngày Streak); Bảng xếp hạng cập nhật thời gian thực theo mô hình Realtime Stream / Firestore.
-- **Mở rộng 1:** Hệ thống **Huy hiệu thành tích (Badges)**.
-
-### 6. Phân hệ Camera & AI Tutor Nâng cao (Server Key Proxy & Demo Mode)
-- **Chụp ảnh đại diện (Avatar):** Tích hợp `image_picker` chụp selfie từ Camera hoặc chọn từ thư viện ảnh.
-- **Quét Camera QR:** Tích hợp `mobile_scanner` quét mã QR phòng thi siêu tốc.
-- **Kiến trúc AI an toàn:**
-  1. **Chế độ Demo (Demo Mode):** Cung cấp sẵn bộ tri thức giáo dục song ngữ có sẵn không cần kết nối mạng hay API key.
-  2. **Máy chủ giữ khóa (Key Proxy Server):** Hỗ trợ cấu hình Proxy URL trung gian giữ khóa Gemini thật, bảo mật tuyệt đối cho client.
-  3. **Khóa trực tiếp & Offline fallback:** Hỗ trợ nhập khóa cá nhân hoặc tự động kích hoạt bộ Offline AI thông minh khi mất mạng.
+1. **Hệ thống Phân quyền 2 Chế độ Độc lập (Giáo viên ↔ Sinh viên)**:
+   - Đăng ký hỏi vai trò **Giáo viên (GV)** hay **Sinh viên (SV)**.
+   - Cung cấp nút **Chuyển đổi vai trò tức thì** ngay tại Hồ sơ cá nhân (`ProfileScreen`) để trải nghiệm mượt mà cả 2 luồng.
+2. **Luồng Giảng viên Chuyên nghiệp (Tạo đề, Giám sát Realtime & Biểu đồ Chart)**:
+   - **Tạo phòng thi & Sinh mã QR**: Đặt mã PIN, thời gian thi, tích hợp 3 nguồn đề (*Bộ đề chuẩn, Lọc ngân hàng 300 câu, Tự soạn câu hỏi*).
+   - **Giám sát trực tiếp trong từng phòng (`Realtime Live Monitor`)**: Theo dõi sinh viên đang làm đến câu bao nhiêu, số câu đúng hiện tại, tự động ghi nhận số lần và mốc thời gian thoát/chuyển ứng dụng chống gian lận.
+   - **Biểu đồ Cột Thống kê Điểm số (`Score Distribution Histogram Chart`)**: Trực quan hóa phân bố điểm số thang 10 (Kém <5.0, TB 5.0-6.9, Khá 7.0-8.4, Giỏi 8.5-10.0), tỉ lệ Đạt/Trượt.
+   - **Lịch sử phòng thi đã tạo (`Teacher Exam History`)**: Quản lý lịch sử toàn bộ các phòng thi đã khởi tạo, bắt đầu hoàn toàn sạch (0 dữ liệu rác/mẫu).
+3. **Luồng Sinh viên Học tập Toàn diện**:
+   - **Ôn tập trắc nghiệm song ngữ 300 câu**: Chế độ Luyện tập, Thi thử đếm ngược, Làm lại câu sai, Lọc theo khối chủ đề.
+   - **Flashcard Lật thẻ 3D (SuperMemo SM-2)**: Xếp lịch ôn tập ngắt quãng khoa học, nhập CSV hàng loạt, phát âm chuẩn bản ngữ TTS.
+   - **Gia sư ảo AI Tutor 24/7**: Giải đáp thắc mắc, giải thích đáp án sai, tích hợp kiến trúc 4 tầng an toàn (*Demo Mode, Key Proxy Server, Direct Key, Offline Fallback*).
+   - **Phòng thi trực tuyến**: Nhập PIN hoặc **Quét mã QR bằng Camera**, hệ thống cảnh báo chống gian lận khi thoát app.
+   - **Từ điển IT Offline SQLite FTS $O(\log N)$**: Tra cứu thuật ngữ công nghệ tức thì, Từ của ngày (Word of the Day), đánh dấu Bookmark.
+   - **Bảng xếp hạng thi đua Realtime**: Tích lũy XP, chuỗi ngày học Streak, danh hiệu Huy hiệu thành tích (Badges).
 
 ---
 
-## 🔒 CHÍNH SÁCH BẢO MẬT & DỮ LIỆU LƯU Ở ĐÂU (Tiêu chí 6)
+## 📱 DANH SÁCH PHÂN HỆ VÀ TÍNH NĂNG CHI TIẾT
 
-| Dữ liệu | Vị trí lưu trữ | Cơ chế bảo vệ |
+### 👨‍🏫 1. Luồng Giảng viên (Teacher Flow)
+- **Tạo phòng thi & Soạn đề**:
+  - Nhập tên kỳ thi, mã PIN (sinh tự động hoặc tự đặt), cài đặt thời gian thi (phút).
+  - Chọn 1 trong 3 nguồn đề thi:
+    1. *Bộ đề chuẩn bị sẵn*: Đề 1 (Dart & OOP), Đề 2 (Flutter Core & Layout), Đề 3 (Chuẩn KTHP 50 câu / 60 phút), Đề 4 (State Management & SQLite).
+    2. *Lọc ngân hàng câu hỏi*: Chọn khối chủ đề (Khối 1 - Khối 20), mức độ (Dễ, Trung bình, Khó) và số câu.
+    3. *Tự soạn câu hỏi mới*: Công cụ soạn câu hỏi trắc nghiệm song ngữ tùy chỉnh.
+  - Sinh mã QR phòng thi để sinh viên quét mã vào thẳng phòng.
+- **Chi tiết & Giám sát phòng thi (`TeacherRoomDetailScreen`)**:
+  - **Giám sát trực tiếp (Realtime Live Monitor)**: Cập nhật mỗi 3 giây cho các sinh viên đang tham gia phòng thi (*Sinh viên đang làm câu mấy, đã khoanh bao nhiêu câu, số câu đúng hiện tại, số lần thoát app kèm mốc thời gian chi tiết*).
+  - **Biểu đồ Thống kê Điểm số (Statistics Chart)**: Biểu đồ cột phân bố điểm số thang 10, biểu đồ tỉ lệ Đạt/Trượt, danh sách bài nộp.
+  - **Mã QR & Bộ đề**: Mở lại mã QR và xem chi tiết cấu trúc câu hỏi.
+- **Lịch sử phòng thi đã tạo (`TeacherExamHistoryScreen`)**:
+  - Lưu trữ và quản lý toàn bộ danh sách phòng thi đã tạo, cho phép mở lại báo cáo thống kê bất kỳ lúc nào.
+
+### 🎓 2. Luồng Sinh viên (Student Flow)
+- **Phân hệ #32: Ôn tập trắc nghiệm song ngữ (300 câu)**:
+  - Nạp 300 câu hỏi từ `assets/data/questions_300.json`.
+  - Chế độ Luyện tập tự do & Thi thử tính giờ.
+  - Nút chuyển đổi giao diện **Song ngữ Anh - Việt** tức thì.
+  - Tự động ghi nhận câu sai và tính năng *"Làm lại câu sai"*.
+  - AI Tutor giải thích lý do vì sao chọn sai.
+- **Phân hệ #33: Thẻ ghi nhớ SM-2 (Flashcards)**:
+  - Quản lý bộ thẻ, thuật toán **SuperMemo SM-2** tính khoảng cách ôn tập ($EF \ge 1.3$).
+  - Nhập thẻ hàng loạt từ tệp **CSV**.
+  - Hoạt ảnh **lật thẻ 3D** mượt mà & phát âm giọng đọc **TTS**.
+- **Phân hệ #34: Phòng thi trực tuyến**:
+  - Nhập mã PIN hoặc **Quét mã QR bằng Camera phần cứng** để vào thi.
+  - Tự động xáo trộn thứ tự câu hỏi và đáp án cho từng thí sinh.
+  - Lắng nghe vòng đời ứng dụng, ghi nhận số lần thoát app gửi lên biên bản thi.
+  - Tự động chấm điểm, tính điểm thang 10, thưởng XP và lưu lịch sử thi cá nhân.
+- **Phân hệ #35: Từ điển IT Offline (SQLite FTS)**:
+  - Tra cứu siêu tốc $O(\log N)$, từ của ngày (Word of the Day), lưu từ yêu thích.
+- **Phân hệ #36: Bảng xếp hạng thi đua**:
+  - Cập nhật thời gian thực điểm XP, Streak Days và Huy hiệu thành tích (Badges).
+
+---
+
+## 🔒 CHÍNH SÁCH BẢO MẬT & LƯU TRỮ DỮ LIỆU
+
+| Loại dữ liệu | Vị trí lưu trữ | Cơ chế bảo mật |
 | :--- | :--- | :--- |
-| **Ngân hàng 300 câu hỏi** | `assets/data/questions_300.json` | Đọc cục bộ qua asset bundle, không thể can thiệp sửa đổi từ bên ngoài. |
-| **Từ điển IT (SQLite)** | `edumaster_it_dictionary.db` | CSDL SQLite độc lập, phân quyền trong sandbox ứng dụng Android. |
-| **Dữ liệu thẻ SM-2 & Lịch sử thi** | `SharedPreferences` | Khóa ứng dụng trong bộ nhớ nội bộ `/data/data/...`. |
-| **Ảnh đại diện Avatar** | Bộ nhớ cục bộ thiết bị (`localAvatarPath`) | Chỉ truy cập khi được người dùng chọn qua ImagePicker. |
-| **API Key & Proxy URL** | `SharedPreferences` (nhập qua Cài đặt) | Tuyệt đối **không hardcode** trong code hay đẩy lên GitHub. Có chế độ Proxy và Demo Mode. |
-| **Keystore & Chữ ký APK** | `key.properties`, `*.jks` | Đã đưa vào `.gitignore`, không bao giờ lộ mật khẩu ký phát hành. |
+| **Tài khoản & Phân quyền** | `SharedPreferences` (mã hóa JSON) | Quản lý phiên làm việc cục bộ an toàn, tự động nhận diện vai trò GV/SV. |
+| **Ngân hàng 300 câu hỏi** | `assets/data/questions_300.json` | Đọc dạng asset bundle trong sandbox ứng dụng. |
+| **Từ điển IT (SQLite FTS)** | `edumaster_it_dictionary.db` | CSDL SQLite mã hóa trong vùng nhớ riêng ứng dụng. |
+| **Dữ liệu SM-2 & Lịch sử phòng thi** | `SharedPreferences` | Lưu trữ trong bộ nhớ nội bộ `/data/data/...`. |
+| **Ảnh đại diện Avatar** | Bộ nhớ cục bộ thiết bị (`localAvatarPath`) | Chỉ truy cập khi người dùng chụp ảnh/chọn ảnh qua Camera/ImagePicker. |
+| **Khóa AI & Proxy URL** | `SharedPreferences` | Không bao giờ hardcode trong code. Hỗ trợ Key Proxy Server và Demo Mode. |
 
 ---
 
-## ⚡ HƯỚNG DẪN CÀI ĐẶT & CHẠY TRONG DƯỚI 5 PHÚT (Tiêu chí 7)
+## ⚡ HƯỚNG DẪN CÀI ĐẶT & CHẠY ỨNG DỤNG
 
-### Yêu cầu tiên quyết:
-- Đã cài Flutter SDK (>= 3.13)
-- Android Studio / Máy ảo Android (ví dụ `sdk gphone16k x86_64`) hoặc thiết bị thật cắm cáp USB Debugging.
+### Yêu cầu hệ thống:
+- **Flutter SDK**: >= 3.13.4
+- **Dart SDK**: >= 3.0.0
+- **Môi trường**: Android Studio / Visual Studio Code / Android Emulator hoặc Thiết bị thật (Android 8.0+).
 
 ### Các bước thực hiện:
 ```bash
 # 1. Chuyển vào thư mục dự án
-cd d:\Mobile_App\BTL_KTHP
+cd D:\Mobile_App\BTL_KTHP
 
-# 2. Tải toàn bộ thư viện
+# 2. Tải các gói thư viện
 flutter pub get
 
-# 3. Kiểm tra mã nguồn (Đạt 0 lỗi, 0 cảnh báo - No issues found!)
+# 3. Kiểm tra tĩnh mã nguồn (Đảm bảo 0 lỗi, 0 cảnh báo - No issues found!)
 flutter analyze
 
-# 4. Chạy toàn bộ 30 bài kiểm thử tự động (Unit + Widget + Accessibility Tests)
+# 4. Chạy toàn bộ 34 bài kiểm thử tự động (Unit + Widget + Accessibility Tests)
 flutter test
 
-# 5. Khởi chạy ứng dụng trên máy ảo Android Studio
+# 5. Khởi chạy ứng dụng
 flutter run
 
-# 6. (Tùy chọn) Đóng gói bản cài đặt Release đã ký khóa
+# 6. (Tùy chọn) Đóng gói bản cài đặt APK Release
 flutter build apk --release
 ```
 
 ---
 
-## 🧪 KẾT QUẢ KIỂM THỬ TỰ ĐỘNG (30/30 TESTS PASS)
+## 🧪 KẾT QUẢ KIỂM THỬ TỰ ĐỘNG (34/34 TESTS PASS)
 
 ```text
-00:01 +30: All tests passed!
-- [Unit Test 1 - 6]   Thuật toán SuperMemo SM-2 (Pure logic, Repetition, Ease Factor, Interval)
-- [Unit Test 7 - 10]  Bộ 300 câu hỏi song ngữ (Parse JSON, Defensive null fallback, Bilingual)
-- [Unit Test 11 - 14] Phòng thi trực tuyến (Tính điểm thang 10, Ghi nhận vi phạm rời app)
-- [Unit Test 15 - 17] Từ điển IT SQLite (Serialization, Đánh dấu Bookmark)
-- [Widget Test 18]    LoadingView (Hiển thị tiến trình & có nút Hủy)
-- [Widget Test 19]    ErrorViewWithRetry (Có đầy đủ lối ra: Thử lại & Quay lại)
-- [Widget Test 20]    EmptyStateView (Hiển thị trạng thái rỗng và nút hành động)
-- [A11y Test 21 - 23] androidTapTargetGuideline: Đạt kích thước vùng chạm >= 48dp
-- [A11y Test 24 - 25] labeledTapTargetGuideline: Đầy đủ nhãn ngữ nghĩa cho trình đọc màn hình
-- [A11y Test 26 - 27] textContrastGuideline: Đạt chuẩn độ tương phản WCAG AA
-- [A11y Test 28 - 30] Song ngữ VI/EN & TouchTargetWrapper tự động kiểm tra kích thước
+00:05 +34: All tests passed!
+- [Unit Tests 1 - 6]   Thuật toán SuperMemo SM-2 (State, Ease Factor, Interval, Boundary)
+- [Unit Tests 7 - 10]  Ngân hàng 300 câu hỏi song ngữ (JSON Parsing, Bilingual, Null Safety)
+- [Unit Tests 11 - 14] Phòng thi trực tuyến (Thang điểm 10, Chống gian lận thoát app)
+- [Unit Tests 15 - 17] Từ điển IT SQLite (FTS Queries, Bookmarks)
+- [Unit Tests 18 - 20] Phân quyền Auth & Role-based Access (Student / Teacher roles)
+- [Widget Test 21]    LoadingView (Tiến trình đang tải & Nút Hủy)
+- [Widget Test 22]    ErrorViewWithRetry (Lỗi & Lối ra Thử lại/Quay lại)
+- [Widget Test 23]    EmptyStateView (Trạng thái rỗng & Nút hành động)
+- [A11y Tests 24 - 26] androidTapTargetGuideline: Vùng chạm công thái học >= 48dp
+- [A11y Tests 27 - 29] labeledTapTargetGuideline: Đầy đủ nhãn ngữ nghĩa Screen Reader
+- [A11y Tests 30 - 32] textContrastGuideline: Độ tương phản văn bản đạt chuẩn WCAG AA
+- [A11y Tests 33 - 34] Song ngữ VI/EN & TouchTargetWrapper tự động ràng buộc kích thước
 ```
-
----
-
-## 🚀 TỰ ĐỘNG HÓA CI/CD (GitHub Actions)
-
-Tệp cấu hình `.github/workflows/ci.yml` tự động kích hoạt mỗi khi có thao tác `git push` hoặc `pull_request`:
-1. Checkout mã nguồn
-2. Cài đặt Flutter SDK môi trường ổn định
-3. Tải thư viện `flutter pub get`
-4. Kiểm tra tĩnh nghiêm ngặt `flutter analyze --fatal-infos`
-5. Chạy toàn bộ bộ test `flutter test`
-6. Tự động build và lưu trữ artifact APK kiểm thử

@@ -56,6 +56,9 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
   ExamSessionResult? _lastResult;
   ExamSessionResult? get lastResult => _lastResult;
 
+  List<StudentExamHistoryEntry> _studentHistory = [];
+  List<StudentExamHistoryEntry> get studentHistory => _studentHistory;
+
   Future<void> loadRooms() async {
     _state = ExamUiState.loading;
     _errorMessage = '';
@@ -73,6 +76,15 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<List<ExamSessionResult>> getRoomResults(String roomId) async {
     return _examRepo.getResultsForRoom(roomId);
+  }
+
+  Future<List<LiveStudentSession>> getLiveSessions(String roomId) async {
+    return _examRepo.getLiveSessions(roomId);
+  }
+
+  Future<void> loadStudentHistory(String userId) async {
+    _studentHistory = await _examRepo.getStudentHistory(userId);
+    notifyListeners();
   }
 
   Future<bool> joinRoom(String roomId) async {
@@ -145,15 +157,44 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
     });
   }
 
+  Future<void> _syncLiveSession({bool isFinished = false}) async {
+    if (_activeRoom == null) return;
+    try {
+      final profile = await _leaderboardRepo.getUserProfile();
+      int correct = 0;
+      _answers.forEach((qIdx, chosenOpt) {
+        if (qIdx < _shuffledQuestions.length && chosenOpt == _shuffledQuestions[qIdx].correctIndex) {
+          correct++;
+        }
+      });
+      final session = LiveStudentSession(
+        roomId: _activeRoom!.id,
+        studentId: profile.uid,
+        studentName: profile.name,
+        currentIndex: _currentIndex,
+        answeredCount: _answers.length,
+        totalQuestions: _shuffledQuestions.length,
+        currentCorrect: correct,
+        appSwitchViolations: _appSwitchCount,
+        violationTimestamps: List.from(_violationTimestamps),
+        isFinished: isFinished,
+        lastActiveAt: DateTime.now(),
+      );
+      await _examRepo.saveLiveSession(session);
+    } catch (_) {}
+  }
+
   void selectAnswer(int optionIndex) {
     if (_state != ExamUiState.inRoom) return;
     _answers[_currentIndex] = optionIndex;
+    _syncLiveSession();
     notifyListeners();
   }
 
   void goToQuestion(int index) {
     if (index >= 0 && index < _shuffledQuestions.length) {
       _currentIndex = index;
+      _syncLiveSession();
       notifyListeners();
     }
   }
@@ -190,9 +231,24 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
     );
 
     await _examRepo.submitResult(_lastResult!);
+    await _syncLiveSession(isFinished: true);
     // Award XP
     final earnedXp = (correct * 20) + 50;
     await _leaderboardRepo.updateXp(profile.uid, earnedXp);
+
+    // Save to student's personal exam history
+    final historyEntry = StudentExamHistoryEntry(
+      roomId: _activeRoom!.id,
+      roomTitle: _activeRoom!.title,
+      teacherName: _activeRoom!.creatorName,
+      score: correct,
+      totalQuestions: _shuffledQuestions.length,
+      durationMinutes: _activeRoom!.durationMinutes,
+      timeSpentSeconds: timeSpent > 0 ? timeSpent : 0,
+      submittedAt: _lastResult!.submittedAt,
+    );
+    await _examRepo.addStudentHistory(profile.uid, historyEntry);
+    _studentHistory = await _examRepo.getStudentHistory(profile.uid);
 
     _state = ExamUiState.finished;
     notifyListeners();
@@ -227,6 +283,7 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
         final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
         _violationTimestamps.add('Rời màn hình thi lúc $timeStr (Lần $_appSwitchCount)');
         _cheatWarningShown = true;
+        _syncLiveSession();
         notifyListeners();
       }
     }

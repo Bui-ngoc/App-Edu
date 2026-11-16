@@ -27,15 +27,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _registerPasswordController = TextEditingController();
   final _registerConfirmPasswordController = TextEditingController();
   bool _obscureRegisterPassword = true;
-  String _selectedGroup = 'Khối 12 - Ôn thi KTHP';
 
-  final List<String> _groupOptions = [
-    'Khối 12 - Ôn thi KTHP',
-    'Khối 11 - Lập trình & Thuật toán',
-    'Khối 8 - Tin học cơ sở',
-    'Sinh viên CNTT - ĐH & CĐ',
-    'Khối chuyên ngữ & Tự do',
-  ];
+  // Selected role for registration: 'student' or 'teacher'
+  String _selectedRole = 'student';
 
   @override
   void initState() {
@@ -76,7 +70,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       context.read<ProfileProvider>().loadProfile();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Chào mừng ${authProv.currentUser?.name ?? 'bạn'} trở lại!'),
+          content: Text(
+            'Chào mừng ${authProv.currentUser?.name ?? 'bạn'} (${authProv.currentUser?.isTeacher == true ? "Giáo viên" : "Sinh viên"}) trở lại!',
+          ),
           backgroundColor: AppColors.success,
         ),
       );
@@ -121,14 +117,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       name: name,
       email: email,
       password: password,
-      group: _selectedGroup,
+      role: _selectedRole,
     );
 
     if (success && mounted) {
       context.read<ProfileProvider>().loadProfile();
+      final roleText = _selectedRole == 'teacher' ? 'Giáo viên' : 'Sinh viên';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đăng ký tài khoản thành công! Chào mừng $name.'),
+          content: Text('Đăng ký tài khoản thành công với vai trò $roleText! Chào mừng $name.'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -142,14 +139,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
   }
 
-  Future<void> _handleQuickDemoLogin() async {
+  Future<void> _handleQuickDemoLogin(String role) async {
     final authProv = context.read<AuthProvider>();
-    final success = await authProv.quickDemoLogin();
+    final success = await authProv.quickDemoLogin(role: role);
     if (success && mounted) {
       context.read<ProfileProvider>().loadProfile();
+      final roleText = role == 'teacher' ? 'Giáo viên' : 'Sinh viên';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã đăng nhập nhanh với tài khoản sinh viên mẫu!'),
+        SnackBar(
+          content: Text('Đã đăng nhập nhanh với tài khoản $roleText mẫu!'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -211,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     color: AppColors.textSecondaryLight,
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
                 // ── Tab Bar (Đăng nhập / Đăng ký) ─────────────────────
                 Container(
@@ -239,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
                 // ── Tab Bar Views ─────────────────────────────────────
                 SizedBox(
-                  height: 440,
+                  height: 480,
                   child: TabBarView(
                     controller: _tabController,
                     children: [
@@ -268,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             controller: _loginEmailController,
             keyboardType: TextInputType.emailAddress,
             decoration: const InputDecoration(
-              labelText: 'Email học tập',
+              labelText: 'Email học tập / Giảng dạy',
               hintText: 'student@edumaster.edu.vn',
               prefixIcon: Icon(Icons.email_outlined),
               border: OutlineInputBorder(),
@@ -306,11 +304,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Tài khoản mẫu mặc định: student@edumaster.edu.vn / 123456'),
+                      content: Text(
+                        'Tài khoản mẫu:\n• SV: student@edumaster.edu.vn / 123456\n• GV: teacher@edumaster.edu.vn / 123456',
+                      ),
                     ),
                   );
                 },
-                child: const Text('Quên mật khẩu?', style: TextStyle(fontSize: 13)),
+                child: const Text('Tài khoản mẫu?', style: TextStyle(fontSize: 13)),
               ),
             ],
           ),
@@ -332,19 +332,60 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     ),
             ),
           ),
-          const SizedBox(height: 12),
-          // Quick demo login
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.bolt_rounded, color: AppColors.accent),
-              label: const Text(
-                'Dùng thử nhanh (Tài khoản mẫu)',
-                style: TextStyle(fontWeight: FontWeight.w600),
+          const SizedBox(height: 18),
+          const Row(
+            children: [
+              Expanded(child: Divider()),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Text('HOẶC DÙNG THỬ NHANH', style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
               ),
-              onPressed: authProv.isLoading ? null : _handleQuickDemoLogin,
-            ),
+              Expanded(child: Divider()),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  icon: const Icon(Icons.school_rounded, color: AppColors.primary, size: 20),
+                  label: const Text(
+                    'Sinh viên',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  onPressed: authProv.isLoading
+                      ? null
+                      : () {
+                          _loginEmailController.text = 'student@edumaster.edu.vn';
+                          _handleQuickDemoLogin('student');
+                        },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    foregroundColor: AppColors.secondary,
+                    side: const BorderSide(color: AppColors.secondary),
+                  ),
+                  icon: const Icon(Icons.supervisor_account_rounded, color: AppColors.secondary, size: 20),
+                  label: const Text(
+                    'Giáo viên',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  onPressed: authProv.isLoading
+                      ? null
+                      : () {
+                          _loginEmailController.text = 'teacher@edumaster.edu.vn';
+                          _handleQuickDemoLogin('teacher');
+                        },
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -356,13 +397,100 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── ROLE SELECTION CHOICE ─────────────────────────
+          const Text(
+            'Bạn đăng ký với vai trò gì?',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => _selectedRole = 'student'),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: _selectedRole == 'student'
+                          ? AppColors.primary.withOpacity(0.12)
+                          : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _selectedRole == 'student' ? AppColors.primary : Colors.grey.shade300,
+                        width: _selectedRole == 'student' ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.school_rounded,
+                          color: _selectedRole == 'student' ? AppColors.primary : Colors.grey,
+                          size: 26,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Sinh viên (SV)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: _selectedRole == 'student' ? AppColors.primary : Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => _selectedRole = 'teacher'),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: _selectedRole == 'teacher'
+                          ? AppColors.secondary.withOpacity(0.12)
+                          : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _selectedRole == 'teacher' ? AppColors.secondary : Colors.grey.shade300,
+                        width: _selectedRole == 'teacher' ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.supervisor_account_rounded,
+                          color: _selectedRole == 'teacher' ? AppColors.secondary : Colors.grey,
+                          size: 26,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Giáo viên (GV)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: _selectedRole == 'teacher' ? AppColors.secondary : Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
           TextField(
             controller: _registerNameController,
-            decoration: const InputDecoration(
-              labelText: 'Họ và tên học viên',
-              hintText: 'Ví dụ: Nguyễn Văn A',
-              prefixIcon: Icon(Icons.person_outline),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: _selectedRole == 'teacher' ? 'Họ và tên Giảng viên' : 'Họ và tên Sinh viên',
+              hintText: _selectedRole == 'teacher' ? 'Ví dụ: TS. Nguyễn Văn A' : 'Ví dụ: Nguyễn Văn B',
+              prefixIcon: const Icon(Icons.person_outline),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
@@ -371,25 +499,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             keyboardType: TextInputType.emailAddress,
             decoration: const InputDecoration(
               labelText: 'Email đăng ký',
-              hintText: 'user@gmail.com',
+              hintText: 'user@edumaster.edu.vn',
               prefixIcon: Icon(Icons.email_outlined),
               border: OutlineInputBorder(),
             ),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: _selectedGroup,
-            decoration: const InputDecoration(
-              labelText: 'Khối lớp / Chuyên ngành',
-              prefixIcon: Icon(Icons.school_outlined),
-              border: OutlineInputBorder(),
-            ),
-            items: _groupOptions.map((opt) {
-              return DropdownMenuItem(value: opt, child: Text(opt, style: const TextStyle(fontSize: 13)));
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) setState(() => _selectedGroup = val);
-            },
           ),
           const SizedBox(height: 12),
           Row(
@@ -429,13 +542,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.secondary,
+                backgroundColor: _selectedRole == 'teacher' ? AppColors.secondary : AppColors.primary,
                 foregroundColor: Colors.white,
               ),
               onPressed: authProv.isLoading ? null : _handleRegister,
@@ -445,9 +558,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       height: 24,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                     )
-                  : const Text(
-                      'TẠO TÀI KHOẢN MỚI',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  : Text(
+                      'TẠO TÀI KHOẢN ${_selectedRole == 'teacher' ? 'GIÁO VIÊN' : 'SINH VIÊN'}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                     ),
             ),
           ),

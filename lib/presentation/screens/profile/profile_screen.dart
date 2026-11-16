@@ -14,9 +14,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final TextEditingController _nameController    = TextEditingController();
-  final TextEditingController _groupController   = TextEditingController();
-  final TextEditingController _apiKeyController  = TextEditingController();
+  final TextEditingController _nameController     = TextEditingController();
+  final TextEditingController _apiKeyController   = TextEditingController();
   final TextEditingController _proxyUrlController = TextEditingController();
 
   @override
@@ -24,7 +23,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     final prov = context.read<ProfileProvider>();
     _nameController.text     = prov.profile.name;
-    _groupController.text    = prov.profile.currentGroup;
     _apiKeyController.text   = prov.apiKey;
     _proxyUrlController.text = prov.proxyUrl;
   }
@@ -32,7 +30,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _groupController.dispose();
     _apiKeyController.dispose();
     _proxyUrlController.dispose();
     super.dispose();
@@ -107,6 +104,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               Navigator.of(ctx).pop();
               await context.read<AuthProvider>().logout();
+              if (context.mounted) {
+                Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+              }
             },
             child: const Text('Đăng xuất'),
           ),
@@ -117,8 +117,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final prov    = context.watch<ProfileProvider>();
-    final profile = prov.profile;
+    final authProv = context.watch<AuthProvider>();
+    final user     = authProv.currentUser;
+    final prov     = context.watch<ProfileProvider>();
+    final profile  = prov.profile;
+
+    final isTeacher = user?.isTeacher ?? false;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Hồ sơ & Cài đặt')),
@@ -139,7 +143,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         : null,
                     child: (profile.localAvatarPath == null ||
                             !File(profile.localAvatarPath!).existsSync())
-                        ? const Icon(Icons.person_rounded, size: 54, color: AppColors.primary)
+                        ? Icon(
+                            isTeacher ? Icons.supervisor_account_rounded : Icons.person_rounded,
+                            size: 54,
+                            color: isTeacher ? AppColors.secondary : AppColors.primary,
+                          )
                         : null,
                   ),
                   Positioned(
@@ -168,9 +176,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
               profile.name,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            Text(profile.currentGroup,
-                style: const TextStyle(color: AppColors.textSecondaryLight)),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              decoration: BoxDecoration(
+                color: isTeacher ? AppColors.secondary.withOpacity(0.15) : AppColors.primary.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isTeacher ? Icons.supervisor_account_rounded : Icons.school_rounded,
+                    size: 16,
+                    color: isTeacher ? AppColors.secondary : AppColors.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isTeacher ? 'Giáo viên (GV)' : 'Sinh viên (SV)',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: isTeacher ? AppColors.secondary : AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 20),
+
+            // ── Chuyển đổi Vai trò (Giáo viên ↔ Sinh viên) ────────────────────
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          isTeacher ? Icons.supervisor_account_rounded : Icons.school_rounded,
+                          color: isTeacher ? AppColors.secondary : AppColors.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Chuyển đổi vai trò tài khoản',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Hiện tại bạn đang ở vai trò: ${isTeacher ? "Giáo viên (GV)" : "Sinh viên (SV)"}.\nBấm nút bên dưới để chuyển nhanh giao diện sử dụng.',
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight, height: 1.4),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isTeacher ? AppColors.primary : AppColors.secondary,
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: Icon(
+                          isTeacher ? Icons.school_rounded : Icons.supervisor_account_rounded,
+                          size: 20,
+                        ),
+                        label: Text(
+                          isTeacher ? 'Chuyển sang vai trò SINH VIÊN' : 'Chuyển sang vai trò GIÁO VIÊN',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        onPressed: () async {
+                          final targetRole = isTeacher ? 'student' : 'teacher';
+                          final success = await context.read<AuthProvider>().switchRole(targetRole);
+                          if (success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Đã chuyển sang vai trò ${isTeacher ? "Sinh viên" : "Giáo viên"} thành công!',
+                                ),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // ── Stats row ───────────────────────────────────────────────────
             Row(
@@ -203,7 +303,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 4),
                           Text('${profile.streakDays} Ngày',
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          const Text('Chuỗi học tập', style: TextStyle(fontSize: 12)),
+                          const Text('Chuỗi hoạt động', style: TextStyle(fontSize: 12)),
                         ],
                       ),
                     ),
@@ -213,14 +313,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 20),
 
-            // ── Thông tin học viên ──────────────────────────────────────────
+            // ── Thông tin tài khoản ──────────────────────────────────────────
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Thông tin học viên',
+                    Text('Thông tin cá nhân',
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium
@@ -234,22 +334,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _groupController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nhóm học tập',
-                        prefixIcon: Icon(Icons.group_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
                           prov.updateNameAndGroup(
-                              _nameController.text, _groupController.text);
+                            _nameController.text,
+                            isTeacher ? 'Giảng viên' : 'Sinh viên',
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Đã cập nhật thông tin thành công!')),
                           );
@@ -433,7 +526,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Đang đăng nhập: ${profile.email}',
+                      'Đang đăng nhập: ${user?.email ?? profile.email}',
                       style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryLight),
                     ),
                     const SizedBox(height: 14),

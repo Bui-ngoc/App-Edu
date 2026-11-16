@@ -75,7 +75,7 @@ class AuthProvider extends ChangeNotifier {
     required String name,
     required String email,
     required String password,
-    required String group,
+    String role = 'student',
   }) async {
     _isLoading = true;
     _errorMessage = '';
@@ -86,7 +86,7 @@ class AuthProvider extends ChangeNotifier {
         name: name,
         email: email,
         password: password,
-        group: group,
+        role: role,
       );
       _currentUser = user;
       _isLoggedIn = true;
@@ -101,15 +101,34 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> quickDemoLogin() async {
+  Future<bool> quickDemoLogin({String role = 'student'}) async {
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
 
     try {
-      final user = await _authRepo.quickDemoLogin();
+      final user = await _authRepo.quickDemoLogin(role: role);
       _currentUser = user;
       _isLoggedIn = true;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> switchRole(String newRole) async {
+    if (_currentUser == null) return false;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final updated = await _authRepo.switchRole(_currentUser!.email, newRole);
+      _currentUser = updated;
       _isLoading = false;
       notifyListeners();
       return true;

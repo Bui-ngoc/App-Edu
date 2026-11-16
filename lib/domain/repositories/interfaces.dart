@@ -12,13 +12,15 @@ abstract class IAuthRepository {
     required String name,
     required String email,
     required String password,
-    required String group,
+    String role = 'student',
+    String group = 'Thành viên EduMaster',
   });
   Future<AuthUser> login({
     required String email,
     required String password,
   });
-  Future<AuthUser> quickDemoLogin();
+  Future<AuthUser> quickDemoLogin({String role = 'student'});
+  Future<AuthUser> switchRole(String email, String newRole);
   Future<void> logout();
 }
 
@@ -45,6 +47,10 @@ abstract class IExamRepository {
   Future<void> createRoom(ExamRoom room);
   Future<void> submitResult(ExamSessionResult result);
   Future<List<ExamSessionResult>> getResultsForRoom(String roomId);
+  Future<void> addStudentHistory(String userId, StudentExamHistoryEntry entry);
+  Future<List<StudentExamHistoryEntry>> getStudentHistory(String userId);
+  Future<void> saveLiveSession(LiveStudentSession session);
+  Future<List<LiveStudentSession>> getLiveSessions(String roomId);
 }
 
 abstract class IDictionaryRepository {

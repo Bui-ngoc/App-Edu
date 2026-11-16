@@ -13,34 +13,54 @@ class AuthLocalDataSource {
   AuthLocalDataSource({required LeaderboardDataSource leaderboardDataSource})
       : _leaderboardDataSource = leaderboardDataSource;
 
-  /// Get list of registered users. Seed default account if empty.
+  /// Get list of registered users. Seed default accounts if missing.
   Future<List<AuthUser>> getRegisteredUsers() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = prefs.getString(_usersKey);
-    if (jsonStr == null || jsonStr.isEmpty) {
-      final defaultUsers = [
-        AuthUser(
-          id: 'user_u1',
-          name: 'Bùi Ngọc',
-          email: 'student@edumaster.edu.vn',
-          password: '123456',
-          group: 'Nhóm F - Lập trình Di động',
-          createdAt: DateTime.now(),
-        ),
-      ];
-      await prefs.setString(
-        _usersKey,
-        json.encode(defaultUsers.map((e) => e.toMap()).toList()),
-      );
-      return defaultUsers;
+    List<AuthUser> users = [];
+
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List<dynamic> list = json.decode(jsonStr);
+        users = list.map((e) => AuthUser.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      } catch (_) {}
     }
 
-    try {
-      final List<dynamic> list = json.decode(jsonStr);
-      return list.map((e) => AuthUser.fromMap(Map<String, dynamic>.from(e as Map))).toList();
-    } catch (_) {
-      return [];
+    bool needsSave = false;
+
+    // Ensure default student account exists
+    if (!users.any((u) => u.email.trim().toLowerCase() == 'student@edumaster.edu.vn')) {
+      users.add(AuthUser(
+        id: 'user_student_1',
+        name: 'Bùi Ngọc (Sinh viên)',
+        email: 'student@edumaster.edu.vn',
+        password: '123456',
+        role: 'student',
+        group: 'Sinh viên EduMaster',
+        createdAt: DateTime.now(),
+      ));
+      needsSave = true;
     }
+
+    // Ensure default teacher account exists
+    if (!users.any((u) => u.email.trim().toLowerCase() == 'teacher@edumaster.edu.vn')) {
+      users.add(AuthUser(
+        id: 'user_teacher_1',
+        name: 'TS. Nguyễn Văn (Giáo viên)',
+        email: 'teacher@edumaster.edu.vn',
+        password: '123456',
+        role: 'teacher',
+        group: 'Bộ môn Lập trình',
+        createdAt: DateTime.now(),
+      ));
+      needsSave = true;
+    }
+
+    if (needsSave || jsonStr == null || jsonStr.isEmpty) {
+      await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
+    }
+
+    return users;
   }
 
   /// Check whether a user is currently logged in
@@ -73,12 +93,13 @@ class AuthLocalDataSource {
     required String name,
     required String email,
     required String password,
-    required String group,
+    String role = 'student',
+    String group = 'Thành viên EduMaster',
   }) async {
     final cleanEmail = email.trim().toLowerCase();
     final cleanPassword = password.trim();
     final cleanName = name.trim();
-    final cleanGroup = group.trim();
+    final cleanRole = role.trim().toLowerCase();
 
     if (cleanName.isEmpty) {
       throw Exception('Vui lòng nhập họ và tên của bạn.');
@@ -103,7 +124,8 @@ class AuthLocalDataSource {
       name: cleanName,
       email: cleanEmail,
       password: cleanPassword,
-      group: cleanGroup.isNotEmpty ? cleanGroup : 'Khối 12 - Ôn thi KTHP',
+      role: cleanRole == 'teacher' ? 'teacher' : 'student',
+      group: cleanRole == 'teacher' ? 'Giảng viên' : 'Sinh viên',
       createdAt: DateTime.now(),
     );
 
@@ -163,10 +185,18 @@ class AuthLocalDataSource {
   }
 
   /// Quick Demo Login (for grading/quick presentation)
-  Future<AuthUser> quickDemoLogin() async {
+  Future<AuthUser> quickDemoLogin({String role = 'student'}) async {
     final users = await getRegisteredUsers();
-    if (users.isNotEmpty) {
-      final demoUser = users.first;
+    final targetRole = role.toLowerCase();
+    AuthUser? demoUser;
+
+    try {
+      demoUser = users.firstWhere((u) => u.role == targetRole);
+    } catch (_) {
+      if (users.isNotEmpty) demoUser = users.first;
+    }
+
+    if (demoUser != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_currentSessionKey, demoUser.email);
       await prefs.setBool(_isLoggedInKey, true);
@@ -174,12 +204,35 @@ class AuthLocalDataSource {
       return demoUser;
     }
 
+    final isTeacher = targetRole == 'teacher';
     return register(
-      name: 'Bùi Ngọc (Sinh viên)',
-      email: 'student@edumaster.edu.vn',
+      name: isTeacher ? 'TS. Nguyễn Văn (Giáo viên)' : 'Bùi Ngọc (Sinh viên)',
+      email: isTeacher ? 'teacher@edumaster.edu.vn' : 'student@edumaster.edu.vn',
       password: '123456',
-      group: 'Nhóm F - Lập trình Di động',
+      role: isTeacher ? 'teacher' : 'student',
     );
+  }
+
+  /// Switch role for current account
+  Future<AuthUser> switchRole(String email, String newRole) async {
+    final prefs = await SharedPreferences.getInstance();
+    final users = await getRegisteredUsers();
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanRole = newRole.trim().toLowerCase() == 'teacher' ? 'teacher' : 'student';
+
+    final userIdx = users.indexWhere((u) => u.email.trim().toLowerCase() == cleanEmail);
+    if (userIdx >= 0) {
+      final oldUser = users[userIdx];
+      final updatedUser = oldUser.copyWith(
+        role: cleanRole,
+        group: cleanRole == 'teacher' ? 'Giảng viên' : 'Sinh viên',
+      );
+      users[userIdx] = updatedUser;
+      await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
+      await _syncProfile(updatedUser);
+      return updatedUser;
+    }
+    throw Exception('Không tìm thấy người dùng');
   }
 
   /// Logout
