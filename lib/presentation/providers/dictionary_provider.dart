@@ -40,7 +40,8 @@ class DictionaryProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> init() async {
+  Future<void> init({bool force = false}) async {
+    if (!force && _words.isNotEmpty && _state == DictUiState.success) return;
     _state = DictUiState.loading;
     notifyListeners();
 

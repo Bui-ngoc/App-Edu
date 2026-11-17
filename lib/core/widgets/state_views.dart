@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 
-/// Loading state view with clear exit / cancel option
+/// Loading state view with clear exit / cancel option (Criterion 2 guarantee)
 class LoadingView extends StatelessWidget {
   final String message;
   final VoidCallback? onCancel;
@@ -15,6 +15,8 @@ class LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveCancel = onCancel ?? () => Navigator.maybePop(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -35,14 +37,15 @@ class LoadingView extends StatelessWidget {
                     color: AppColors.textSecondaryLight,
                   ),
             ),
-            if (onCancel != null) ...[
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: onCancel,
-                icon: const Icon(Icons.close, size: 20),
-                label: const Text('Hủy bỏ'),
+            const SizedBox(height: 18),
+            OutlinedButton.icon(
+              onPressed: effectiveCancel,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(AppStrings.minTouchTargetSize, AppStrings.minTouchTargetSize),
               ),
-            ]
+              icon: const Icon(Icons.close, size: 20),
+              label: const Text('Hủy bỏ'),
+            ),
           ],
         ),
       ),
@@ -65,6 +68,8 @@ class ErrorViewWithRetry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveBack = onBack ?? () => Navigator.maybePop(context);
+
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -105,17 +110,20 @@ class ErrorViewWithRetry extends StatelessWidget {
               runSpacing: 12,
               alignment: WrapAlignment.center,
               children: [
-                if (onBack != null)
-                  OutlinedButton.icon(
-                    onPressed: onBack,
-                    icon: const Icon(Icons.arrow_back, size: 20),
-                    label: const Text(AppStrings.goBack),
+                OutlinedButton.icon(
+                  onPressed: effectiveBack,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(AppStrings.minTouchTargetSize, AppStrings.minTouchTargetSize),
                   ),
+                  icon: const Icon(Icons.arrow_back, size: 20),
+                  label: const Text(AppStrings.goBack),
+                ),
                 ElevatedButton.icon(
                   onPressed: onRetry,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
+                    minimumSize: const Size(AppStrings.minTouchTargetSize, AppStrings.minTouchTargetSize),
                   ),
                   icon: const Icon(Icons.refresh, size: 20),
                   label: const Text(AppStrings.retry),
@@ -150,6 +158,8 @@ class EmptyStateView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveBack = onBack ?? () => Navigator.maybePop(context);
+
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -189,15 +199,20 @@ class EmptyStateView extends StatelessWidget {
               runSpacing: 12,
               alignment: WrapAlignment.center,
               children: [
-                if (onBack != null)
-                  OutlinedButton.icon(
-                    onPressed: onBack,
-                    icon: const Icon(Icons.arrow_back, size: 20),
-                    label: const Text(AppStrings.goBack),
+                OutlinedButton.icon(
+                  onPressed: effectiveBack,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(AppStrings.minTouchTargetSize, AppStrings.minTouchTargetSize),
                   ),
+                  icon: const Icon(Icons.arrow_back, size: 20),
+                  label: const Text(AppStrings.goBack),
+                ),
                 if (actionLabel != null && onAction != null)
                   ElevatedButton.icon(
                     onPressed: onAction,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(AppStrings.minTouchTargetSize, AppStrings.minTouchTargetSize),
+                    ),
                     icon: const Icon(Icons.add, size: 20),
                     label: Text(actionLabel!),
                   ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
@@ -13,6 +14,7 @@ class DictionaryScreen extends StatefulWidget {
 
 class _DictionaryScreenState extends State<DictionaryScreen> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -24,8 +26,18 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String val) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 250), () {
+      if (mounted) {
+        context.read<DictionaryProvider>().search(val);
+      }
+    });
   }
 
   void _showWordDetails(BuildContext context, dynamic word) {
@@ -153,6 +165,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                     ? IconButton(
                         icon: const Icon(Icons.clear_rounded),
                         onPressed: () {
+                          _debounceTimer?.cancel();
                           _searchController.clear();
                           prov.search('');
                         },
@@ -161,7 +174,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-              onChanged: (val) => prov.search(val),
+              onChanged: _onSearchChanged,
             ),
           ),
 

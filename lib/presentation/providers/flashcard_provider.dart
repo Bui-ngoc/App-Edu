@@ -34,7 +34,8 @@ class FlashcardProvider extends ChangeNotifier {
   bool _isCardFlipped = false;
   bool get isCardFlipped => _isCardFlipped;
 
-  Future<void> loadDecks() async {
+  Future<void> loadDecks({bool force = false}) async {
+    if (!force && _decks.isNotEmpty && _state == FlashcardUiState.success) return;
     _state = FlashcardUiState.loading;
     _errorMessage = '';
     notifyListeners();

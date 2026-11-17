@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
@@ -115,6 +116,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildAvatarWidget(String? avatarPath, bool isTeacher) {
+    if (avatarPath != null && avatarPath.trim().isNotEmpty) {
+      final file = File(avatarPath);
+      return ClipOval(
+        child: Image.file(
+          file,
+          width: 108,
+          height: 108,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return CircleAvatar(
+              radius: 54,
+              backgroundColor: (isTeacher ? AppColors.secondary : AppColors.primary).withOpacity(0.15),
+              child: Icon(
+                isTeacher ? Icons.supervisor_account_rounded : Icons.person_rounded,
+                size: 54,
+                color: isTeacher ? AppColors.secondary : AppColors.primary,
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    return CircleAvatar(
+      radius: 54,
+      backgroundColor: (isTeacher ? AppColors.secondary : AppColors.primary).withOpacity(0.15),
+      child: Icon(
+        isTeacher ? Icons.supervisor_account_rounded : Icons.person_rounded,
+        size: 54,
+        color: isTeacher ? AppColors.secondary : AppColors.primary,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProv = context.watch<AuthProvider>();
@@ -134,37 +170,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Center(
               child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 54,
-                    backgroundColor: AppColors.primary.withAlpha(38),
-                    backgroundImage: (profile.localAvatarPath != null &&
-                            File(profile.localAvatarPath!).existsSync())
-                        ? FileImage(File(profile.localAvatarPath!))
-                        : null,
-                    child: (profile.localAvatarPath == null ||
-                            !File(profile.localAvatarPath!).existsSync())
-                        ? Icon(
-                            isTeacher ? Icons.supervisor_account_rounded : Icons.person_rounded,
-                            size: 54,
-                            color: isTeacher ? AppColors.secondary : AppColors.primary,
-                          )
-                        : null,
-                  ),
+                  _buildAvatarWidget(profile.localAvatarPath, isTeacher),
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: SizedBox(
-                      width: 48,
-                      height: 48,
+                      width: 44,
+                      height: 44,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           shape: const CircleBorder(),
                           padding: EdgeInsets.zero,
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: isTeacher ? AppColors.secondary : AppColors.primary,
                           foregroundColor: Colors.white,
                         ),
                         onPressed: _showAvatarOptions,
-                        child: const Icon(Icons.camera_alt_rounded, size: 20),
+                        child: const Icon(Icons.camera_alt_rounded, size: 18),
                       ),
                     ),
                   ),
@@ -203,7 +224,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
+
+            // ── Mã ID người dùng (SV/GV) ───────────────────────────────
+            InkWell(
+              onTap: () {
+                final id = user?.id ?? profile.uid;
+                Clipboard.setData(ClipboardData(text: id));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Đã sao chép mã ID: $id'),
+                    backgroundColor: AppColors.success,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.badge_rounded, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Mã ID: ${user?.id ?? profile.uid}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.copy_rounded, size: 14, color: AppColors.primary),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // ── Chuyển đổi Vai trò (Giáo viên ↔ Sinh viên) ────────────────────
             Card(

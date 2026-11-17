@@ -59,7 +59,10 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
   List<StudentExamHistoryEntry> _studentHistory = [];
   List<StudentExamHistoryEntry> get studentHistory => _studentHistory;
 
-  Future<void> loadRooms() async {
+  Future<void> loadRooms({bool force = false}) async {
+    if (!force && _availableRooms.isNotEmpty && _state == ExamUiState.initial) {
+      return;
+    }
     _state = ExamUiState.loading;
     _errorMessage = '';
     notifyListeners();
@@ -82,7 +85,8 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
     return _examRepo.getLiveSessions(roomId);
   }
 
-  Future<void> loadStudentHistory(String userId) async {
+  Future<void> loadStudentHistory(String userId, {bool force = false}) async {
+    if (!force && _studentHistory.isNotEmpty) return;
     _studentHistory = await _examRepo.getStudentHistory(userId);
     notifyListeners();
   }

@@ -23,6 +23,11 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          minimumSize: const Size(AppStrings.minTouchTargetSize, AppStrings.minTouchTargetSize),
+        ),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(AppStrings.minTouchTargetSize, AppStrings.minTouchTargetSize),
@@ -72,6 +77,11 @@ class AppTheme {
         foregroundColor: AppColors.textPrimaryDark,
         elevation: 0,
         centerTitle: true,
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          minimumSize: const Size(AppStrings.minTouchTargetSize, AppStrings.minTouchTargetSize),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

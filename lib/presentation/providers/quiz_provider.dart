@@ -27,28 +27,28 @@ class QuizProvider extends ChangeNotifier {
   List<QuizQuestion> _activeQuestions = [];
   List<QuizQuestion> get activeQuestions => _activeQuestions;
 
-  int _selectedGrade = 0; // 0: All, 1..20
+  int _selectedGrade = 0;
   int get selectedGrade => _selectedGrade;
 
-  String _selectedDifficulty = 'all'; // 'all', 'easy', 'medium', 'hard'
+  String _selectedDifficulty = 'all';
   String get selectedDifficulty => _selectedDifficulty;
 
-  int _examDurationMinutes = 60; // Standard 60 mins
+  int _examDurationMinutes = 60;
   int get examDurationMinutes => _examDurationMinutes;
 
-  int _examQuestionCount = 50; // Standard 50 questions
+  int _examQuestionCount = 50;
   int get examQuestionCount => _examQuestionCount;
 
   QuizMode _currentMode = QuizMode.practice;
   QuizMode get currentMode => _currentMode;
 
-  bool _isEnglish = false; // Bilingual toggle (Topic #32 Extension)
+  bool _isEnglish = false;
   bool get isEnglish => _isEnglish;
 
   int _currentIndex = 0;
   int get currentIndex => _currentIndex;
 
-  final Map<int, int> _userAnswers = {}; // questionIndex -> chosen option index
+  final Map<int, int> _userAnswers = {};
   Map<int, int> get userAnswers => _userAnswers;
 
   int _score = 0;
@@ -57,12 +57,14 @@ class QuizProvider extends ChangeNotifier {
   int _timeSpentSeconds = 0;
   int get timeSpentSeconds => _timeSpentSeconds;
 
-  // Countdown timer for Exam mode (Topic #32 Extension)
+  // ── Timer: ValueNotifier so ONLY the timer widget rebuilds each tick ──────
   Timer? _countdownTimer;
-  int _secondsRemaining = 0;
-  int get secondsRemaining => _secondsRemaining;
+  final ValueNotifier<int> timerNotifier = ValueNotifier(0);
   bool _isTimeUp = false;
   bool get isTimeUp => _isTimeUp;
+
+  // Keep secondsRemaining as a getter from timerNotifier for backward compat
+  int get secondsRemaining => timerNotifier.value;
 
   // AI explanation state
   bool _isExplaining = false;
@@ -70,8 +72,18 @@ class QuizProvider extends ChangeNotifier {
   String _aiExplanation = '';
   String get aiExplanation => _aiExplanation;
 
-  /// Standard Practice / Wrong Review load
-  Future<void> loadQuestions({int grade = 0, QuizMode mode = QuizMode.practice}) async {
+  Future<void> loadQuestions({
+    int grade = 0,
+    QuizMode mode = QuizMode.practice,
+    bool force = false,
+  }) async {
+    if (!force &&
+        mode == QuizMode.practice &&
+        grade == 0 &&
+        _allQuestions.isNotEmpty &&
+        _state == QuizUiState.success) {
+      return;
+    }
     _state = QuizUiState.loading;
     _errorMessage = '';
     _selectedGrade = grade;
@@ -115,7 +127,6 @@ class QuizProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Full-featured Timed Exam with filters for Grade, Difficulty, Count and Duration
   Future<void> startTimedExam({
     int grade = 0,
     String difficulty = 'all',
@@ -141,12 +152,9 @@ class QuizProvider extends ChangeNotifier {
       _allQuestions = await _quizRepo.getAllQuestions();
       List<QuizQuestion> pool = List.from(_allQuestions);
 
-      // 1. Filter by Grade if specified
       if (grade > 0) {
         pool = pool.where((q) => q.grade == grade).toList();
       }
-
-      // 2. Filter by Difficulty if specified
       if (difficulty == 'easy') {
         pool = pool.where(_isEasyQuestion).toList();
       } else if (difficulty == 'medium') {
@@ -155,15 +163,9 @@ class QuizProvider extends ChangeNotifier {
         pool = pool.where(_isHardQuestion).toList();
       }
 
-      if (pool.isEmpty) {
-        // Fallback to all questions if specific filter is too restrictive
-        pool = List.from(_allQuestions);
-      }
-
-      // 3. Shuffle pool
+      if (pool.isEmpty) pool = List.from(_allQuestions);
       pool.shuffle();
 
-      // 4. Limit to questionCount
       final actualCount = pool.length < questionCount ? pool.length : questionCount;
       _activeQuestions = pool.sublist(0, actualCount);
 
@@ -214,19 +216,20 @@ class QuizProvider extends ChangeNotifier {
         text.contains('ai');
   }
 
+  // ── Timer: tick only updates ValueNotifier, NOT notifyListeners ──────────
   void _startTimer(int totalSeconds) {
     _countdownTimer?.cancel();
-    _secondsRemaining = totalSeconds;
+    timerNotifier.value = totalSeconds;
     _isTimeUp = false;
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsRemaining > 0) {
-        _secondsRemaining--;
-        notifyListeners();
+      if (timerNotifier.value > 0) {
+        timerNotifier.value--;
+        // Do NOT call notifyListeners() here — only timer widget rebuilds
       } else {
         _isTimeUp = true;
         timer.cancel();
         calculateScore();
-        notifyListeners();
+        notifyListeners(); // Only on timeout — triggers isTimeUp UI
       }
     });
   }
@@ -241,7 +244,6 @@ class QuizProvider extends ChangeNotifier {
     _userAnswers[_currentIndex] = optionIndex;
     _aiExplanation = '';
 
-    // In practice mode, evaluate immediately
     if (_currentMode != QuizMode.exam) {
       final question = _activeQuestions[_currentIndex];
       if (optionIndex == question.correctIndex) {
@@ -290,7 +292,7 @@ class QuizProvider extends ChangeNotifier {
       }
     }
     _score = count;
-    _timeSpentSeconds = (_examDurationMinutes * 60) - _secondsRemaining;
+    _timeSpentSeconds = (_examDurationMinutes * 60) - timerNotifier.value;
     if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
     notifyListeners();
   }
@@ -311,7 +313,8 @@ class QuizProvider extends ChangeNotifier {
       );
       _aiExplanation = res;
     } catch (e) {
-      _aiExplanation = '💡 Lời giải tham khảo: ${_activeQuestions[_currentIndex].explanationVi}';
+      _aiExplanation =
+          '💡 Lời giải tham khảo: ${_activeQuestions[_currentIndex].explanationVi}';
     } finally {
       _isExplaining = false;
       notifyListeners();
@@ -321,6 +324,7 @@ class QuizProvider extends ChangeNotifier {
   @override
   void dispose() {
     _countdownTimer?.cancel();
+    timerNotifier.dispose();
     super.dispose();
   }
 }

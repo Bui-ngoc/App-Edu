@@ -32,7 +32,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (scannedCode != null && scannedCode.isNotEmpty && context.mounted) {
       if (!isTeacher) {
         // If student scans QR, switch to Exam tab and join
-        setState(() => _currentIndex = 2);
+        setState(() {
+          _currentIndex = 2;
+        });
         await context.read<ExamProvider>().joinRoom(scannedCode);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -44,9 +46,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProv = context.watch<AuthProvider>();
-    final isTeacher = authProv.currentUser?.isTeacher ?? false;
+    // Select ONLY isTeacher to prevent rebuilds on other auth state changes
+    final isTeacher = context.select<AuthProvider, bool>(
+      (a) => a.currentUser?.isTeacher ?? false,
+    );
     final profile = context.watch<ProfileProvider>().profile;
+
+    final hasAvatar = profile.localAvatarPath != null &&
+        profile.localAvatarPath!.isNotEmpty &&
+        File(profile.localAvatarPath!).existsSync();
 
     final List<Widget> screens = isTeacher
         ? const [
@@ -62,6 +70,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             LeaderboardScreen(),
           ];
 
+    final safeIndex = _currentIndex < screens.length ? _currentIndex : 0;
+
     final List<NavigationDestination> destinations = isTeacher
         ? const [
             NavigationDestination(
@@ -75,9 +85,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Lịch sử phòng thi',
             ),
             NavigationDestination(
-              icon: Icon(Icons.leaderboard_outlined),
-              selectedIcon: Icon(Icons.leaderboard_rounded, color: AppColors.secondary),
-              label: 'Xếp hạng',
+              icon: Icon(Icons.local_fire_department_outlined),
+              selectedIcon: Icon(Icons.local_fire_department_rounded, color: AppColors.secondary),
+              label: 'Chuỗi ngày',
             ),
           ]
         : const [
@@ -102,13 +112,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Từ điển IT',
             ),
             NavigationDestination(
-              icon: Icon(Icons.leaderboard_outlined),
-              selectedIcon: Icon(Icons.leaderboard_rounded, color: AppColors.primary),
-              label: 'Xếp hạng',
+              icon: Icon(Icons.local_fire_department_outlined),
+              selectedIcon: Icon(Icons.local_fire_department_rounded, color: AppColors.primary),
+              label: 'Chuỗi ngày',
             ),
           ];
 
     return Scaffold(
+      backgroundColor: isTeacher ? const Color(0xFFFBFBFB) : Colors.white,
       appBar: AppBar(
         title: Row(
           children: [
@@ -173,12 +184,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               child: CircleAvatar(
                 radius: 18,
                 backgroundColor: (isTeacher ? AppColors.secondary : AppColors.primary).withOpacity(0.15),
-                backgroundImage: (profile.localAvatarPath != null &&
-                        File(profile.localAvatarPath!).existsSync())
-                    ? FileImage(File(profile.localAvatarPath!))
-                    : null,
-                child: (profile.localAvatarPath == null ||
-                        !File(profile.localAvatarPath!).existsSync())
+                backgroundImage: hasAvatar ? FileImage(File(profile.localAvatarPath!)) : null,
+                child: !hasAvatar
                     ? Icon(
                         isTeacher ? Icons.supervisor_account_rounded : Icons.person,
                         size: 18,
@@ -191,12 +198,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         ],
       ),
       body: IndexedStack(
-        index: _currentIndex < screens.length ? _currentIndex : 0,
+        index: safeIndex,
         children: screens,
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex < destinations.length ? _currentIndex : 0,
-        onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
+        selectedIndex: safeIndex,
+        onDestinationSelected: (idx) {
+          setState(() {
+            _currentIndex = idx;
+          });
+        },
         destinations: destinations,
       ),
     );

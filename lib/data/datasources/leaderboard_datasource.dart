@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/leaderboard_entry.dart';
@@ -7,23 +6,26 @@ class LeaderboardDataSource {
   static const String _profileKey = 'edumaster_user_profile';
   static const String _leaderboardKey = 'edumaster_leaderboard_list';
 
-  final StreamController<List<LeaderboardEntry>> _controller =
-      StreamController<List<LeaderboardEntry>>.broadcast();
+  SharedPreferences? _prefs;
+  List<LeaderboardEntry>? _cachedEntries;
+  UserProfile? _cachedProfile;
 
-  Stream<List<LeaderboardEntry>> get leaderboardStream {
-    _emitCurrent();
-    return _controller.stream;
+  Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
   }
 
-  Future<void> _emitCurrent() async {
+  Stream<List<LeaderboardEntry>> get leaderboardStream async* {
     final list = await getEntries();
-    if (!_controller.isClosed) {
-      _controller.add(list);
-    }
+    yield list;
   }
 
   Future<List<LeaderboardEntry>> getEntries() async {
-    final prefs = await SharedPreferences.getInstance();
+    if (_cachedEntries != null && _cachedEntries!.isNotEmpty) {
+      return _cachedEntries!;
+    }
+
+    final prefs = await _getPrefs();
     final jsonStr = prefs.getString(_leaderboardKey);
     if (jsonStr == null || jsonStr.isEmpty) {
       final initialData = [
@@ -78,6 +80,7 @@ class LeaderboardDataSource {
           groupName: 'Nhóm F - KTHP',
         ),
       ];
+      _cachedEntries = initialData;
       await prefs.setString(_leaderboardKey, json.encode(initialData.map((e) => e.toMap()).toList()));
       return initialData;
     }
@@ -86,14 +89,15 @@ class LeaderboardDataSource {
       final List<dynamic> list = json.decode(jsonStr);
       final entries = list.map((e) => LeaderboardEntry.fromMap(Map<String, dynamic>.from(e as Map))).toList();
       entries.sort((a, b) => b.xp.compareTo(a.xp));
+      _cachedEntries = entries;
       return entries;
     } catch (_) {
+      _cachedEntries = [];
       return [];
     }
   }
 
   Future<void> updateXp(String userId, int addedXp) async {
-    final prefs = await SharedPreferences.getInstance();
     final entries = await getEntries();
     final idx = entries.indexWhere((e) => e.id == userId);
     if (idx >= 0) {
@@ -109,13 +113,17 @@ class LeaderboardDataSource {
         groupName: old.groupName,
       );
       entries.sort((a, b) => b.xp.compareTo(a.xp));
+      _cachedEntries = entries;
+
+      final prefs = await _getPrefs();
       await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
-      _emitCurrent();
     }
   }
 
   Future<UserProfile> getUserProfile() async {
-    final prefs = await SharedPreferences.getInstance();
+    if (_cachedProfile != null) return _cachedProfile!;
+
+    final prefs = await _getPrefs();
     final jsonStr = prefs.getString(_profileKey);
     if (jsonStr == null || jsonStr.isEmpty) {
       const defaultProfile = UserProfile(
@@ -128,18 +136,22 @@ class LeaderboardDataSource {
         currentGroup: 'Nhóm F - Lập trình Di động',
       );
       await saveUserProfile(defaultProfile);
+      _cachedProfile = defaultProfile;
       return defaultProfile;
     }
 
     try {
-      return UserProfile.fromMap(json.decode(jsonStr) as Map<String, dynamic>);
+      _cachedProfile = UserProfile.fromMap(json.decode(jsonStr) as Map<String, dynamic>);
+      return _cachedProfile!;
     } catch (_) {
-      return const UserProfile(uid: 'user_current', name: 'Sinh viên', email: 'student@edumaster.edu.vn');
+      _cachedProfile = const UserProfile(uid: 'user_current', name: 'Sinh viên', email: 'student@edumaster.edu.vn');
+      return _cachedProfile!;
     }
   }
 
   Future<void> saveUserProfile(UserProfile profile) async {
-    final prefs = await SharedPreferences.getInstance();
+    _cachedProfile = profile;
+    final prefs = await _getPrefs();
     await prefs.setString(_profileKey, json.encode(profile.toMap()));
 
     // Keep leaderboard in sync
@@ -157,12 +169,10 @@ class LeaderboardDataSource {
         groupName: profile.currentGroup,
       );
       entries.sort((a, b) => b.xp.compareTo(a.xp));
+      _cachedEntries = entries;
       await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
-      _emitCurrent();
     }
   }
 
-  void dispose() {
-    _controller.close();
-  }
+  void dispose() {}
 }

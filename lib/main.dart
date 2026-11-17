@@ -40,7 +40,7 @@ void main() async {
   final geminiAiDataSource = GeminiAiDataSource();
   final authLocalDataSource = AuthLocalDataSource(leaderboardDataSource: leaderboardDataSource);
 
-  // Instantiate repositories (Clean Architecture: Domain interfaces satisfied)
+  // Instantiate repositories (Clean Architecture)
   final quizRepo = QuizRepositoryImpl(dataSource: quizLocalDataSource);
   final flashcardRepo = FlashcardRepositoryImpl(dataSource: sm2StorageDataSource);
   final examRepo = ExamRepositoryImpl(dataSource: examStorageDataSource);
@@ -87,24 +87,40 @@ class EduMasterApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profileProv = context.watch<ProfileProvider>();
-    final authProv = context.watch<AuthProvider>();
+    // Select ONLY isDarkMode so MaterialApp is NEVER rebuilt on profile/XP/avatar updates
+    final isDarkMode = context.select<ProfileProvider, bool>((p) => p.isDarkMode);
 
     return MaterialApp(
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: profileProv.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: authProv.isLoading
-          ? const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-            )
-          : authProv.isLoggedIn
-              ? const MainNavigationScreen()
-              : const LoginScreen(),
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      home: const AuthWrapper(),
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authProv = context.watch<AuthProvider>();
+
+    if (authProv.isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (authProv.isLoggedIn) {
+      return const MainNavigationScreen();
+    }
+
+    return const LoginScreen();
   }
 }

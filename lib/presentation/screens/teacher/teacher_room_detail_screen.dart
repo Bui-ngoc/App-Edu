@@ -30,9 +30,9 @@ class _TeacherRoomDetailScreenState extends State<TeacherRoomDetailScreen>
     _tabController = TabController(length: 3, vsync: this);
     _loadRoomData();
 
-    // Auto-refresh live monitoring data every 3 seconds
-    _liveTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      if (mounted) {
+    // Auto-refresh live monitoring data every 4 seconds only when on the live monitoring tab
+    _liveTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted && _tabController.index == 0) {
         _fetchLiveSessionsOnly();
       }
     });

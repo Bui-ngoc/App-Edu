@@ -9,13 +9,24 @@ class AuthLocalDataSource {
   static const String _isLoggedInKey = 'edumaster_is_user_logged_in';
 
   final LeaderboardDataSource _leaderboardDataSource;
+  SharedPreferences? _prefs;
+  List<AuthUser>? _cachedUsers;
 
   AuthLocalDataSource({required LeaderboardDataSource leaderboardDataSource})
       : _leaderboardDataSource = leaderboardDataSource;
 
+  Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
   /// Get list of registered users. Seed default accounts if missing.
   Future<List<AuthUser>> getRegisteredUsers() async {
-    final prefs = await SharedPreferences.getInstance();
+    if (_cachedUsers != null && _cachedUsers!.isNotEmpty) {
+      return _cachedUsers!;
+    }
+
+    final prefs = await _getPrefs();
     final jsonStr = prefs.getString(_usersKey);
     List<AuthUser> users = [];
 
@@ -60,18 +71,19 @@ class AuthLocalDataSource {
       await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
     }
 
+    _cachedUsers = users;
     return users;
   }
 
   /// Check whether a user is currently logged in
   Future<bool> isLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     return prefs.getBool(_isLoggedInKey) ?? false;
   }
 
   /// Get currently logged in user
   Future<AuthUser?> getCurrentUser() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     final loggedIn = prefs.getBool(_isLoggedInKey) ?? false;
     if (!loggedIn) return null;
 
@@ -111,7 +123,6 @@ class AuthLocalDataSource {
       throw Exception('Mật khẩu phải có độ dài tối thiểu 6 ký tự.');
     }
 
-    final prefs = await SharedPreferences.getInstance();
     final users = await getRegisteredUsers();
 
     final exists = users.any((u) => u.email.trim().toLowerCase() == cleanEmail);
@@ -119,17 +130,22 @@ class AuthLocalDataSource {
       throw Exception('Email "$cleanEmail" đã được đăng ký. Vui lòng đăng nhập!');
     }
 
+    final prefix = cleanRole == 'teacher' ? 'GV' : 'SV';
+    final randNum = 1000 + (DateTime.now().millisecondsSinceEpoch % 9000);
     final newUser = AuthUser(
-      id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+      id: '$prefix$randNum',
       name: cleanName,
       email: cleanEmail,
       password: cleanPassword,
       role: cleanRole == 'teacher' ? 'teacher' : 'student',
-      group: cleanRole == 'teacher' ? 'Giảng viên' : 'Sinh viên',
+      group: cleanRole == 'teacher' ? 'Bộ môn Lập trình' : 'Nhóm F - Lập trình Di động',
       createdAt: DateTime.now(),
     );
 
     users.add(newUser);
+    _cachedUsers = users;
+
+    final prefs = await _getPrefs();
     await prefs.setString(
       _usersKey,
       json.encode(users.map((e) => e.toMap()).toList()),
@@ -174,7 +190,7 @@ class AuthLocalDataSource {
       throw Exception('Mật khẩu không chính xác. Vui lòng kiểm tra lại!');
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setString(_currentSessionKey, cleanEmail);
     await prefs.setBool(_isLoggedInKey, true);
 
@@ -197,7 +213,7 @@ class AuthLocalDataSource {
     }
 
     if (demoUser != null) {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _getPrefs();
       await prefs.setString(_currentSessionKey, demoUser.email);
       await prefs.setBool(_isLoggedInKey, true);
       await _syncProfile(demoUser);
@@ -215,7 +231,6 @@ class AuthLocalDataSource {
 
   /// Switch role for current account
   Future<AuthUser> switchRole(String email, String newRole) async {
-    final prefs = await SharedPreferences.getInstance();
     final users = await getRegisteredUsers();
     final cleanEmail = email.trim().toLowerCase();
     final cleanRole = newRole.trim().toLowerCase() == 'teacher' ? 'teacher' : 'student';
@@ -228,6 +243,9 @@ class AuthLocalDataSource {
         group: cleanRole == 'teacher' ? 'Giảng viên' : 'Sinh viên',
       );
       users[userIdx] = updatedUser;
+      _cachedUsers = users;
+
+      final prefs = await _getPrefs();
       await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
       await _syncProfile(updatedUser);
       return updatedUser;
@@ -235,9 +253,47 @@ class AuthLocalDataSource {
     throw Exception('Không tìm thấy người dùng');
   }
 
+  /// Find a user by Student/Teacher ID or Email
+  Future<AuthUser?> getUserById(String idOrEmail) async {
+    final clean = idOrEmail.trim().toLowerCase();
+    if (clean.isEmpty) return null;
+    final users = await getRegisteredUsers();
+    try {
+      return users.firstWhere(
+        (u) =>
+            u.id.toLowerCase() == clean ||
+            u.email.toLowerCase() == clean ||
+            (clean == 'sv1001' && u.id == 'user_student_1') ||
+            (clean == 'gv2001' && u.id == 'user_teacher_1'),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Update user's study group
+  Future<void> updateUserGroup(String userId, String newGroupName) async {
+    final users = await getRegisteredUsers();
+    final cleanId = userId.trim().toLowerCase();
+    final idx = users.indexWhere((u) =>
+        u.id.toLowerCase() == cleanId ||
+        (cleanId == 'sv1001' && u.id == 'user_student_1') ||
+        (cleanId == 'gv2001' && u.id == 'user_teacher_1'));
+
+    if (idx >= 0) {
+      final updated = users[idx].copyWith(group: newGroupName.trim());
+      users[idx] = updated;
+      _cachedUsers = users;
+
+      final prefs = await _getPrefs();
+      await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
+      await _syncProfile(updated);
+    }
+  }
+
   /// Logout
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setBool(_isLoggedInKey, false);
     await prefs.remove(_currentSessionKey);
   }

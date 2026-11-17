@@ -319,8 +319,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: authProv.isLoading ? null : _handleLogin,
-              child: authProv.isLoading
+              onPressed: (authProv.isLoading || authProv.isPerformingAction) ? null : _handleLogin,
+              child: (authProv.isLoading || authProv.isPerformingAction)
                   ? const SizedBox(
                       width: 24,
                       height: 24,
@@ -356,7 +356,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     'Sinh viên',
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                   ),
-                  onPressed: authProv.isLoading
+                  onPressed: (authProv.isLoading || authProv.isPerformingAction)
                       ? null
                       : () {
                           _loginEmailController.text = 'student@edumaster.edu.vn';
@@ -377,7 +377,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     'Giáo viên',
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                   ),
-                  onPressed: authProv.isLoading
+                  onPressed: (authProv.isLoading || authProv.isPerformingAction)
                       ? null
                       : () {
                           _loginEmailController.text = 'teacher@edumaster.edu.vn';
@@ -551,8 +551,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 backgroundColor: _selectedRole == 'teacher' ? AppColors.secondary : AppColors.primary,
                 foregroundColor: Colors.white,
               ),
-              onPressed: authProv.isLoading ? null : _handleRegister,
-              child: authProv.isLoading
+              onPressed: (authProv.isLoading || authProv.isPerformingAction) ? null : _handleRegister,
+              child: (authProv.isLoading || authProv.isPerformingAction)
                   ? const SizedBox(
                       width: 24,
                       height: 24,

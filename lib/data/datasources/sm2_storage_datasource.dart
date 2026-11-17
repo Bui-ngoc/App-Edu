@@ -7,8 +7,19 @@ class Sm2StorageDataSource {
   static const String _decksKey = 'edumaster_flashcard_decks';
   static const String _cardsKeyPrefix = 'edumaster_flashcards_deck_';
 
+  SharedPreferences? _prefs;
+  List<FlashcardDeck>? _cachedDecks;
+  final Map<String, List<FlashcardItem>> _cachedCards = {};
+
+  Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
   Future<List<FlashcardDeck>> getDecks() async {
-    final prefs = await SharedPreferences.getInstance();
+    if (_cachedDecks != null) return _cachedDecks!;
+
+    final prefs = await _getPrefs();
     final jsonStr = prefs.getString(_decksKey);
     if (jsonStr == null || jsonStr.isEmpty) {
       // Seed default deck
@@ -18,54 +29,61 @@ class Sm2StorageDataSource {
         description: 'Bộ thẻ ôn luyện kiến thức nền tảng SM-2',
         createdAt: DateTime.now(),
       );
+      _cachedDecks = [defaultDeck];
       await prefs.setString(_decksKey, json.encode([defaultDeck.toMap()]));
       await _seedDefaultCards(defaultDeck.id);
-      return [defaultDeck];
+      return _cachedDecks!;
     }
 
     try {
       final List<dynamic> list = json.decode(jsonStr);
-      return list.map((e) => FlashcardDeck.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      _cachedDecks = list.map((e) => FlashcardDeck.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      return _cachedDecks!;
     } catch (_) {
+      _cachedDecks = [];
       return [];
     }
   }
 
   Future<void> saveDeck(FlashcardDeck deck) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString(_decksKey);
-    List<FlashcardDeck> decks = [];
-    if (jsonStr != null && jsonStr.isNotEmpty) {
-      try {
-        final List<dynamic> list = json.decode(jsonStr);
-        decks = list.map((e) => FlashcardDeck.fromMap(Map<String, dynamic>.from(e as Map))).toList();
-      } catch (_) {}
-    }
+    final decks = await getDecks();
     final index = decks.indexWhere((d) => d.id == deck.id);
     if (index >= 0) {
       decks[index] = deck;
     } else {
       decks.add(deck);
     }
+    _cachedDecks = decks;
+
+    final prefs = await _getPrefs();
     await prefs.setString(_decksKey, json.encode(decks.map((d) => d.toMap()).toList()));
   }
 
   Future<List<FlashcardItem>> getCardsInDeck(String deckId) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (_cachedCards.containsKey(deckId)) {
+      return _cachedCards[deckId]!;
+    }
+
+    final prefs = await _getPrefs();
     final jsonStr = prefs.getString('$_cardsKeyPrefix$deckId');
     if (jsonStr == null || jsonStr.isEmpty) {
+      _cachedCards[deckId] = [];
       return [];
     }
     try {
       final List<dynamic> list = json.decode(jsonStr);
-      return list.map((e) => FlashcardItem.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      final cards = list.map((e) => FlashcardItem.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      _cachedCards[deckId] = cards;
+      return cards;
     } catch (_) {
+      _cachedCards[deckId] = [];
       return [];
     }
   }
 
   Future<void> saveCardsInDeck(String deckId, List<FlashcardItem> cards) async {
-    final prefs = await SharedPreferences.getInstance();
+    _cachedCards[deckId] = cards;
+    final prefs = await _getPrefs();
     await prefs.setString(
       '$_cardsKeyPrefix$deckId',
       json.encode(cards.map((c) => c.toMap()).toList()),

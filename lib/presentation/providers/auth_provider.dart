@@ -5,10 +5,6 @@ import '../../domain/repositories/interfaces.dart';
 class AuthProvider extends ChangeNotifier {
   final IAuthRepository _authRepo;
 
-  AuthProvider({required IAuthRepository authRepo}) : _authRepo = authRepo {
-    checkAuthStatus();
-  }
-
   bool _isLoggedIn = false;
   bool get isLoggedIn => _isLoggedIn;
 
@@ -18,8 +14,15 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = true;
   bool get isLoading => _isLoading;
 
+  bool _isPerformingAction = false;
+  bool get isPerformingAction => _isPerformingAction;
+
   String _errorMessage = '';
   String get errorMessage => _errorMessage;
+
+  AuthProvider({required IAuthRepository authRepo}) : _authRepo = authRepo {
+    checkAuthStatus();
+  }
 
   void clearError() {
     _errorMessage = '';
@@ -52,7 +55,7 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
-    _isLoading = true;
+    _isPerformingAction = true;
     _errorMessage = '';
     notifyListeners();
 
@@ -60,12 +63,12 @@ class AuthProvider extends ChangeNotifier {
       final user = await _authRepo.login(email: email, password: password);
       _currentUser = user;
       _isLoggedIn = true;
-      _isLoading = false;
+      _isPerformingAction = false;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _isLoading = false;
+      _isPerformingAction = false;
       notifyListeners();
       return false;
     }
@@ -77,7 +80,7 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     String role = 'student',
   }) async {
-    _isLoading = true;
+    _isPerformingAction = true;
     _errorMessage = '';
     notifyListeners();
 
@@ -90,19 +93,19 @@ class AuthProvider extends ChangeNotifier {
       );
       _currentUser = user;
       _isLoggedIn = true;
-      _isLoading = false;
+      _isPerformingAction = false;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _isLoading = false;
+      _isPerformingAction = false;
       notifyListeners();
       return false;
     }
   }
 
   Future<bool> quickDemoLogin({String role = 'student'}) async {
-    _isLoading = true;
+    _isPerformingAction = true;
     _errorMessage = '';
     notifyListeners();
 
@@ -110,12 +113,12 @@ class AuthProvider extends ChangeNotifier {
       final user = await _authRepo.quickDemoLogin(role: role);
       _currentUser = user;
       _isLoggedIn = true;
-      _isLoading = false;
+      _isPerformingAction = false;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _isLoading = false;
+      _isPerformingAction = false;
       notifyListeners();
       return false;
     }
@@ -123,25 +126,26 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> switchRole(String newRole) async {
     if (_currentUser == null) return false;
-    _isLoading = true;
+    _isPerformingAction = true;
+    _errorMessage = '';
     notifyListeners();
 
     try {
       final updated = await _authRepo.switchRole(_currentUser!.email, newRole);
       _currentUser = updated;
-      _isLoading = false;
+      _isPerformingAction = false;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _isLoading = false;
+      _isPerformingAction = false;
       notifyListeners();
       return false;
     }
   }
 
   Future<void> logout() async {
-    _isLoading = true;
+    _isPerformingAction = true;
     notifyListeners();
 
     try {
@@ -151,7 +155,7 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = '';
     } catch (_) {}
 
-    _isLoading = false;
+    _isPerformingAction = false;
     notifyListeners();
   }
 }

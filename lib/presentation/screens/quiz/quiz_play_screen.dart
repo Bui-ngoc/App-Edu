@@ -210,6 +210,7 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
 
     // Auto-submit when time is up in Exam mode
     if (prov.currentMode == QuizMode.exam && prov.isTimeUp && !_submitted) {
+      _submitted = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
           context: context,

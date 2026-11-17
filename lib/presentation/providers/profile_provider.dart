@@ -9,14 +9,6 @@ class ProfileProvider extends ChangeNotifier {
   final GeminiAiDataSource _aiDataSource;
   final ImagePicker _picker = ImagePicker();
 
-  ProfileProvider({
-    required ILeaderboardRepository repo,
-    required GeminiAiDataSource aiDataSource,
-  })  : _repo = repo,
-        _aiDataSource = aiDataSource {
-    loadProfile();
-  }
-
   UserProfile _profile = const UserProfile(
     uid: 'user_current',
     name: 'Sinh viên CNTT',
@@ -39,14 +31,24 @@ class ProfileProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  ProfileProvider({
+    required ILeaderboardRepository repo,
+    required GeminiAiDataSource aiDataSource,
+  })  : _repo = repo,
+        _aiDataSource = aiDataSource {
+    loadProfile();
+  }
+
   Future<void> loadProfile() async {
     _isLoading = true;
     notifyListeners();
 
-    _profile   = await _repo.getUserProfile();
-    _apiKey    = (await _aiDataSource.getApiKey()) ?? '';
-    _proxyUrl  = await _aiDataSource.getProxyUrl();
-    _isDemoMode = await _aiDataSource.isDemoMode();
+    try {
+      _profile   = await _repo.getUserProfile();
+      _apiKey    = (await _aiDataSource.getApiKey()) ?? '';
+      _proxyUrl  = await _aiDataSource.getProxyUrl();
+      _isDemoMode = await _aiDataSource.isDemoMode();
+    } catch (_) {}
     _isLoading = false;
     notifyListeners();
   }

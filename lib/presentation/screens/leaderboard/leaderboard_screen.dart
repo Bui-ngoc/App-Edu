@@ -1,9 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/state_views.dart';
-import '../../providers/leaderboard_provider.dart';
 import '../../providers/profile_provider.dart';
 
 class LeaderboardScreen extends StatelessWidget {
@@ -11,225 +8,356 @@ class LeaderboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<LeaderboardProvider>();
-    final profile = context.watch<ProfileProvider>().profile;
+    final profileProv = context.watch<ProfileProvider>();
+    final profile = profileProv.profile;
+    final streakDays = profile.streakDays;
+    final totalXp = profile.totalXp;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bảng xếp hạng'),
+        title: const Text('Chuỗi ngày & Thành tích'),
       ),
-      body: prov.state == LeaderboardUiState.loading
-          ? const LoadingView(message: 'Đang tải bảng xếp hạng...')
-          : prov.state == LeaderboardUiState.error
-              ? ErrorViewWithRetry(
-                  message: prov.errorMessage,
-                  onRetry: () {},
-                )
-              : CustomScrollView(
-                  slivers: [
-                    // Study Group & Streak Header Card
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Card(
-                          color: AppColors.primary,
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.group_work_rounded, color: Colors.white, size: 14),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            profile.currentGroup,
-                                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    const Icon(Icons.bolt_rounded, color: AppColors.accent, size: 28),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-                                const Text(
-                                  'Tích lũy XP & Chuỗi học tập',
-                                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Badges Showcase
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Huy hiệu đạt được',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              height: 40,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  _buildBadge('🎖️ Tân binh EduMaster'),
-                                  _buildBadge('🔥 7 Ngày Chăm chỉ'),
-                                  _buildBadge('🧠 Bậc thầy SM-2'),
-                                  _buildBadge('⚡ Thợ săn Điểm 10'),
-                                  _buildBadge('🌐 Chuyên gia Song ngữ'),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Bảng xếp hạng tổng điểm',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Leaderboard list
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final entry = prov.entries[index];
-                            final rank = index + 1;
-                            final isCurrentUser = entry.id == profile.uid || entry.userName.contains('(Bạn)');
-
-                            Color? rankColor;
-                            if (rank == 1) rankColor = const Color(0xFFFFD700); // Gold
-                            if (rank == 2) rankColor = const Color(0xFFC0C0C0); // Silver
-                            if (rank == 3) rankColor = const Color(0xFFCD7F32); // Bronze
-
-                            return Card(
-                              color: isCurrentUser
-                                  ? AppColors.primary.withOpacity(0.08)
-                                  : null,
-                              margin: const EdgeInsets.only(bottom: 8),
-                              child: ListTile(
-                                leading: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      width: 28,
-                                      child: rankColor != null
-                                          ? Icon(Icons.emoji_events_rounded, color: rankColor, size: 22)
-                                          : Text(
-                                              '$rank',
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                            ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    CircleAvatar(
-                                      radius: 20,
-                                      backgroundColor: AppColors.primary.withOpacity(0.15),
-                                      backgroundImage: (entry.avatarUrl.isNotEmpty && File(entry.avatarUrl).existsSync())
-                                          ? FileImage(File(entry.avatarUrl))
-                                          : null,
-                                      child: (entry.avatarUrl.isEmpty || !File(entry.avatarUrl).existsSync())
-                                          ? Text(
-                                              entry.userName.isNotEmpty ? entry.userName[0] : 'U',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
-                                            )
-                                          : null,
-                                    ),
-                                  ],
-                                ),
-                                title: Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        entry.userName,
-                                        style: TextStyle(
-                                          fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (isCurrentUser) ...[
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary,
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: const Text('BẠN', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                subtitle: Text(
-                                  '🔥 ${entry.streakDays} ngày chuỗi • ${entry.testsCompleted} bài đã làm',
-                                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
-                                ),
-                                trailing: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.accent.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    '${entry.xp} XP',
-                                    style: const TextStyle(
-                                      color: Color(0xFFB45309),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                          childCount: prov.entries.length,
-                        ),
-                      ),
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                  ],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── STREAK HIGHLIGHT HERO CARD ──────────────────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(22.0),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF5722), Color(0xFFFF9800)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF5722).withOpacity(0.35),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.local_fire_department_rounded,
+                      color: Colors.white,
+                      size: 56,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '$streakDays Ngày Chuỗi',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Duy trì thói quen học tập hằng ngày để giữ vững chuỗi Streak!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // WEEKDAY STREAK TRACKER DOTS
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildDayDot('T2', true),
+                      _buildDayDot('T3', true),
+                      _buildDayDot('T4', true),
+                      _buildDayDot('T5', true),
+                      _buildDayDot('T6', streakDays >= 5),
+                      _buildDayDot('T7', streakDays >= 6),
+                      _buildDayDot('CN', streakDays >= 7),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── PERSONAL STATS GRID ─────────────────────────────────────────
+            Row(
+              children: [
+                Expanded(
+                  child: Card(
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.bolt_rounded, color: AppColors.accent, size: 22),
+                              SizedBox(width: 6),
+                              Text('Tích lũy XP', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '$totalXp XP',
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text('Điểm thưởng học tập', style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Card(
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.military_tech_rounded, color: AppColors.secondary, size: 22),
+                              SizedBox(width: 6),
+                              Text('Huy hiệu', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '${profile.badges.length} Danh hiệu',
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.secondary),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text('Đã hoàn thành', style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // ── HUY HIỆU THÀNH TÍCH (BADGES SHOWCASE) ───────────────────────
+            Text(
+              'Bộ sưu tập Huy hiệu thành tích',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildBadgeCard('🎖️ Tân binh EduMaster', 'Hoàn thành bài đầu tiên', true),
+                _buildBadgeCard('🔥 7 Ngày Chăm chỉ', 'Duy trì chuỗi 7 ngày', streakDays >= 7),
+                _buildBadgeCard('🧠 Bậc thầy SM-2', 'Ôn tập xuất sắc Flashcards', totalXp >= 1000),
+                _buildBadgeCard('⚡ Thợ săn Điểm 10', 'Đạt điểm tuyệt đối bài thi', totalXp >= 1500),
+                _buildBadgeCard('🌐 Chuyên gia Song ngữ', 'Hoàn thành ôn tập 2 ngôn ngữ', true),
+                _buildBadgeCard('🏆 Chiến binh Bền bỉ', 'Duy trì chuỗi 30 ngày', streakDays >= 30),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // ── THỬ THÁCH MỐC CHUỖI STREAK (MILESTONE CHALLENGES) ───────────
+            Text(
+              'Thử thách Mốc chuỗi Streak',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            _buildMilestoneTile(
+              title: 'Mốc 3 Ngày — Khởi động Chăm chỉ',
+              subtitle: 'Duy trì học 3 ngày liên tục',
+              targetDays: 3,
+              currentDays: streakDays,
+              color: const Color(0xFF4CAF50),
+            ),
+            const SizedBox(height: 10),
+            _buildMilestoneTile(
+              title: 'Mốc 7 Ngày — Tuần lễ Bứt phá',
+              subtitle: 'Duy trì học 7 ngày liên tục',
+              targetDays: 7,
+              currentDays: streakDays,
+              color: const Color(0xFFFF9800),
+            ),
+            const SizedBox(height: 10),
+            _buildMilestoneTile(
+              title: 'Mốc 14 Ngày — Chiến binh Kiên trì',
+              subtitle: 'Duy trì học 14 ngày liên tục',
+              targetDays: 14,
+              currentDays: streakDays,
+              color: const Color(0xFF2196F3),
+            ),
+            const SizedBox(height: 10),
+            _buildMilestoneTile(
+              title: 'Mốc 30 Ngày — Bậc thầy Học thuật',
+              subtitle: 'Duy trì học 30 ngày liên tục',
+              targetDays: 30,
+              currentDays: streakDays,
+              color: const Color(0xFF9C27B0),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildBadge(String title) {
+  Widget _buildDayDot(String dayLabel, bool isDone) {
+    return Column(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: isDone ? Colors.white : Colors.white.withOpacity(0.25),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isDone ? Icons.local_fire_department_rounded : Icons.check,
+            size: 20,
+            color: isDone ? const Color(0xFFFF5722) : Colors.white54,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          dayLabel,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBadgeCard(String name, String desc, bool isUnlocked) {
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.secondary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
+        color: isUnlocked ? AppColors.secondary.withOpacity(0.12) : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isUnlocked ? AppColors.secondary.withOpacity(0.4) : Colors.grey.shade300,
+        ),
       ),
-      child: Center(
-        child: Text(
-          title,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.secondary),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Opacity(
+            opacity: isUnlocked ? 1.0 : 0.4,
+            child: Text(name.split(' ')[0], style: const TextStyle(fontSize: 18)),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                name.substring(name.indexOf(' ') + 1),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isUnlocked ? AppColors.secondary : Colors.grey.shade600,
+                ),
+              ),
+              Text(
+                desc,
+                style: TextStyle(fontSize: 10, color: isUnlocked ? AppColors.textSecondaryLight : Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(width: 4),
+          if (isUnlocked)
+            const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMilestoneTile({
+    required String title,
+    required String subtitle,
+    required int targetDays,
+    required int currentDays,
+    required Color color,
+  }) {
+    final isAchieved = currentDays >= targetDays;
+    final progress = (currentDays / targetDays).clamp(0.0, 1.0);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isAchieved ? Icons.verified_rounded : Icons.lock_clock_rounded,
+                  color: isAchieved ? color : Colors.grey,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: isAchieved ? color : Colors.black87,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: (isAchieved ? color : Colors.grey).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    isAchieved ? '✅ Đã đạt' : '$currentDays/$targetDays ngày',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isAchieved ? color : Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6,
+                backgroundColor: Colors.grey.shade200,
+                color: isAchieved ? color : AppColors.primary,
+              ),
+            ),
+          ],
         ),
       ),
     );
