@@ -5,8 +5,16 @@ import '../../domain/entities/quiz_question.dart';
 import '../../core/errors/app_exception.dart';
 
 class QuizLocalDataSource {
-  static const String _wrongQuestionsKey = 'edumaster_wrong_question_ids';
+  static const String _wrongQuestionsKeyPrefix = 'edumaster_wrong_question_ids_u_';
   List<QuizQuestion>? _cachedQuestions;
+
+  String _userId = 'default';
+  String get _wrongQuestionsKey => '$_wrongQuestionsKeyPrefix$_userId';
+
+  /// Gọi khi user đăng nhập/đăng xuất để load đúng wrong-questions của user đó.
+  void switchUser(String userId) {
+    _userId = userId.trim().isEmpty ? 'default' : userId.trim();
+  }
 
   Future<List<QuizQuestion>> loadAllQuestions() async {
     if (_cachedQuestions != null && _cachedQuestions!.isNotEmpty) {

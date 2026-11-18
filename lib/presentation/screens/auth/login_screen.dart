@@ -4,6 +4,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
+import '../../providers/flashcard_provider.dart';
+import '../../providers/quiz_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,6 +32,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   // Selected role for registration: 'student' or 'teacher'
   String _selectedRole = 'student';
+
+  /// Reload dữ liệu riêng của user sau khi đăng nhập/đăng ký thành công.
+  /// Đảm bảo flashcard & quiz không bị lẫn dữ liệu giữa các tài khoản.
+  void _reloadUserData() {
+    if (!mounted) return;
+    context.read<ProfileProvider>().loadProfile();
+    context.read<FlashcardProvider>().loadDecks(force: true);
+    context.read<QuizProvider>().resetState();
+  }
 
   @override
   void initState() {
@@ -67,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final success = await authProv.login(email: email, password: password);
 
     if (success && mounted) {
-      context.read<ProfileProvider>().loadProfile();
+      _reloadUserData();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -121,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
 
     if (success && mounted) {
-      context.read<ProfileProvider>().loadProfile();
+      _reloadUserData();
       final roleText = _selectedRole == 'teacher' ? 'Giáo viên' : 'Sinh viên';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -143,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final authProv = context.read<AuthProvider>();
     final success = await authProv.quickDemoLogin(role: role);
     if (success && mounted) {
-      context.read<ProfileProvider>().loadProfile();
+      _reloadUserData();
       final roleText = role == 'teacher' ? 'Giáo viên' : 'Sinh viên';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

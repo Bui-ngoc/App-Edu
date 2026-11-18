@@ -281,7 +281,9 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (_state == ExamUiState.inRoom) {
-      if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      // Only count on 'paused' – Android transitions active→inactive→paused on
+      // every app switch, so counting 'inactive' would double the counter.
+      if (state == AppLifecycleState.paused) {
         _appSwitchCount++;
         final now = DateTime.now();
         final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';

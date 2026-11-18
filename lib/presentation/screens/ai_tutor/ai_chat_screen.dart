@@ -305,7 +305,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 4.0),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.max,
                   children: [
                     const Icon(Icons.smart_toy_rounded, size: 14, color: AppColors.primary),
                     const SizedBox(width: 4),
@@ -329,16 +329,68 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   ],
                 ),
               ),
-            SelectableText(
-              msg.text,
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.black87,
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
+            _buildFormattedMessageText(msg.text, isMe),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Hiển thị câu trả lời AI đẹp mắt, phân giải **thành chữ in đậm** và KHÔNG BAO GIỜ hiển thị ký tự **
+  Widget _buildFormattedMessageText(String rawText, bool isMe) {
+    if (isMe) {
+      return SelectableText(
+        rawText,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          height: 1.4,
+        ),
+      );
+    }
+
+    final baseStyle = const TextStyle(
+      color: Colors.black87,
+      fontSize: 14,
+      height: 1.45,
+    );
+    final boldStyle = baseStyle.copyWith(
+      fontWeight: FontWeight.bold,
+      color: const Color(0xFF111827),
+    );
+
+    // Làm sạch và chuyển đổi **thành phần in đậm**
+    final cleanedText = rawText.replaceAll(RegExp(r'^\s*\*\*\s*$', multiLine: true), '');
+    final List<TextSpan> spans = [];
+    final regex = RegExp(r'\*\*(.*?)\*\*');
+    int lastMatchEnd = 0;
+
+    for (final match in regex.allMatches(cleanedText)) {
+      if (match.start > lastMatchEnd) {
+        final regularPart = cleanedText.substring(lastMatchEnd, match.start).replaceAll('**', '');
+        if (regularPart.isNotEmpty) {
+          spans.add(TextSpan(text: regularPart, style: baseStyle));
+        }
+      }
+      final boldContent = (match.group(1) ?? '').replaceAll('**', '');
+      if (boldContent.isNotEmpty) {
+        spans.add(TextSpan(text: boldContent, style: boldStyle));
+      }
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < cleanedText.length) {
+      final trailing = cleanedText.substring(lastMatchEnd).replaceAll('**', '');
+      if (trailing.isNotEmpty) {
+        spans.add(TextSpan(text: trailing, style: baseStyle));
+      }
+    }
+
+    return SelectableText.rich(
+      TextSpan(
+        children: spans.isEmpty
+            ? [TextSpan(text: cleanedText.replaceAll('**', ''), style: baseStyle)]
+            : spans,
       ),
     );
   }

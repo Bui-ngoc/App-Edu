@@ -4,12 +4,28 @@ import '../../domain/algorithms/sm2_algorithm.dart';
 import '../../domain/entities/flashcard.dart';
 
 class Sm2StorageDataSource {
-  static const String _decksKey = 'edumaster_flashcard_decks';
+  // Keys có userId suffix để phân biệt dữ liệu giữa các user
+  static const String _decksKeyPrefix = 'edumaster_flashcard_decks_u_';
   static const String _cardsKeyPrefix = 'edumaster_flashcards_deck_';
+
+  String _userId = 'default';
+
+  String get _decksKey => '$_decksKeyPrefix$_userId';
+  String _cardKey(String deckId) => '${_cardsKeyPrefix}${_userId}_$deckId';
 
   SharedPreferences? _prefs;
   List<FlashcardDeck>? _cachedDecks;
   final Map<String, List<FlashcardItem>> _cachedCards = {};
+
+  /// Gọi khi user đăng nhập/đăng xuất để load đúng data của user đó.
+  void switchUser(String userId) {
+    final newId = userId.trim().isEmpty ? 'default' : userId.trim();
+    if (_userId != newId) {
+      _userId = newId;
+      _cachedDecks = null;
+      _cachedCards.clear();
+    }
+  }
 
   Future<SharedPreferences> _getPrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -22,7 +38,7 @@ class Sm2StorageDataSource {
     final prefs = await _getPrefs();
     final jsonStr = prefs.getString(_decksKey);
     if (jsonStr == null || jsonStr.isEmpty) {
-      // Seed default deck
+      // Seed default deck cho user này
       final defaultDeck = FlashcardDeck(
         id: 'deck_it_core',
         title: 'Thuật ngữ Lập trình & CNTT Thiết yếu',
@@ -59,14 +75,19 @@ class Sm2StorageDataSource {
     await prefs.setString(_decksKey, json.encode(decks.map((d) => d.toMap()).toList()));
   }
 
-  Future<List<FlashcardItem>> getCardsInDeck(String deckId) async {
-    if (_cachedCards.containsKey(deckId)) {
+  Future<List<FlashcardItem>> getCardsInDeck(String deckId, {bool force = false}) async {
+    if (!force && _cachedCards.containsKey(deckId) && _cachedCards[deckId]!.isNotEmpty) {
       return _cachedCards[deckId]!;
     }
 
     final prefs = await _getPrefs();
-    final jsonStr = prefs.getString('$_cardsKeyPrefix$deckId');
+    final jsonStr = prefs.getString(_cardKey(deckId));
     if (jsonStr == null || jsonStr.isEmpty) {
+      if (deckId == 'deck_it_core') {
+        final defaults = _getDefaultCoreCards(deckId);
+        await saveCardsInDeck(deckId, defaults);
+        return defaults;
+      }
       _cachedCards[deckId] = [];
       return [];
     }
@@ -82,16 +103,16 @@ class Sm2StorageDataSource {
   }
 
   Future<void> saveCardsInDeck(String deckId, List<FlashcardItem> cards) async {
-    _cachedCards[deckId] = cards;
+    _cachedCards[deckId] = List<FlashcardItem>.from(cards);
     final prefs = await _getPrefs();
     await prefs.setString(
-      '$_cardsKeyPrefix$deckId',
+      _cardKey(deckId),
       json.encode(cards.map((c) => c.toMap()).toList()),
     );
   }
 
   Future<void> saveCard(FlashcardItem card) async {
-    final cards = await getCardsInDeck(card.deckId);
+    final cards = List<FlashcardItem>.from(await getCardsInDeck(card.deckId, force: true));
     final idx = cards.indexWhere((c) => c.id == card.id);
     if (idx >= 0) {
       cards[idx] = card;
@@ -141,7 +162,7 @@ class Sm2StorageDataSource {
     }
 
     if (newCards.isNotEmpty) {
-      final existing = await getCardsInDeck(deckId);
+      final existing = List<FlashcardItem>.from(await getCardsInDeck(deckId, force: true));
       existing.addAll(newCards);
       await saveCardsInDeck(deckId, existing);
     }
@@ -149,8 +170,8 @@ class Sm2StorageDataSource {
     return count;
   }
 
-  Future<void> _seedDefaultCards(String deckId) async {
-    final defaults = [
+  List<FlashcardItem> _getDefaultCoreCards(String deckId) {
+    return [
       FlashcardItem(
         id: 'c1',
         deckId: deckId,
@@ -188,6 +209,10 @@ class Sm2StorageDataSource {
         sm2: SM2State.initial(),
       ),
     ];
+  }
+
+  Future<void> _seedDefaultCards(String deckId) async {
+    final defaults = _getDefaultCoreCards(deckId);
     await saveCardsInDeck(deckId, defaults);
   }
 }

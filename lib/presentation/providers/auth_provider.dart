@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/interfaces.dart';
+import '../../data/datasources/quiz_local_datasource.dart';
+import '../../data/datasources/sm2_storage_datasource.dart';
 
 class AuthProvider extends ChangeNotifier {
   final IAuthRepository _authRepo;
+  final QuizLocalDataSource _quizDataSource;
+  final Sm2StorageDataSource _flashcardDataSource;
 
   bool _isLoggedIn = false;
   bool get isLoggedIn => _isLoggedIn;
@@ -20,8 +24,20 @@ class AuthProvider extends ChangeNotifier {
   String _errorMessage = '';
   String get errorMessage => _errorMessage;
 
-  AuthProvider({required IAuthRepository authRepo}) : _authRepo = authRepo {
+  AuthProvider({
+    required IAuthRepository authRepo,
+    required QuizLocalDataSource quizDataSource,
+    required Sm2StorageDataSource flashcardDataSource,
+  })  : _authRepo = authRepo,
+        _quizDataSource = quizDataSource,
+        _flashcardDataSource = flashcardDataSource {
     checkAuthStatus();
+  }
+
+  /// Thông báo đúng userId cho datasource để tách biệt dữ liệu giữa các user
+  void _notifyDatasourcesUserChanged(String userId) {
+    _quizDataSource.switchUser(userId);
+    _flashcardDataSource.switchUser(userId);
   }
 
   void clearError() {
@@ -40,6 +56,8 @@ class AuthProvider extends ChangeNotifier {
         _currentUser = await _authRepo.getCurrentUser();
         if (_currentUser == null) {
           _isLoggedIn = false;
+        } else {
+          _notifyDatasourcesUserChanged(_currentUser!.id);
         }
       }
     } catch (e) {
@@ -63,6 +81,7 @@ class AuthProvider extends ChangeNotifier {
       final user = await _authRepo.login(email: email, password: password);
       _currentUser = user;
       _isLoggedIn = true;
+      _notifyDatasourcesUserChanged(user.id);
       _isPerformingAction = false;
       notifyListeners();
       return true;
@@ -93,6 +112,7 @@ class AuthProvider extends ChangeNotifier {
       );
       _currentUser = user;
       _isLoggedIn = true;
+      _notifyDatasourcesUserChanged(user.id);
       _isPerformingAction = false;
       notifyListeners();
       return true;
@@ -113,6 +133,7 @@ class AuthProvider extends ChangeNotifier {
       final user = await _authRepo.quickDemoLogin(role: role);
       _currentUser = user;
       _isLoggedIn = true;
+      _notifyDatasourcesUserChanged(user.id);
       _isPerformingAction = false;
       notifyListeners();
       return true;
@@ -153,6 +174,7 @@ class AuthProvider extends ChangeNotifier {
       _isLoggedIn = false;
       _currentUser = null;
       _errorMessage = '';
+      _notifyDatasourcesUserChanged('default'); // reset data isolation
     } catch (_) {}
 
     _isPerformingAction = false;

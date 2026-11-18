@@ -72,6 +72,18 @@ class QuizProvider extends ChangeNotifier {
   String _aiExplanation = '';
   String get aiExplanation => _aiExplanation;
 
+  /// Reset toàn bộ trạng thái quiz khi đổi user, để wrong-questions không bị lẫn
+  void resetState() {
+    _state = QuizUiState.initial;
+    _allQuestions = [];
+    _activeQuestions = [];
+    _userAnswers.clear();
+    _score = 0;
+    _currentIndex = 0;
+    _errorMessage = '';
+    notifyListeners();
+  }
+
   Future<void> loadQuestions({
     int grade = 0,
     QuizMode mode = QuizMode.practice,

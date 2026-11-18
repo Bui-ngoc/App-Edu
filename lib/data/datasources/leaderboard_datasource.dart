@@ -674,7 +674,8 @@ class LeaderboardDataSource {
         currentGroup: 'Bộ môn Lập trình',
       );
     } else {
-      // NEW REGISTERED USER: 100% Clean profile data with 0 XP & 0 Streak Days
+      // NEW REGISTERED USER: profile sạch 100% — 0 XP, 0 Streak, chưa có nhóm.
+      // GV sẽ phân nhóm, SV KHÔNG tự thấy dữ liệu demo "Nhóm 01".
       profile = UserProfile(
         uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
         name: 'Thành viên mới',
@@ -682,7 +683,7 @@ class LeaderboardDataSource {
         totalXp: 0,
         streakDays: 0,
         badges: const [],
-        currentGroup: 'Nhóm 01',
+        currentGroup: '',  // để trống, GV phân nhóm sau
       );
     }
 

@@ -144,7 +144,9 @@ class AuthLocalDataSource {
       email: cleanEmail,
       password: cleanPassword,
       role: cleanRole == 'teacher' ? 'teacher' : 'student',
-      group: cleanRole == 'teacher' ? 'Bộ môn Lập trình' : 'Nhóm 01',
+      // Tài khoản mới KHÔNG được assign nhóm sẵn — GV sẽ phân nhóm sau.
+      // Giáo viên được tự động vào bộ môn của trường.
+      group: cleanRole == 'teacher' ? 'Bộ môn Lập trình' : '',
       createdAt: DateTime.now(),
     );
 

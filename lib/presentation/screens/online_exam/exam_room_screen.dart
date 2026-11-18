@@ -64,7 +64,11 @@ class ExamRoomScreen extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(room.title),
+          title: Text(
+            room.title,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
           automaticallyImplyLeading: false,
           actions: [
             // Countdown timer chip
@@ -251,16 +255,20 @@ class ExamRoomScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        OutlinedButton(
-                          onPressed: currentIndex > 0 ? () => prov.goToQuestion(currentIndex - 1) : null,
-                          child: const Text('Câu trước'),
+                        Flexible(
+                          child: OutlinedButton(
+                            onPressed: currentIndex > 0 ? () => prov.goToQuestion(currentIndex - 1) : null,
+                            child: const Text('← Trước', overflow: TextOverflow.ellipsis),
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          onPressed: currentIndex < questions.length - 1
-                              ? () => prov.goToQuestion(currentIndex + 1)
-                              : null,
-                          child: const Text('Câu sau'),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: OutlinedButton(
+                            onPressed: currentIndex < questions.length - 1
+                                ? () => prov.goToQuestion(currentIndex + 1)
+                                : null,
+                            child: const Text('Sau →', overflow: TextOverflow.ellipsis),
+                          ),
                         ),
                         const Spacer(),
                         ElevatedButton.icon(

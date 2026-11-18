@@ -53,7 +53,11 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(authRepo: authRepo),
+          create: (_) => AuthProvider(
+            authRepo: authRepo,
+            quizDataSource: quizLocalDataSource,
+            flashcardDataSource: sm2StorageDataSource,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => QuizProvider(quizRepo: quizRepo, aiRepo: aiTutorRepo),

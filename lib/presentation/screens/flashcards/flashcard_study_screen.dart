@@ -216,10 +216,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> with Single
               ),
             ),
             const Spacer(),
-            Text(
-              card.front,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                card.front,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
             ),
             if (card.phonetic != null) ...[
               const SizedBox(height: 8),
@@ -290,10 +293,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> with Single
               ),
             ),
             const Spacer(),
-            Text(
-              card.back,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18, height: 1.5, fontWeight: FontWeight.w500),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                card.back,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18, height: 1.5, fontWeight: FontWeight.w500),
+              ),
             ),
             if (card.example != null) ...[
               const SizedBox(height: 16),

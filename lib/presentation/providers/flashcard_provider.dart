@@ -34,6 +34,9 @@ class FlashcardProvider extends ChangeNotifier {
   bool _isCardFlipped = false;
   bool get isCardFlipped => _isCardFlipped;
 
+  Map<String, int> _deckCardCounts = {};
+  int getDeckCardCount(String deckId) => _deckCardCounts[deckId] ?? 0;
+
   Future<void> loadDecks({bool force = false}) async {
     if (!force && _decks.isNotEmpty && _state == FlashcardUiState.success) return;
     _state = FlashcardUiState.loading;
@@ -42,6 +45,11 @@ class FlashcardProvider extends ChangeNotifier {
 
     try {
       _decks = await _repo.getDecks();
+      _deckCardCounts = {};
+      for (final d in _decks) {
+        final cards = await _repo.getCardsInDeck(d.id);
+        _deckCardCounts[d.id] = cards.length;
+      }
       if (_decks.isEmpty) {
         _state = FlashcardUiState.empty;
       } else {
@@ -114,9 +122,47 @@ class FlashcardProvider extends ChangeNotifier {
 
   Future<int> importCsv(String deckId, String csvContent) async {
     final count = await _repo.importCardsFromCsv(deckId, csvContent);
+    await loadDecks(force: true);
     if (_currentDeck != null && _currentDeck!.id == deckId) {
       await selectDeck(_currentDeck!);
     }
     return count;
+  }
+
+  /// Thêm thẻ mới trực tiếp vào bộ thẻ và lưu kiên cố vào bộ nhớ máy
+  Future<void> addCard({
+    required String deckId,
+    required String front,
+    required String back,
+    String? phonetic,
+    String? example,
+  }) async {
+    final newCard = FlashcardItem(
+      id: 'card_${DateTime.now().millisecondsSinceEpoch}',
+      deckId: deckId,
+      front: front.trim(),
+      back: back.trim(),
+      phonetic: (phonetic != null && phonetic.trim().isNotEmpty) ? phonetic.trim() : null,
+      example: (example != null && example.trim().isNotEmpty) ? example.trim() : null,
+      sm2: SM2State.initial(),
+    );
+    await _repo.saveCard(newCard);
+    await loadDecks(force: true);
+    if (_currentDeck != null && _currentDeck!.id == deckId) {
+      await selectDeck(_currentDeck!);
+    }
+    notifyListeners();
+  }
+
+  /// Tạo bộ thẻ học tập mới
+  Future<void> createDeck(String title, String description) async {
+    final newDeck = FlashcardDeck(
+      id: 'deck_${DateTime.now().millisecondsSinceEpoch}',
+      title: title.trim(),
+      description: description.trim().isEmpty ? 'Bộ thẻ tự tạo' : description.trim(),
+      createdAt: DateTime.now(),
+    );
+    await _repo.saveDeck(newDeck);
+    await loadDecks(force: true);
   }
 }
