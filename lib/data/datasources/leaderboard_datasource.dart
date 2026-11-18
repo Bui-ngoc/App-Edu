@@ -80,6 +80,78 @@ class LeaderboardDataSource {
           badges: ['Tân binh'],
           groupName: 'Nhóm F - KTHP',
         ),
+        // Thành viên Nhóm 1 - Lập trình Di động
+        const LeaderboardEntry(
+          id: 'user_u6',
+          userName: 'Phạm Hoàng Nam',
+          avatarUrl: '',
+          xp: 3200,
+          streakDays: 21,
+          testsCompleted: 45,
+          badges: ['Thần đồng Lập trình', 'Top 1 Server'],
+          groupName: 'Nhóm 1 - Lập trình Di động',
+        ),
+        const LeaderboardEntry(
+          id: 'user_u7',
+          userName: 'Vũ Thị Minh Châu',
+          avatarUrl: '',
+          xp: 2650,
+          streakDays: 11,
+          testsCompleted: 33,
+          badges: ['Chiến binh Bền bỉ'],
+          groupName: 'Nhóm 1 - Lập trình Di động',
+        ),
+        const LeaderboardEntry(
+          id: 'user_u8',
+          userName: 'Đỗ Tuấn Kiệt',
+          avatarUrl: '',
+          xp: 1980,
+          streakDays: 7,
+          testsCompleted: 22,
+          badges: ['Bậc thầy SM-2'],
+          groupName: 'Nhóm 1 - Lập trình Di động',
+        ),
+        const LeaderboardEntry(
+          id: 'user_u9',
+          userName: 'Hoàng Quốc Bảo',
+          avatarUrl: '',
+          xp: 1530,
+          streakDays: 5,
+          testsCompleted: 16,
+          badges: ['Khám phá Tri thức'],
+          groupName: 'Nhóm 1 - Lập trình Di động',
+        ),
+        // Thành viên Nhóm 2 - Kiến trúc Flutter
+        const LeaderboardEntry(
+          id: 'user_u10',
+          userName: 'Bùi Gia Huy',
+          avatarUrl: '',
+          xp: 2950,
+          streakDays: 16,
+          testsCompleted: 39,
+          badges: ['Kiến trúc sư Clean Code'],
+          groupName: 'Nhóm 2 - Kiến trúc Flutter',
+        ),
+        const LeaderboardEntry(
+          id: 'user_u11',
+          userName: 'Ngô Thanh Thảo',
+          avatarUrl: '',
+          xp: 2310,
+          streakDays: 10,
+          testsCompleted: 28,
+          badges: ['Ngôi sao Song ngữ'],
+          groupName: 'Nhóm 2 - Kiến trúc Flutter',
+        ),
+        const LeaderboardEntry(
+          id: 'user_u12',
+          userName: 'Trịnh Đức Anh',
+          avatarUrl: '',
+          xp: 1720,
+          streakDays: 6,
+          testsCompleted: 19,
+          badges: ['Chăm chỉ Mỗi ngày'],
+          groupName: 'Nhóm 2 - Kiến trúc Flutter',
+        ),
       ];
       _cachedEntries = initialData;
       await prefs.setString(_leaderboardKey, json.encode(initialData.map((e) => e.toMap()).toList()));
@@ -96,6 +168,46 @@ class LeaderboardDataSource {
       _cachedEntries = [];
       return [];
     }
+  }
+
+  Future<void> updateUserLeaderboard({
+    required String userId,
+    String? userName,
+    String? groupName,
+    int? xp,
+  }) async {
+    final entries = await getEntries();
+    final idx = entries.indexWhere((e) => e.id == userId || e.id == 'user_current');
+    if (idx >= 0) {
+      final old = entries[idx];
+      entries[idx] = LeaderboardEntry(
+        id: old.id,
+        userName: userName ?? old.userName,
+        avatarUrl: old.avatarUrl,
+        xp: xp ?? old.xp,
+        streakDays: old.streakDays,
+        testsCompleted: old.testsCompleted,
+        badges: old.badges,
+        groupName: groupName ?? old.groupName,
+      );
+    } else {
+      entries.add(
+        LeaderboardEntry(
+          id: userId,
+          userName: userName ?? 'Bạn (Sinh viên CNTT)',
+          avatarUrl: '',
+          xp: xp ?? 0,
+          streakDays: 1,
+          testsCompleted: 0,
+          badges: const ['Tân binh EduMaster'],
+          groupName: groupName ?? 'Nhóm F - KTHP',
+        ),
+      );
+    }
+    entries.sort((a, b) => b.xp.compareTo(a.xp));
+    _cachedEntries = entries;
+    final prefs = await _getPrefs();
+    await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
   }
 
   Future<void> updateXp(String userId, int addedXp) async {

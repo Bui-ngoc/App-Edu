@@ -66,6 +66,12 @@ abstract class ILeaderboardRepository {
   Future<void> updateXp(String userId, int addedXp);
   Future<UserProfile> getUserProfile();
   Future<void> saveUserProfile(UserProfile profile);
+  Future<void> updateUserLeaderboard({
+    required String userId,
+    String? userName,
+    String? groupName,
+    int? xp,
+  });
 }
 
 abstract class IAiTutorRepository {

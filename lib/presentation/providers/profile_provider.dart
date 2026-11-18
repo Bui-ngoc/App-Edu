@@ -77,6 +77,12 @@ class ProfileProvider extends ChangeNotifier {
   Future<void> updateNameAndGroup(String name, String group) async {
     _profile = _profile.copyWith(name: name.trim(), currentGroup: group.trim());
     await _repo.saveUserProfile(_profile);
+    await _repo.updateUserLeaderboard(
+      userId: _profile.uid,
+      userName: _profile.name,
+      groupName: _profile.currentGroup,
+      xp: _profile.totalXp,
+    );
     notifyListeners();
   }
 

@@ -27,4 +27,19 @@ class LeaderboardRepositoryImpl implements ILeaderboardRepository {
   Future<void> saveUserProfile(UserProfile profile) {
     return _dataSource.saveUserProfile(profile);
   }
+
+  @override
+  Future<void> updateUserLeaderboard({
+    required String userId,
+    String? userName,
+    String? groupName,
+    int? xp,
+  }) {
+    return _dataSource.updateUserLeaderboard(
+      userId: userId,
+      userName: userName,
+      groupName: groupName,
+      xp: xp,
+    );
+  }
 }

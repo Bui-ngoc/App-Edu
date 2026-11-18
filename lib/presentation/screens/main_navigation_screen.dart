@@ -85,9 +85,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Lịch sử phòng thi',
             ),
             NavigationDestination(
-              icon: Icon(Icons.local_fire_department_outlined),
-              selectedIcon: Icon(Icons.local_fire_department_rounded, color: AppColors.secondary),
-              label: 'Chuỗi ngày',
+              icon: Icon(Icons.emoji_events_outlined),
+              selectedIcon: Icon(Icons.emoji_events_rounded, color: AppColors.secondary),
+              label: 'BXH Nhóm',
             ),
           ]
         : const [
@@ -112,9 +112,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Từ điển IT',
             ),
             NavigationDestination(
-              icon: Icon(Icons.local_fire_department_outlined),
-              selectedIcon: Icon(Icons.local_fire_department_rounded, color: AppColors.primary),
-              label: 'Chuỗi ngày',
+              icon: Icon(Icons.emoji_events_outlined),
+              selectedIcon: Icon(Icons.emoji_events_rounded, color: AppColors.primary),
+              label: 'BXH Nhóm',
             ),
           ];
 
