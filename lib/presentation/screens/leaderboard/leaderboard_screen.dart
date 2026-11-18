@@ -209,15 +209,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final profProv = context.read<ProfileProvider>();
     final lProv = context.read<LeaderboardProvider>();
     final groups = lProv.availableGroups;
+    final codeController = TextEditingController();
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
         return Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,24 +241,58 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                '👥 Đổi nhóm học tập của bạn',
+                '👥 Chuyển nhóm học tập của bạn',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               const Text(
-                'Điểm tích lũy EXP của bạn sẽ được tính vào bảng xếp hạng của nhóm bạn chọn:',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondaryLight),
+                '⚠️ Quy tắc: Mỗi sinh viên chỉ thuộc duy nhất 1 nhóm học. Khi chuyển sang nhóm mới, điểm EXP hoạt động của bạn sẽ được tính vào bảng xếp hạng của nhóm đó.',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
               ),
               const SizedBox(height: 16),
+              TextField(
+                controller: codeController,
+                decoration: InputDecoration(
+                  labelText: 'Nhập tên hoặc mã nhóm học',
+                  hintText: 'Ví dụ: Nhóm 02 - Flutter Pro',
+                  prefixIcon: const Icon(Icons.qr_code_scanner_rounded),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.login_rounded),
+                  label: const Text('Tham gia nhóm theo tên / mã trên'),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    final target = codeController.text.trim();
+                    if (target.isNotEmpty) {
+                      await profProv.updateNameAndGroup(profProv.profile.name, target);
+                      lProv.selectGroup(target);
+                      await lProv.loadLeaderboard(force: true);
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Hoặc chọn từ các nhóm hiện có:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
               ...groups.map((grp) {
                 final isCurrent = profProv.profile.currentGroup == grp;
                 return ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
                   leading: Icon(
                     isCurrent ? Icons.check_circle_rounded : Icons.group_work_outlined,
                     color: isCurrent ? AppColors.primary : Colors.grey,
                   ),
                   title: Text(grp, style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal)),
-                  trailing: isCurrent ? const Text('Nhóm hiện tại', style: TextStyle(fontSize: 12, color: AppColors.primary)) : null,
+                  trailing: isCurrent ? const Text('Nhóm hiện tại', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)) : null,
                   onTap: () async {
                     await profProv.updateNameAndGroup(profProv.profile.name, grp);
                     lProv.selectGroup(grp);
@@ -526,8 +567,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final pProv = context.watch<ProfileProvider>();
     final userProfile = pProv.profile;
 
-    final selectedGroup = lProv.selectedGroup;
-    final filteredList = lProv.filteredEntries;
+    // Sinh viên chỉ thuộc 1 nhóm duy nhất (userProfile.currentGroup) và chỉ so sánh nội bộ nhóm.
+    // Giáo viên có thể duyệt xem BXH của bất kỳ nhóm nào.
+    final selectedGroup = isTeacher ? lProv.selectedGroup : userProfile.currentGroup;
+    final filteredList = lProv.entries.where((e) => e.groupName == selectedGroup).toList()
+      ..sort((a, b) => b.xp.compareTo(a.xp));
     final availableGroups = lProv.availableGroups;
 
     // Tìm thứ hạng cá nhân trong nhóm
@@ -558,38 +602,61 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── CHỌN NHÓM HỌC ĐỂ SO TÀI (TUYỆT ĐỐI KHÔNG CÓ "TOÀN TRƯỜNG") ───
+            // ── THÔNG TIN NHÓM HỌC ĐANG SO TÀI (KHÔNG CÓ "TOÀN TRƯỜNG") ───
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: isTeacher ? AppColors.secondary.withOpacity(0.08) : AppColors.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(
+                  color: isTeacher ? AppColors.secondary.withOpacity(0.25) : AppColors.primary.withOpacity(0.25),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.groups_rounded, color: AppColors.primary, size: 22),
-                  const SizedBox(width: 10),
+                  Icon(
+                    Icons.groups_rounded,
+                    color: isTeacher ? AppColors.secondary : AppColors.primary,
+                    size: 26,
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Đang so tài trong nhóm học:',
-                          style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                        Text(
+                          isTeacher ? 'Đang xem BXH nhóm học:' : 'Nhóm học của bạn (1 SV chỉ thuộc 1 nhóm):',
+                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           selectedGroup,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.primary),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isTeacher ? AppColors.secondary : AppColors.primary,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (!isTeacher)
+                          const Text(
+                            'Chỉ so sánh điểm EXP hoạt động giữa các bạn cùng nhóm.',
+                            style: TextStyle(fontSize: 11, color: Colors.black54),
+                          ),
                       ],
                     ),
                   ),
                   if (!isTeacher)
-                    TextButton.icon(
-                      icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                      label: const Text('Đổi nhóm'),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                      label: const Text('Chuyển nhóm'),
                       onPressed: () => _showStudentChangeGroupSheet(context),
                     ),
                 ],
@@ -597,33 +664,32 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Thanh danh sách các nhóm cụ thể (KHÔNG CÓ "Tất cả")
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: availableGroups.map((grp) {
-                  final isSelected = selectedGroup == grp;
-                  final isMine = !isTeacher && userProfile.currentGroup == grp;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: ChoiceChip(
-                      selected: isSelected,
-                      avatar: isMine ? const Icon(Icons.star_rounded, size: 16, color: Colors.amber) : null,
-                      label: Text(grp),
-                      selectedColor: isTeacher ? AppColors.secondary : AppColors.primary,
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? Colors.white : Colors.black87,
+            // CHỈ GIÁO VIÊN MỚI CÓ THỂ CHỌN QUA LẠI GIỮA NHIỀU NHÓM ĐỂ THEO DÕI:
+            if (isTeacher) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: availableGroups.map((grp) {
+                    final isSelected = selectedGroup == grp;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: ChoiceChip(
+                        selected: isSelected,
+                        label: Text(grp),
+                        selectedColor: AppColors.secondary,
+                        labelStyle: TextStyle(
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? Colors.white : Colors.black87,
+                        ),
+                        onSelected: (_) => lProv.selectGroup(grp),
                       ),
-                      onSelected: (_) => lProv.selectGroup(grp),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
 
             // ── THẺ THỨ HẠNG CỦA HỌC VIÊN TRONG NHÓM NÀY ─────────────────────
             if (!isTeacher)

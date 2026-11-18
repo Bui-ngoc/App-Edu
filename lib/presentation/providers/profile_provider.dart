@@ -86,6 +86,22 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Ghi nhận điểm hoạt động (EXP) của sinh viên (khi làm quiz, bài tập, flashcards)
+  /// và cập nhật thời gian thực vào bảng xếp hạng Firestore của nhóm học.
+  Future<void> addActivityXp(int xpAmount) async {
+    if (xpAmount <= 0) return;
+    final newXp = _profile.totalXp + xpAmount;
+    _profile = _profile.copyWith(totalXp: newXp);
+    await _repo.saveUserProfile(_profile);
+    await _repo.updateUserLeaderboard(
+      userId: _profile.uid,
+      userName: _profile.name,
+      groupName: _profile.currentGroup,
+      xp: _profile.totalXp,
+    );
+    notifyListeners();
+  }
+
   Future<void> saveApiKey(String key) async {
     _apiKey = key.trim();
     await _aiDataSource.saveApiKey(_apiKey);

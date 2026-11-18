@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 import '../../domain/repositories/interfaces.dart';
@@ -6,9 +7,26 @@ enum LeaderboardUiState { initial, loading, success, error }
 
 class LeaderboardProvider extends ChangeNotifier {
   final ILeaderboardRepository _repo;
+  StreamSubscription<List<LeaderboardEntry>>? _sub;
 
   LeaderboardProvider({required ILeaderboardRepository repo}) : _repo = repo {
     loadLeaderboard();
+    _subscribeRealtime();
+  }
+
+  void _subscribeRealtime() {
+    _sub?.cancel();
+    _sub = _repo.getRealtimeLeaderboard().listen((entries) {
+      _entries = List.from(entries)..sort((a, b) => b.xp.compareTo(a.xp));
+      _state = LeaderboardUiState.success;
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   LeaderboardUiState _state = LeaderboardUiState.initial;
@@ -23,7 +41,7 @@ class LeaderboardProvider extends ChangeNotifier {
   List<String> _groups = [];
   List<String> get availableGroups => _groups;
 
-  String _selectedGroup = 'Nhóm F - KTHP';
+  String _selectedGroup = 'Nhóm 01 - KTHP';
   String get selectedGroup => _selectedGroup;
 
   /// CHỈ SO SÁNH GIỮA CÁC SINH VIÊN CÙNG NHÓM HỌC

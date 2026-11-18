@@ -30,7 +30,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
         profileProv.profile.currentGroup,
       );
       if (earnedXp > 0) {
-        // XP gained
+        profileProv.addActivityXp(earnedXp);
       }
     });
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/leaderboard_entry.dart';
@@ -12,14 +13,27 @@ class LeaderboardDataSource {
   final Map<String, UserProfile> _profileCache = {};
   String? _currentActiveEmail;
 
+  final StreamController<List<LeaderboardEntry>> _streamController =
+      StreamController<List<LeaderboardEntry>>.broadcast();
+
   Future<SharedPreferences> _getPrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;
   }
 
-  Stream<List<LeaderboardEntry>> get leaderboardStream async* {
-    final list = await getEntries();
-    yield list;
+  Stream<List<LeaderboardEntry>> get leaderboardStream {
+    getEntries().then((entries) {
+      if (!_streamController.isClosed) {
+        _streamController.add(entries);
+      }
+    });
+    return _streamController.stream;
+  }
+
+  void _emitRealtime(List<LeaderboardEntry> list) {
+    if (!_streamController.isClosed) {
+      _streamController.add(List.unmodifiable(list));
+    }
   }
 
   Future<List<LeaderboardEntry>> getEntries() async {
@@ -31,6 +45,7 @@ class LeaderboardDataSource {
     final jsonStr = prefs.getString(_leaderboardKey);
     if (jsonStr == null || jsonStr.isEmpty) {
       final initialData = [
+        // ── NHÓM 01: Nhóm của Bạn và các bạn cùng nhóm ───────────────────────
         const LeaderboardEntry(
           id: 'user_u1',
           userName: 'Đặng Mai Phương',
@@ -39,7 +54,7 @@ class LeaderboardDataSource {
           streakDays: 14,
           testsCompleted: 38,
           badges: ['Thợ săn Tri thức', 'Bậc thầy Trắc nghiệm', '7 Ngày Chăm chỉ'],
-          groupName: 'Nhóm F - KTHP',
+          groupName: 'Nhóm 01 - KTHP',
         ),
         const LeaderboardEntry(
           id: 'user_u2',
@@ -49,7 +64,7 @@ class LeaderboardDataSource {
           streakDays: 9,
           testsCompleted: 29,
           badges: ['Chiến binh SM-2', 'Chuyên gia IT'],
-          groupName: 'Nhóm F - KTHP',
+          groupName: 'Nhóm 01 - KTHP',
         ),
         const LeaderboardEntry(
           id: 'user_u3',
@@ -59,7 +74,7 @@ class LeaderboardDataSource {
           streakDays: 12,
           testsCompleted: 25,
           badges: ['Ngôi sao Song ngữ', 'Người tiên phong'],
-          groupName: 'Nhóm F - KTHP',
+          groupName: 'Nhóm 01 - KTHP',
         ),
         const LeaderboardEntry(
           id: 'user_current',
@@ -69,7 +84,7 @@ class LeaderboardDataSource {
           streakDays: 5,
           testsCompleted: 18,
           badges: ['Tân binh EduMaster', 'Khám phá Từ điển'],
-          groupName: 'Nhóm F - KTHP',
+          groupName: 'Nhóm 01 - KTHP',
         ),
         const LeaderboardEntry(
           id: 'user_u5',
@@ -79,9 +94,10 @@ class LeaderboardDataSource {
           streakDays: 4,
           testsCompleted: 12,
           badges: ['Tân binh'],
-          groupName: 'Nhóm F - KTHP',
+          groupName: 'Nhóm 01 - KTHP',
         ),
-        // Thành viên Nhóm 1 - Lập trình Di động
+
+        // ── NHÓM 02: Các sinh viên nhóm khác (user 2 không thuộc nhóm 1) ──────
         const LeaderboardEntry(
           id: 'user_u6',
           userName: 'Phạm Hoàng Nam',
@@ -90,7 +106,7 @@ class LeaderboardDataSource {
           streakDays: 21,
           testsCompleted: 45,
           badges: ['Thần đồng Lập trình', 'Top 1 Server'],
-          groupName: 'Nhóm 1 - Lập trình Di động',
+          groupName: 'Nhóm 02 - Flutter Pro',
         ),
         const LeaderboardEntry(
           id: 'user_u7',
@@ -100,7 +116,7 @@ class LeaderboardDataSource {
           streakDays: 11,
           testsCompleted: 33,
           badges: ['Chiến binh Bền bỉ'],
-          groupName: 'Nhóm 1 - Lập trình Di động',
+          groupName: 'Nhóm 02 - Flutter Pro',
         ),
         const LeaderboardEntry(
           id: 'user_u8',
@@ -110,7 +126,7 @@ class LeaderboardDataSource {
           streakDays: 7,
           testsCompleted: 22,
           badges: ['Bậc thầy SM-2'],
-          groupName: 'Nhóm 1 - Lập trình Di động',
+          groupName: 'Nhóm 02 - Flutter Pro',
         ),
         const LeaderboardEntry(
           id: 'user_u9',
@@ -120,9 +136,10 @@ class LeaderboardDataSource {
           streakDays: 5,
           testsCompleted: 16,
           badges: ['Khám phá Tri thức'],
-          groupName: 'Nhóm 1 - Lập trình Di động',
+          groupName: 'Nhóm 02 - Flutter Pro',
         ),
-        // Thành viên Nhóm 2 - Kiến trúc Flutter
+
+        // ── NHÓM 03: Sinh viên thuộc Nhóm 03 ─────────────────────────────────
         const LeaderboardEntry(
           id: 'user_u10',
           userName: 'Bùi Gia Huy',
@@ -131,7 +148,7 @@ class LeaderboardDataSource {
           streakDays: 16,
           testsCompleted: 39,
           badges: ['Kiến trúc sư Clean Code'],
-          groupName: 'Nhóm 2 - Kiến trúc Flutter',
+          groupName: 'Nhóm 03 - Lập Trình Di Động',
         ),
         const LeaderboardEntry(
           id: 'user_u11',
@@ -141,7 +158,7 @@ class LeaderboardDataSource {
           streakDays: 10,
           testsCompleted: 28,
           badges: ['Ngôi sao Song ngữ'],
-          groupName: 'Nhóm 2 - Kiến trúc Flutter',
+          groupName: 'Nhóm 03 - Lập Trình Di Động',
         ),
         const LeaderboardEntry(
           id: 'user_u12',
@@ -151,11 +168,22 @@ class LeaderboardDataSource {
           streakDays: 6,
           testsCompleted: 19,
           badges: ['Chăm chỉ Mỗi ngày'],
-          groupName: 'Nhóm 2 - Kiến trúc Flutter',
+          groupName: 'Nhóm 03 - Lập Trình Di Động',
+        ),
+        const LeaderboardEntry(
+          id: 'user_u13',
+          userName: 'Mai Xuân Bách',
+          avatarUrl: '',
+          xp: 1350,
+          streakDays: 3,
+          testsCompleted: 14,
+          badges: ['Tân binh'],
+          groupName: 'Nhóm 03 - Lập Trình Di Động',
         ),
       ];
       _cachedEntries = initialData;
       await prefs.setString(_leaderboardKey, json.encode(initialData.map((e) => e.toMap()).toList()));
+      _emitRealtime(initialData);
       return initialData;
     }
 
@@ -164,6 +192,7 @@ class LeaderboardDataSource {
       final entries = list.map((e) => LeaderboardEntry.fromMap(Map<String, dynamic>.from(e as Map))).toList();
       entries.sort((a, b) => b.xp.compareTo(a.xp));
       _cachedEntries = entries;
+      _emitRealtime(entries);
       return entries;
     } catch (_) {
       _cachedEntries = [];
@@ -209,6 +238,7 @@ class LeaderboardDataSource {
     _cachedEntries = entries;
     final prefs = await _getPrefs();
     await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+    _emitRealtime(entries);
   }
 
   // ── Quản lý nhóm học tập (Dành cho Giáo viên & Sinh viên) ─────────────────
@@ -226,10 +256,9 @@ class LeaderboardDataSource {
 
     if (groups.isEmpty) {
       groups = [
-        'Nhóm F - KTHP',
-        'Nhóm 1 - Lập trình Di động',
-        'Nhóm 2 - Kiến trúc Flutter',
-        'Nhóm 3 - Trắc nghiệm Tiếng Anh',
+        'Nhóm 01 - KTHP',
+        'Nhóm 02 - Flutter Pro',
+        'Nhóm 03 - Lập Trình Di Động',
       ];
       await prefs.setString(_groupsListKey, json.encode(groups));
     }
@@ -264,7 +293,7 @@ class LeaderboardDataSource {
     await prefs.setString(_groupsListKey, json.encode(groups));
 
     // Chuyển các sinh viên trong nhóm bị xóa về nhóm mặc định
-    final fallbackGroup = groups.isNotEmpty ? groups.first : 'Nhóm F - KTHP';
+    final fallbackGroup = groups.isNotEmpty ? groups.first : 'Nhóm 01 - KTHP';
     final entries = await getEntries();
     bool modified = false;
     for (int i = 0; i < entries.length; i++) {
@@ -285,6 +314,7 @@ class LeaderboardDataSource {
     if (modified) {
       _cachedEntries = entries;
       await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+      _emitRealtime(entries);
     }
   }
 
@@ -323,6 +353,7 @@ class LeaderboardDataSource {
     if (modified) {
       _cachedEntries = entries;
       await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+      _emitRealtime(entries);
     }
   }
 
@@ -348,6 +379,7 @@ class LeaderboardDataSource {
       _cachedEntries = entries;
       final prefs = await _getPrefs();
       await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+      _emitRealtime(entries);
     }
   }
 
@@ -371,6 +403,7 @@ class LeaderboardDataSource {
 
       final prefs = await _getPrefs();
       await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+      _emitRealtime(entries);
     }
   }
 
@@ -404,7 +437,7 @@ class LeaderboardDataSource {
         totalXp: 1850,
         streakDays: 5,
         badges: ['Tân binh EduMaster', 'Chiến binh Học tập'],
-        currentGroup: 'Sinh viên EduMaster',
+        currentGroup: 'Nhóm 01 - KTHP',
       );
     } else if (targetEmail == 'teacher@edumaster.edu.vn') {
       profile = const UserProfile(
