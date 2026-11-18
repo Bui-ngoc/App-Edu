@@ -5,6 +5,7 @@ import '../../domain/entities/leaderboard_entry.dart';
 class LeaderboardDataSource {
   static const String _profileKeyPrefix = 'edumaster_user_profile_';
   static const String _leaderboardKey = 'edumaster_leaderboard_list';
+  static const String _groupsListKey = 'edumaster_study_groups_list';
 
   SharedPreferences? _prefs;
   List<LeaderboardEntry>? _cachedEntries;
@@ -208,6 +209,146 @@ class LeaderboardDataSource {
     _cachedEntries = entries;
     final prefs = await _getPrefs();
     await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+  }
+
+  // ── Quản lý nhóm học tập (Dành cho Giáo viên & Sinh viên) ─────────────────
+
+  Future<List<String>> getGroups() async {
+    final prefs = await _getPrefs();
+    final jsonStr = prefs.getString(_groupsListKey);
+    List<String> groups = [];
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List<dynamic> list = json.decode(jsonStr);
+        groups = list.map((e) => e.toString().trim()).where((g) => g.isNotEmpty).toList();
+      } catch (_) {}
+    }
+
+    if (groups.isEmpty) {
+      groups = [
+        'Nhóm F - KTHP',
+        'Nhóm 1 - Lập trình Di động',
+        'Nhóm 2 - Kiến trúc Flutter',
+        'Nhóm 3 - Trắc nghiệm Tiếng Anh',
+      ];
+      await prefs.setString(_groupsListKey, json.encode(groups));
+    }
+
+    // Luôn bảo đảm các nhóm có thành viên trong entries đều xuất hiện
+    final entries = await getEntries();
+    for (final e in entries) {
+      final g = e.groupName.trim();
+      if (g.isNotEmpty && !groups.contains(g)) {
+        groups.add(g);
+      }
+    }
+    return groups;
+  }
+
+  Future<void> createGroup(String groupName) async {
+    final clean = groupName.trim();
+    if (clean.isEmpty) return;
+    final groups = await getGroups();
+    if (!groups.contains(clean)) {
+      groups.add(clean);
+      final prefs = await _getPrefs();
+      await prefs.setString(_groupsListKey, json.encode(groups));
+    }
+  }
+
+  Future<void> deleteGroup(String groupName) async {
+    final clean = groupName.trim();
+    final groups = await getGroups();
+    groups.remove(clean);
+    final prefs = await _getPrefs();
+    await prefs.setString(_groupsListKey, json.encode(groups));
+
+    // Chuyển các sinh viên trong nhóm bị xóa về nhóm mặc định
+    final fallbackGroup = groups.isNotEmpty ? groups.first : 'Nhóm F - KTHP';
+    final entries = await getEntries();
+    bool modified = false;
+    for (int i = 0; i < entries.length; i++) {
+      if (entries[i].groupName == clean) {
+        entries[i] = LeaderboardEntry(
+          id: entries[i].id,
+          userName: entries[i].userName,
+          avatarUrl: entries[i].avatarUrl,
+          xp: entries[i].xp,
+          streakDays: entries[i].streakDays,
+          testsCompleted: entries[i].testsCompleted,
+          badges: entries[i].badges,
+          groupName: fallbackGroup,
+        );
+        modified = true;
+      }
+    }
+    if (modified) {
+      _cachedEntries = entries;
+      await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+    }
+  }
+
+  Future<void> renameGroup(String oldName, String newName) async {
+    final cleanOld = oldName.trim();
+    final cleanNew = newName.trim();
+    if (cleanNew.isEmpty || cleanOld == cleanNew) return;
+
+    final groups = await getGroups();
+    final idx = groups.indexOf(cleanOld);
+    if (idx >= 0) {
+      groups[idx] = cleanNew;
+    } else {
+      groups.add(cleanNew);
+    }
+    final prefs = await _getPrefs();
+    await prefs.setString(_groupsListKey, json.encode(groups));
+
+    final entries = await getEntries();
+    bool modified = false;
+    for (int i = 0; i < entries.length; i++) {
+      if (entries[i].groupName == cleanOld) {
+        entries[i] = LeaderboardEntry(
+          id: entries[i].id,
+          userName: entries[i].userName,
+          avatarUrl: entries[i].avatarUrl,
+          xp: entries[i].xp,
+          streakDays: entries[i].streakDays,
+          testsCompleted: entries[i].testsCompleted,
+          badges: entries[i].badges,
+          groupName: cleanNew,
+        );
+        modified = true;
+      }
+    }
+    if (modified) {
+      _cachedEntries = entries;
+      await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+    }
+  }
+
+  Future<void> moveStudentToGroup(String studentId, String newGroupName) async {
+    final cleanGroup = newGroupName.trim();
+    if (cleanGroup.isEmpty) return;
+    await createGroup(cleanGroup);
+
+    final entries = await getEntries();
+    final idx = entries.indexWhere((e) => e.id == studentId);
+    if (idx >= 0) {
+      final old = entries[idx];
+      entries[idx] = LeaderboardEntry(
+        id: old.id,
+        userName: old.userName,
+        avatarUrl: old.avatarUrl,
+        xp: old.xp,
+        streakDays: old.streakDays,
+        testsCompleted: old.testsCompleted,
+        badges: old.badges,
+        groupName: cleanGroup,
+      );
+      _cachedEntries = entries;
+      final prefs = await _getPrefs();
+      await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+    }
   }
 
   Future<void> updateXp(String userId, int addedXp) async {

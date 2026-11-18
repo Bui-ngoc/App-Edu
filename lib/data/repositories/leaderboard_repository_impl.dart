@@ -42,4 +42,29 @@ class LeaderboardRepositoryImpl implements ILeaderboardRepository {
       xp: xp,
     );
   }
+
+  @override
+  Future<List<String>> getGroups() {
+    return _dataSource.getGroups();
+  }
+
+  @override
+  Future<void> createGroup(String groupName) {
+    return _dataSource.createGroup(groupName);
+  }
+
+  @override
+  Future<void> deleteGroup(String groupName) {
+    return _dataSource.deleteGroup(groupName);
+  }
+
+  @override
+  Future<void> renameGroup(String oldName, String newName) {
+    return _dataSource.renameGroup(oldName, newName);
+  }
+
+  @override
+  Future<void> moveStudentToGroup(String studentId, String newGroupName) {
+    return _dataSource.moveStudentToGroup(studentId, newGroupName);
+  }
 }

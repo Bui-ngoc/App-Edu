@@ -85,9 +85,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Lịch sử phòng thi',
             ),
             NavigationDestination(
-              icon: Icon(Icons.emoji_events_outlined),
-              selectedIcon: Icon(Icons.emoji_events_rounded, color: AppColors.secondary),
-              label: 'BXH Nhóm',
+              icon: Icon(Icons.groups_outlined),
+              selectedIcon: Icon(Icons.groups_rounded, color: AppColors.secondary),
+              label: 'Quản lý Nhóm',
             ),
           ]
         : const [

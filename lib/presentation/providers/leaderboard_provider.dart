@@ -20,30 +20,84 @@ class LeaderboardProvider extends ChangeNotifier {
   List<LeaderboardEntry> _entries = [];
   List<LeaderboardEntry> get entries => _entries;
 
-  String _selectedGroup = 'Tất cả';
+  List<String> _groups = [];
+  List<String> get availableGroups => _groups;
+
+  String _selectedGroup = 'Nhóm F - KTHP';
   String get selectedGroup => _selectedGroup;
 
-  List<String> get availableGroups {
-    final groups = <String>{};
-    for (final e in _entries) {
-      if (e.groupName.trim().isNotEmpty) {
-        groups.add(e.groupName.trim());
-      }
-    }
-    return groups.toList()..sort();
-  }
-
+  /// CHỈ SO SÁNH GIỮA CÁC SINH VIÊN CÙNG NHÓM HỌC
+  /// Tuyệt đối không so sánh toàn trường.
   List<LeaderboardEntry> get filteredEntries {
-    if (_selectedGroup == 'Tất cả') {
-      return List.unmodifiable(_entries);
-    }
-    return _entries.where((e) => e.groupName == _selectedGroup).toList();
+    final list = _entries.where((e) => e.groupName == _selectedGroup).toList();
+    list.sort((a, b) => b.xp.compareTo(a.xp));
+    return list;
   }
 
   void selectGroup(String group) {
-    if (_selectedGroup == group) return;
-    _selectedGroup = group;
+    final clean = group.trim();
+    if (clean.isEmpty || _selectedGroup == clean) return;
+    _selectedGroup = clean;
     notifyListeners();
+  }
+
+  // ── Thống kê theo nhóm học cho Giáo viên ─────────────────────────────────
+
+  int getGroupStudentCount(String groupName) {
+    return _entries.where((e) => e.groupName == groupName).length;
+  }
+
+  int getGroupAverageXp(String groupName) {
+    final members = _entries.where((e) => e.groupName == groupName).toList();
+    if (members.isEmpty) return 0;
+    final total = members.fold<int>(0, (sum, e) => sum + e.xp);
+    return (total / members.length).round();
+  }
+
+  LeaderboardEntry? getGroupTopStudent(String groupName) {
+    final members = _entries.where((e) => e.groupName == groupName).toList();
+    if (members.isEmpty) return null;
+    members.sort((a, b) => b.xp.compareTo(a.xp));
+    return members.first;
+  }
+
+  // ── Quản lý Nhóm học tập (Dành cho Giáo viên) ───────────────────────────
+
+  Future<void> createGroup(String groupName) async {
+    final clean = groupName.trim();
+    if (clean.isEmpty) return;
+    await _repo.createGroup(clean);
+    _selectedGroup = clean;
+    await loadLeaderboard(force: true);
+  }
+
+  Future<void> deleteGroup(String groupName) async {
+    final clean = groupName.trim();
+    if (clean.isEmpty) return;
+    await _repo.deleteGroup(clean);
+    await loadLeaderboard(force: true);
+    if (_groups.isNotEmpty) {
+      _selectedGroup = _groups.first;
+    }
+    notifyListeners();
+  }
+
+  Future<void> renameGroup(String oldName, String newName) async {
+    final cleanOld = oldName.trim();
+    final cleanNew = newName.trim();
+    if (cleanNew.isEmpty || cleanOld == cleanNew) return;
+    await _repo.renameGroup(cleanOld, cleanNew);
+    if (_selectedGroup == cleanOld) {
+      _selectedGroup = cleanNew;
+    }
+    await loadLeaderboard(force: true);
+  }
+
+  Future<void> moveStudentToGroup(String studentId, String newGroupName) async {
+    final clean = newGroupName.trim();
+    if (clean.isEmpty) return;
+    await _repo.moveStudentToGroup(studentId, clean);
+    await loadLeaderboard(force: true);
   }
 
   int getRank(LeaderboardEntry entry) {
@@ -81,8 +135,13 @@ class LeaderboardProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      _groups = await _repo.getGroups();
       _entries = await _repo.getRealtimeLeaderboard().first;
       _entries.sort((a, b) => b.xp.compareTo(a.xp));
+
+      if (_groups.isNotEmpty && !_groups.contains(_selectedGroup)) {
+        _selectedGroup = _groups.first;
+      }
       _state = LeaderboardUiState.success;
     } catch (e) {
       _state = LeaderboardUiState.error;
