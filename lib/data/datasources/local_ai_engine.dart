@@ -312,49 +312,35 @@ class LocalAiEngine {
     final topicDisplay = topic.isNotEmpty ? topic : raw;
 
     if (isWhat) {
-      return '💡 **Giải đáp chuyên sâu về: "$topicDisplay"**\n\n'
+      return '**Giải đáp về "$topicDisplay":**\n\n'
           '1. **Định nghĩa & Bản chất:**\n'
-          '   - **$topicDisplay** là một thành phần/khái niệm quan trọng trong công nghệ và phát triển ứng dụng di động.\n'
-          '   - Đóng vai trò then chốt trong việc tối ưu hóa hiệu năng, trải nghiệm người dùng và tính nhất quán của hệ thống.\n\n'
-          '2. **Nguyên lý hoạt động cốt lõi:**\n'
-          '   - Hoạt động dựa trên các nguyên tắc thiết kế phần mềm hiện đại (Clean Code & Separation of Concerns).\n'
-          '   - Giúp mã nguồn có cấu trúc rõ ràng, dễ bảo trì và dễ dàng viết bài kiểm thử tự động (Unit Test).\n\n'
-          '3. **Ứng dụng thực tiễn trong EduMaster:**\n'
-          '   - Khái niệm này liên kết trực tiếp với các phân hệ học tập trắc nghiệm và ghi nhớ ngắt quãng của ứng dụng.\n'
-          '   - Bạn có thể vào tab **Từ điển IT** hoặc ôn tập bộ **Thẻ ghi nhớ SM-2** để củng cố thêm kiến thức!';
+          '   - **$topicDisplay** là một khái niệm/chủ đề quan trọng trong lĩnh vực học tập, khoa học hoặc cuộc sống.\n'
+          '   - Đóng vai trò then chốt trong việc xây dựng nền tảng tư duy và giải quyết các bài toán liên quan.\n\n'
+          '2. **Ý nghĩa thực tiễn:**\n'
+          '   - Nắm vững khái niệm này giúp bạn áp dụng hiệu quả vào công việc, nghiên cứu và thực hành.\n'
+          '   - Bạn có thể hỏi sâu hơn về công thức, ví dụ minh họa hoặc so sánh cụ thể để mình hỗ trợ nhé!';
     }
 
     if (isHow) {
-      return '🛠️ **Hướng dẫn thực hiện: "$topicDisplay"**\n\n'
-          '1. **Bước 1 — Chuẩn bị & Phân tích yêu cầu:**\n'
-          '   - Xác định rõ mục tiêu đầu ra và dữ liệu đầu vào cần thiết.\n'
-          r'   - Tuân thủ kiến trúc phân tầng (Presentation -> Domain -> Data).' '\n\n'
-          '2. **Bước 2 — Triển khai logic nghiệp vụ:**\n'
-          '   - Xây dựng lớp xử lý độc lập, sử dụng mô hình Provider (`ChangeNotifier`) để quản lý trạng thái.\n'
-          '   - Đảm bảo giải phóng tài nguyên đầy đủ trong hàm `dispose()` để tránh rò rỉ bộ nhớ.\n\n'
-          '3. **Bước 3 — Kiểm thử & Tối ưu hóa:**\n'
-          '   - Viết ít nhất 1 bài Unit Test kiểm tra trường hợp thành công và trường hợp lỗi.\n'
-          '   - Đảm bảo xử lý đầy đủ 3 trạng thái giao diện: Đang tải, Lỗi mạng và Chưa có dữ liệu.';
+      return '**Hướng dẫn các bước thực hiện: "$topicDisplay"**\n\n'
+          '1. **Bước 1 — Xác định mục tiêu & Chuẩn bị:**\n'
+          '   - Phân tích rõ kết quả cần đạt được và chuẩn bị các công cụ/kiến thức cần thiết.\n\n'
+          '2. **Bước 2 — Triển khai từng bước:**\n'
+          '   - Thực hiện theo quy trình chuẩn, chú ý các quy tắc an toàn và kiểm tra từng công đoạn.\n\n'
+          '3. **Bước 3 — Đánh giá & Rút kinh nghiệm:**\n'
+          '   - Kiểm tra lại kết quả đầu ra và tinh chỉnh để đạt hiệu quả tối ưu.';
     }
 
     if (isWhy) {
-      return '🔍 **Phân tích lý do & Tầm quan trọng của: "$topicDisplay"**\n\n'
-          '1. **Mục đích căn bản:**\n'
-          '   - Giải quyết triệt để sự phụ thuộc phức tạp giữa các thành phần phần mềm.\n'
-          '   - Nâng cao tính ổn định, đảm bảo ứng dụng không bao giờ bị dừng đột ngột (crash) khi gặp lỗi ngoại lệ.\n\n'
-          '2. **Lợi ích mang lại:**\n'
-          '   - **Bảo mật:** Không lộ thông tin nhạy cảm hay khóa bí mật ra ngoài.\n'
-          '   - **Trải nghiệm người dùng:** Giao diện phản hồi mượt mà, tốc độ phản hồi nhanh.\n'
-          '   - **Mở rộng dễ dàng:** Cho phép bổ sung thêm tính năng mới mà không phá vỡ logic cũ.';
+      return '**Phân tích lý do & Ý nghĩa của "$topicDisplay":**\n\n'
+          '1. **Mục đích căn bản:** Xuất phát từ nhu cầu giải quyết các bài toán thực tế, nâng cao hiệu quả và tính chính xác.\n'
+          '2. **Lợi ích mang lại:** Tối ưu hóa thời gian, nâng cao chất lượng và tránh các sai sót không đáng có.';
     }
 
-    // Phản hồi tổng quát thân thiện, thông minh và có cấu trúc sư phạm
-    return '🤖 **Trợ lý Gia sư AI EduMaster phản hồi về: "$topicDisplay"**\n\n'
-        'Cảm ơn bạn đã đặt một câu hỏi rất thú vị! Dưới đây là phân tích và gợi ý từ trợ lý học tập:\n\n'
-        '• **Tổng quan vấn đề:** Câu hỏi liên quan đến kiến thức **$topicDisplay** trong chương trình học tập.\n'
-        '• **Gợi ý học tập chuyên sâu:**\n'
-        '  - Bạn có thể tra cứu nhanh thuật ngữ này tại **Tab 4 (Từ điển IT FTS)** để xem định nghĩa song ngữ Anh - Việt.\n'
-        '  - Hoặc tham gia làm các câu hỏi thuộc chủ đề liên quan trong **Ngân hàng 300 câu trắc nghiệm** để luyện tập.\n'
-        '• **Mẹo:** Bạn có thể hỏi mình chi tiết hơn, ví dụ: *"So sánh A và B"*, *"Cách sử dụng..."*, hoặc *"Công thức tính toán..."* nhé!';
+    // Phản hồi tổng quát trực tiếp
+    return '**Phản hồi về "$topicDisplay":**\n\n'
+        'Cảm ơn bạn đã đặt câu hỏi về **$topicDisplay**.\n\n'
+        '- **Tóm tắt:** Đây là một vấn đề quan trọng cần tìm hiểu bản chất và nguyên lý hoạt động.\n'
+        '- **Gợi ý:** Bạn có thể đặt câu hỏi chi tiết hơn như *"So sánh A và B"*, *"Cách thực hiện..."*, hoặc *"Công thức tính toán..."* để mình hỗ trợ tốt nhất nhé!';
   }
 }

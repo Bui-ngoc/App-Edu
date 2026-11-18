@@ -15,24 +15,21 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final TextEditingController _nameController     = TextEditingController();
-  final TextEditingController _apiKeyController   = TextEditingController();
-  final TextEditingController _proxyUrlController = TextEditingController();
+  final TextEditingController _nameController   = TextEditingController();
+  final TextEditingController _apiKeyController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     final prov = context.read<ProfileProvider>();
-    _nameController.text     = prov.profile.name;
-    _apiKeyController.text   = prov.apiKey;
-    _proxyUrlController.text = prov.proxyUrl;
+    _nameController.text   = prov.profile.name;
+    _apiKeyController.text = prov.apiKey;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _apiKeyController.dispose();
-    _proxyUrlController.dispose();
     super.dispose();
   }
 
@@ -415,7 +412,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // ── Cấu hình AI (Proxy + Direct Key + Demo Mode) ────────────────
+            // ── Cấu hình AI (Direct Key + Demo Mode) ────────────────────
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -436,24 +433,86 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
+                        // Trạng thái kết nối AI
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: prov.isDemoMode
+                                ? AppColors.warning.withOpacity(0.12)
+                                : AppColors.success.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: prov.isDemoMode
+                                  ? AppColors.warning.withOpacity(0.4)
+                                  : AppColors.success.withOpacity(0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                prov.isDemoMode
+                                    ? Icons.offline_bolt_rounded
+                                    : Icons.cloud_done_rounded,
+                                size: 14,
+                                color: prov.isDemoMode ? AppColors.warning : AppColors.success,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                prov.isDemoMode ? 'Offline' : 'Online',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: prov.isDemoMode ? AppColors.warning : AppColors.success,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                     const Divider(height: 20),
 
+                    // Thông tin model đang dùng
+                    if (!prov.isDemoMode)
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primary),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Đang dùng: Google Gemini 2.0 Flash\nKey tích hợp sẵn — hoạt động ngay, không cần cấu hình.',
+                                style: TextStyle(fontSize: 12, color: AppColors.primary, height: 1.4),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                     // Demo Mode toggle
                     Semantics(
-                      label: 'Bật tắt chế độ Demo AI',
+                      label: 'Bật tắt chế độ Offline AI',
                       child: SwitchListTile(
                         contentPadding: EdgeInsets.zero,
                         secondary: Icon(
-                          prov.isDemoMode ? Icons.science_rounded : Icons.science_outlined,
-                          color: prov.isDemoMode ? AppColors.accent : AppColors.textSecondaryLight,
+                          prov.isDemoMode ? Icons.offline_bolt_rounded : Icons.cloud_rounded,
+                          color: prov.isDemoMode ? AppColors.warning : AppColors.success,
                         ),
-                        title: const Text('Chế độ Demo',
+                        title: const Text('Chế độ Ngoại tuyến (Offline)',
                             style: TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: const Text(
-                          'Sử dụng dữ liệu mẫu offline, không cần key.',
-                          style: TextStyle(fontSize: 12),
+                        subtitle: Text(
+                          prov.isDemoMode
+                              ? 'Đang dùng AI Engine cục bộ — không cần mạng.'
+                              : 'Đang dùng Gemini 2.0 Flash qua mạng.',
+                          style: const TextStyle(fontSize: 12),
                         ),
                         value: prov.isDemoMode,
                         onChanged: (v) => prov.setDemoMode(v),
@@ -461,70 +520,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const Divider(height: 20),
 
-                    // Proxy Server URL
-                    Text('Proxy Server URL',
+                    // Tùy chọn nhập key riêng
+                    Text('Khóa API cá nhân (tùy chọn)',
                         style: Theme.of(context)
                             .textTheme
                             .labelLarge
                             ?.copyWith(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _proxyUrlController,
-                      keyboardType: TextInputType.url,
-                      decoration: const InputDecoration(
-                        labelText: 'Proxy URL',
-                        hintText: 'https://my-proxy.example.com/ask',
-                        prefixIcon: Icon(Icons.dns_rounded),
-                        border: OutlineInputBorder(),
-                      ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Để trống nếu muốn dùng key tích hợp sẵn của ứng dụng.',
+                      style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
                     ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.save_rounded, size: 18),
-                        label: const Text('Lưu Proxy URL'),
-                        onPressed: () {
-                          prov.saveProxyUrl(_proxyUrlController.text);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Đã lưu Proxy URL!')),
-                          );
-                        },
-                      ),
-                    ),
-                    const Divider(height: 20),
-
-                    // Direct Gemini API Key (fallback)
-                    Text('Gemini API Key',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelLarge
-                            ?.copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _apiKeyController,
                       obscureText: true,
                       decoration: const InputDecoration(
-                        labelText: 'Gemini API Key',
-                        hintText: 'AIzaSy...',
+                        labelText: 'Gemini API Key (tùy chọn)',
+                        hintText: 'Để trống để dùng key mặc định',
                         prefixIcon: Icon(Icons.key_rounded),
                         border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.lock_rounded, size: 18),
-                        label: const Text('Lưu khóa AI'),
-                        onPressed: () {
-                          prov.saveApiKey(_apiKeyController.text);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Đã lưu cấu hình khóa API an toàn!')),
-                          );
-                        },
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.save_rounded, size: 18),
+                            label: const Text('Lưu khóa'),
+                            onPressed: () {
+                              prov.saveApiKey(_apiKeyController.text);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    _apiKeyController.text.trim().isEmpty
+                                        ? 'Đã xóa key — dùng key tích hợp sẵn!'
+                                        : 'Đã lưu khóa API thành công!',
+                                  ),
+                                  backgroundColor: AppColors.success,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextButton.icon(
+                            icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                            label: const Text('Key mặc định'),
+                            onPressed: () async {
+                              await prov.resetApiKeyToDefault();
+                              _apiKeyController.clear();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Đã khôi phục khóa API mặc định tích hợp sẵn!'),
+                                    backgroundColor: AppColors.success,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

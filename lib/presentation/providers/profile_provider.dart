@@ -22,9 +22,6 @@ class ProfileProvider extends ChangeNotifier {
   String _apiKey = '';
   String get apiKey => _apiKey;
 
-  String _proxyUrl = '';
-  String get proxyUrl => _proxyUrl;
-
   bool _isDemoMode = false;
   bool get isDemoMode => _isDemoMode;
 
@@ -45,8 +42,7 @@ class ProfileProvider extends ChangeNotifier {
 
     try {
       _profile   = await _repo.getUserProfile();
-      _apiKey    = (await _aiDataSource.getApiKey()) ?? '';
-      _proxyUrl  = await _aiDataSource.getProxyUrl();
+      _apiKey    = await _aiDataSource.getApiKey();
       _isDemoMode = await _aiDataSource.isDemoMode();
     } catch (_) {}
     _isLoading = false;
@@ -90,9 +86,9 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> saveProxyUrl(String url) async {
-    _proxyUrl = url.trim();
-    await _aiDataSource.saveProxyUrl(_proxyUrl);
+  Future<void> resetApiKeyToDefault() async {
+    await _aiDataSource.clearSavedApiKey();
+    _apiKey = await _aiDataSource.getApiKey();
     notifyListeners();
   }
 
