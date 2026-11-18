@@ -41,7 +41,7 @@ class LeaderboardProvider extends ChangeNotifier {
   List<String> _groups = [];
   List<String> get availableGroups => _groups;
 
-  String _selectedGroup = 'Nhóm 01 - KTHP';
+  String _selectedGroup = 'Nhóm 01';
   String get selectedGroup => _selectedGroup;
 
   /// CHỈ SO SÁNH GIỮA CÁC SINH VIÊN CÙNG NHÓM HỌC
@@ -115,6 +115,18 @@ class LeaderboardProvider extends ChangeNotifier {
     final clean = newGroupName.trim();
     if (clean.isEmpty) return;
     await _repo.moveStudentToGroup(studentId, clean);
+    await loadLeaderboard(force: true);
+  }
+
+  Future<void> addStudentToGroup({
+    required String name,
+    required String groupName,
+    int initialXp = 0,
+  }) async {
+    final cleanName = name.trim();
+    final cleanGroup = groupName.trim();
+    if (cleanName.isEmpty || cleanGroup.isEmpty) return;
+    await _repo.addStudentToGroup(name: cleanName, groupName: cleanGroup, initialXp: initialXp);
     await loadLeaderboard(force: true);
   }
 

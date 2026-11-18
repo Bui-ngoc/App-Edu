@@ -204,107 +204,142 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  // ── BottomSheet: Sinh viên đổi nhóm của mình ──────────────────────────────
-  void _showStudentChangeGroupSheet(BuildContext context) {
-    final profProv = context.read<ProfileProvider>();
+  // ── Dialog: Giáo viên thêm / phân công sinh viên vào nhóm ──────────────
+  void _showAddStudentToGroupDialog(BuildContext context, String targetGroup) {
     final lProv = context.read<LeaderboardProvider>();
-    final groups = lProv.availableGroups;
-    final codeController = TextEditingController();
+    final allEntries = lProv.entries;
+    final otherStudents = allEntries.where((e) => e.groupName != targetGroup).toList();
 
-    showModalBottomSheet(
+    int mode = 0; // 0: chọn từ danh sách SV khác, 1: thêm SV mới
+    LeaderboardEntry? selectedStudent = otherStudents.isNotEmpty ? otherStudents.first : null;
+    final nameController = TextEditingController();
+    final xpController = TextEditingController(text: '1000');
+
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+              const Icon(Icons.person_add_rounded, color: AppColors.secondary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Thêm SV vào $targetGroup',
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                '👥 Chuyển nhóm học tập của bạn',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                '⚠️ Quy tắc: Mỗi sinh viên chỉ thuộc duy nhất 1 nhóm học. Khi chuyển sang nhóm mới, điểm EXP hoạt động của bạn sẽ được tính vào bảng xếp hạng của nhóm đó.',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: codeController,
-                decoration: InputDecoration(
-                  labelText: 'Nhập tên hoặc mã nhóm học',
-                  hintText: 'Ví dụ: Nhóm 02 - Flutter Pro',
-                  prefixIcon: const Icon(Icons.qr_code_scanner_rounded),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.login_rounded),
-                  label: const Text('Tham gia nhóm theo tên / mã trên'),
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () async {
-                    final target = codeController.text.trim();
-                    if (target.isNotEmpty) {
-                      await profProv.updateNameAndGroup(profProv.profile.name, target);
-                      lProv.selectGroup(target);
-                      await lProv.loadLeaderboard(force: true);
-                      if (ctx.mounted) Navigator.pop(ctx);
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text('Hoặc chọn từ các nhóm hiện có:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              ...groups.map((grp) {
-                final isCurrent = profProv.profile.currentGroup == grp;
-                return ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    isCurrent ? Icons.check_circle_rounded : Icons.group_work_outlined,
-                    color: isCurrent ? AppColors.primary : Colors.grey,
-                  ),
-                  title: Text(grp, style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal)),
-                  trailing: isCurrent ? const Text('Nhóm hiện tại', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)) : null,
-                  onTap: () async {
-                    await profProv.updateNameAndGroup(profProv.profile.name, grp);
-                    lProv.selectGroup(grp);
-                    await lProv.loadLeaderboard(force: true);
-                    if (ctx.mounted) Navigator.pop(ctx);
-                  },
-                );
-              }),
             ],
           ),
-        );
-      },
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SegmentedButton<int>(
+                  segments: const [
+                    ButtonSegment(value: 0, label: Text('Từ nhóm khác', style: TextStyle(fontSize: 12))),
+                    ButtonSegment(value: 1, label: Text('Tạo SV mới', style: TextStyle(fontSize: 12))),
+                  ],
+                  selected: {mode},
+                  onSelectionChanged: (val) {
+                    setDialogState(() => mode = val.first);
+                  },
+                ),
+                const SizedBox(height: 16),
+                if (mode == 0) ...[
+                  if (otherStudents.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text('Tất cả sinh viên hiện tại đã thuộc nhóm này!', style: TextStyle(color: Colors.grey)),
+                    )
+                  else ...[
+                    const Text('Chọn sinh viên để chuyển vào nhóm này:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<LeaderboardEntry>(
+                      value: selectedStudent,
+                      isExpanded: true,
+                      items: otherStudents.map((s) {
+                        return DropdownMenuItem(
+                          value: s,
+                          child: Text('${s.userName} (${s.groupName})', overflow: TextOverflow.ellipsis),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        setDialogState(() => selectedStudent = val);
+                      },
+                      decoration: const InputDecoration(border: OutlineInputBorder()),
+                    ),
+                  ],
+                ] else ...[
+                  const Text('Nhập thông tin sinh viên mới:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Họ và tên sinh viên',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: xpController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Điểm EXP khởi đầu',
+                      prefixIcon: Icon(Icons.bolt_rounded),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondary,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                if (mode == 0) {
+                  if (selectedStudent != null) {
+                    await lProv.moveStudentToGroup(selectedStudent!.id, targetGroup);
+                    if (ctx.mounted) Navigator.pop(ctx);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Đã chuyển ${selectedStudent!.userName} vào "$targetGroup"'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  }
+                } else {
+                  final name = nameController.text.trim();
+                  final xp = int.tryParse(xpController.text.trim()) ?? 0;
+                  if (name.isNotEmpty) {
+                    await lProv.addStudentToGroup(name: name, groupName: targetGroup, initialXp: xp);
+                    if (ctx.mounted) Navigator.pop(ctx);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Đã thêm sinh viên "$name" vào "$targetGroup"'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+              child: const Text('Xác nhận'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -479,6 +514,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                     _showRenameGroupDialog(context, grp);
                                   } else if (action == 'delete') {
                                     _showDeleteGroupDialog(context, grp);
+                                  } else if (action == 'add_student') {
+                                    _showAddStudentToGroupDialog(context, grp);
                                   } else if (action == 'view_bxh') {
                                     lProv.selectGroup(grp);
                                     DefaultTabController.of(context).animateTo(1);
@@ -492,6 +529,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                         Icon(Icons.emoji_events_outlined, size: 18),
                                         SizedBox(width: 8),
                                         Text('Xem BXH Nhóm này'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'add_student',
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.person_add_rounded, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Thêm SV vào nhóm'),
                                       ],
                                     ),
                                   ),
@@ -533,6 +580,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.person_add_rounded, size: 14),
+                                label: const Text('Thêm SV'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.secondary,
+                                  foregroundColor: Colors.white,
+                                  visualDensity: VisualDensity.compact,
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                onPressed: () => _showAddStudentToGroupDialog(context, grp),
+                              ),
+                              const SizedBox(width: 8),
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
                                   visualDensity: VisualDensity.compact,
@@ -640,24 +700,30 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         ),
                         if (!isTeacher)
                           const Text(
-                            'Chỉ so sánh điểm EXP hoạt động giữa các bạn cùng nhóm.',
+                            '🔒 Nhóm học do Giáo viên phân công cố định. Sinh viên không được phép tự chuyển nhóm.',
                             style: TextStyle(fontSize: 11, color: Colors.black54),
                           ),
                       ],
                     ),
                   ),
                   if (!isTeacher)
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      icon: const Icon(Icons.swap_horiz_rounded, size: 16),
-                      label: const Text('Chuyển nhóm'),
-                      onPressed: () => _showStudentChangeGroupSheet(context),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.lock_outline_rounded, size: 14, color: Colors.black54),
+                          SizedBox(width: 4),
+                          Text(
+                            'Cố định',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black54),
+                          ),
+                        ],
+                      ),
                     ),
                 ],
               ),

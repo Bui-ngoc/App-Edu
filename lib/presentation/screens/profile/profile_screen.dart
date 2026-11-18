@@ -397,7 +397,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onPressed: () {
                           prov.updateNameAndGroup(
                             _nameController.text,
-                            isTeacher ? 'Giảng viên' : 'Sinh viên',
+                            prov.profile.currentGroup,
                           );
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Đã cập nhật thông tin thành công!')),

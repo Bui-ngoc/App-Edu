@@ -5,8 +5,8 @@ import '../../domain/entities/leaderboard_entry.dart';
 
 class LeaderboardDataSource {
   static const String _profileKeyPrefix = 'edumaster_user_profile_';
-  static const String _leaderboardKey = 'edumaster_leaderboard_list';
-  static const String _groupsListKey = 'edumaster_study_groups_list';
+  static const String _leaderboardKey = 'edumaster_leaderboard_list_v5';
+  static const String _groupsListKey = 'edumaster_study_groups_list_v5';
 
   SharedPreferences? _prefs;
   List<LeaderboardEntry>? _cachedEntries;
@@ -36,6 +36,313 @@ class LeaderboardDataSource {
     }
   }
 
+  /// 30 thành viên mẫu của "Nhóm 01" với điểm tích lũy hoạt động EXP để xếp hạng
+  static List<LeaderboardEntry> _createDefault30Members() {
+    return const [
+      LeaderboardEntry(
+        id: 'user_u01',
+        userName: 'Đặng Mai Phương',
+        avatarUrl: '',
+        xp: 3650,
+        streakDays: 24,
+        testsCompleted: 48,
+        badges: ['Thợ săn Tri thức', 'Bậc thầy Trắc nghiệm', '14 Ngày Chăm chỉ'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u02',
+        userName: 'Phạm Hoàng Nam',
+        avatarUrl: '',
+        xp: 3420,
+        streakDays: 20,
+        testsCompleted: 44,
+        badges: ['Thần đồng Lập trình', 'Top Server'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u03',
+        userName: 'Vũ Thị Minh Châu',
+        avatarUrl: '',
+        xp: 3290,
+        streakDays: 18,
+        testsCompleted: 41,
+        badges: ['Chiến binh Bền bỉ', 'Ngôi sao Song ngữ'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u04',
+        userName: 'Trần Bảo Long',
+        avatarUrl: '',
+        xp: 3100,
+        streakDays: 16,
+        testsCompleted: 38,
+        badges: ['Chiến binh SM-2', 'Chuyên gia IT'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u05',
+        userName: 'Bùi Gia Huy',
+        avatarUrl: '',
+        xp: 2950,
+        streakDays: 15,
+        testsCompleted: 36,
+        badges: ['Kiến trúc sư Clean Code'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u06',
+        userName: 'Nguyễn Thị Hải Yến',
+        avatarUrl: '',
+        xp: 2820,
+        streakDays: 14,
+        testsCompleted: 33,
+        badges: ['Người tiên phong'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u07',
+        userName: 'Ngô Thanh Thảo',
+        avatarUrl: '',
+        xp: 2710,
+        streakDays: 13,
+        testsCompleted: 31,
+        badges: ['Ngôi sao Song ngữ'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u08',
+        userName: 'Đỗ Tuấn Kiệt',
+        avatarUrl: '',
+        xp: 2580,
+        streakDays: 12,
+        testsCompleted: 29,
+        badges: ['Bậc thầy SM-2'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u09',
+        userName: 'Lê Minh Tuấn',
+        avatarUrl: '',
+        xp: 2450,
+        streakDays: 11,
+        testsCompleted: 27,
+        badges: ['Tân binh Chăm chỉ'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u10',
+        userName: 'Trịnh Đức Anh',
+        avatarUrl: '',
+        xp: 2320,
+        streakDays: 10,
+        testsCompleted: 25,
+        badges: ['Chăm chỉ Mỗi ngày'],
+        groupName: 'Nhóm 01',
+      ),
+      // Tài khoản Sinh viên demo trong Nhóm 01
+      LeaderboardEntry(
+        id: 'user_student_1',
+        userName: 'Bùi Ngọc (Sinh viên)',
+        avatarUrl: '',
+        xp: 2190,
+        streakDays: 8,
+        testsCompleted: 22,
+        badges: ['Tân binh EduMaster', 'Khám phá Từ điển'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u12',
+        userName: 'Hoàng Quốc Bảo',
+        avatarUrl: '',
+        xp: 2080,
+        streakDays: 8,
+        testsCompleted: 21,
+        badges: ['Khám phá Tri thức'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u13',
+        userName: 'Mai Xuân Bách',
+        avatarUrl: '',
+        xp: 1970,
+        streakDays: 7,
+        testsCompleted: 20,
+        badges: ['Học viên Tích cực'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u14',
+        userName: 'Đinh Phương Linh',
+        avatarUrl: '',
+        xp: 1880,
+        streakDays: 7,
+        testsCompleted: 19,
+        badges: ['Ngôi sao Từ vựng'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u15',
+        userName: 'Dương Quang Vinh',
+        avatarUrl: '',
+        xp: 1790,
+        streakDays: 6,
+        testsCompleted: 18,
+        badges: ['Chiến binh Bứt phá'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u16',
+        userName: 'Lý Hải Đăng',
+        avatarUrl: '',
+        xp: 1710,
+        streakDays: 6,
+        testsCompleted: 17,
+        badges: ['Chiến binh Bền bỉ'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u17',
+        userName: 'Phan Thu Trang',
+        avatarUrl: '',
+        xp: 1630,
+        streakDays: 5,
+        testsCompleted: 16,
+        badges: ['Tân binh Xuất sắc'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u18',
+        userName: 'Hà Công Minh',
+        avatarUrl: '',
+        xp: 1560,
+        streakDays: 5,
+        testsCompleted: 15,
+        badges: ['Người kiên trì'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u19',
+        userName: 'Võ Hoàng Yến',
+        avatarUrl: '',
+        xp: 1490,
+        streakDays: 5,
+        testsCompleted: 14,
+        badges: ['Chiến binh Học tập'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u20',
+        userName: 'Chu Văn An',
+        avatarUrl: '',
+        xp: 1420,
+        streakDays: 4,
+        testsCompleted: 14,
+        badges: ['Học viên Tinh nhuệ'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u21',
+        userName: 'Tạ Đình Phong',
+        avatarUrl: '',
+        xp: 1350,
+        streakDays: 4,
+        testsCompleted: 13,
+        badges: ['Học viên Năng nổ'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u22',
+        userName: 'Đoàn Minh Trí',
+        avatarUrl: '',
+        xp: 1280,
+        streakDays: 4,
+        testsCompleted: 12,
+        badges: ['Bứt phá Vươn lên'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u23',
+        userName: 'Cao Thị Thanh',
+        avatarUrl: '',
+        xp: 1210,
+        streakDays: 3,
+        testsCompleted: 11,
+        badges: ['Người đồng hành'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u24',
+        userName: 'Lương Triều Vĩ',
+        avatarUrl: '',
+        xp: 1150,
+        streakDays: 3,
+        testsCompleted: 10,
+        badges: ['Tân binh Nỗ lực'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u25',
+        userName: 'Tống Khánh Linh',
+        avatarUrl: '',
+        xp: 1090,
+        streakDays: 3,
+        testsCompleted: 9,
+        badges: ['Hạt giống Tri thức'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u26',
+        userName: 'Hồ Ngọc Hà',
+        avatarUrl: '',
+        xp: 1020,
+        streakDays: 2,
+        testsCompleted: 8,
+        badges: ['Bước đầu Vững chắc'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u27',
+        userName: 'Đào Trọng Nghĩa',
+        avatarUrl: '',
+        xp: 960,
+        streakDays: 2,
+        testsCompleted: 7,
+        badges: ['Tân binh'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u28',
+        userName: 'Quách Tuấn Du',
+        avatarUrl: '',
+        xp: 900,
+        streakDays: 2,
+        testsCompleted: 6,
+        badges: ['Khởi đầu Mới'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u29',
+        userName: 'Nghiêm Xuân Tú',
+        avatarUrl: '',
+        xp: 840,
+        streakDays: 1,
+        testsCompleted: 5,
+        badges: ['Khám phá EduMaster'],
+        groupName: 'Nhóm 01',
+      ),
+      LeaderboardEntry(
+        id: 'user_u30',
+        userName: 'Lâm Khánh Chi',
+        avatarUrl: '',
+        xp: 780,
+        streakDays: 1,
+        testsCompleted: 4,
+        badges: ['Tân binh Nhập môn'],
+        groupName: 'Nhóm 01',
+      ),
+    ];
+  }
+
   Future<List<LeaderboardEntry>> getEntries() async {
     if (_cachedEntries != null && _cachedEntries!.isNotEmpty) {
       return _cachedEntries!;
@@ -43,161 +350,32 @@ class LeaderboardDataSource {
 
     final prefs = await _getPrefs();
     final jsonStr = prefs.getString(_leaderboardKey);
-    if (jsonStr == null || jsonStr.isEmpty) {
-      final initialData = [
-        // ── NHÓM 01: Nhóm của Bạn và các bạn cùng nhóm ───────────────────────
-        const LeaderboardEntry(
-          id: 'user_u1',
-          userName: 'Đặng Mai Phương',
-          avatarUrl: '',
-          xp: 2850,
-          streakDays: 14,
-          testsCompleted: 38,
-          badges: ['Thợ săn Tri thức', 'Bậc thầy Trắc nghiệm', '7 Ngày Chăm chỉ'],
-          groupName: 'Nhóm 01 - KTHP',
-        ),
-        const LeaderboardEntry(
-          id: 'user_u2',
-          userName: 'Trần Bảo Long',
-          avatarUrl: '',
-          xp: 2420,
-          streakDays: 9,
-          testsCompleted: 29,
-          badges: ['Chiến binh SM-2', 'Chuyên gia IT'],
-          groupName: 'Nhóm 01 - KTHP',
-        ),
-        const LeaderboardEntry(
-          id: 'user_u3',
-          userName: 'Nguyễn Thị Hải Yến',
-          avatarUrl: '',
-          xp: 2190,
-          streakDays: 12,
-          testsCompleted: 25,
-          badges: ['Ngôi sao Song ngữ', 'Người tiên phong'],
-          groupName: 'Nhóm 01 - KTHP',
-        ),
-        const LeaderboardEntry(
-          id: 'user_current',
-          userName: 'Bạn (Sinh viên CNTT)',
-          avatarUrl: '',
-          xp: 1850,
-          streakDays: 5,
-          testsCompleted: 18,
-          badges: ['Tân binh EduMaster', 'Khám phá Từ điển'],
-          groupName: 'Nhóm 01 - KTHP',
-        ),
-        const LeaderboardEntry(
-          id: 'user_u5',
-          userName: 'Lê Minh Tuấn',
-          avatarUrl: '',
-          xp: 1420,
-          streakDays: 4,
-          testsCompleted: 12,
-          badges: ['Tân binh'],
-          groupName: 'Nhóm 01 - KTHP',
-        ),
+    List<LeaderboardEntry> entries = [];
 
-        // ── NHÓM 02: Các sinh viên nhóm khác (user 2 không thuộc nhóm 1) ──────
-        const LeaderboardEntry(
-          id: 'user_u6',
-          userName: 'Phạm Hoàng Nam',
-          avatarUrl: '',
-          xp: 3200,
-          streakDays: 21,
-          testsCompleted: 45,
-          badges: ['Thần đồng Lập trình', 'Top 1 Server'],
-          groupName: 'Nhóm 02 - Flutter Pro',
-        ),
-        const LeaderboardEntry(
-          id: 'user_u7',
-          userName: 'Vũ Thị Minh Châu',
-          avatarUrl: '',
-          xp: 2650,
-          streakDays: 11,
-          testsCompleted: 33,
-          badges: ['Chiến binh Bền bỉ'],
-          groupName: 'Nhóm 02 - Flutter Pro',
-        ),
-        const LeaderboardEntry(
-          id: 'user_u8',
-          userName: 'Đỗ Tuấn Kiệt',
-          avatarUrl: '',
-          xp: 1980,
-          streakDays: 7,
-          testsCompleted: 22,
-          badges: ['Bậc thầy SM-2'],
-          groupName: 'Nhóm 02 - Flutter Pro',
-        ),
-        const LeaderboardEntry(
-          id: 'user_u9',
-          userName: 'Hoàng Quốc Bảo',
-          avatarUrl: '',
-          xp: 1530,
-          streakDays: 5,
-          testsCompleted: 16,
-          badges: ['Khám phá Tri thức'],
-          groupName: 'Nhóm 02 - Flutter Pro',
-        ),
-
-        // ── NHÓM 03: Sinh viên thuộc Nhóm 03 ─────────────────────────────────
-        const LeaderboardEntry(
-          id: 'user_u10',
-          userName: 'Bùi Gia Huy',
-          avatarUrl: '',
-          xp: 2950,
-          streakDays: 16,
-          testsCompleted: 39,
-          badges: ['Kiến trúc sư Clean Code'],
-          groupName: 'Nhóm 03 - Lập Trình Di Động',
-        ),
-        const LeaderboardEntry(
-          id: 'user_u11',
-          userName: 'Ngô Thanh Thảo',
-          avatarUrl: '',
-          xp: 2310,
-          streakDays: 10,
-          testsCompleted: 28,
-          badges: ['Ngôi sao Song ngữ'],
-          groupName: 'Nhóm 03 - Lập Trình Di Động',
-        ),
-        const LeaderboardEntry(
-          id: 'user_u12',
-          userName: 'Trịnh Đức Anh',
-          avatarUrl: '',
-          xp: 1720,
-          streakDays: 6,
-          testsCompleted: 19,
-          badges: ['Chăm chỉ Mỗi ngày'],
-          groupName: 'Nhóm 03 - Lập Trình Di Động',
-        ),
-        const LeaderboardEntry(
-          id: 'user_u13',
-          userName: 'Mai Xuân Bách',
-          avatarUrl: '',
-          xp: 1350,
-          streakDays: 3,
-          testsCompleted: 14,
-          badges: ['Tân binh'],
-          groupName: 'Nhóm 03 - Lập Trình Di Động',
-        ),
-      ];
-      _cachedEntries = initialData;
-      await prefs.setString(_leaderboardKey, json.encode(initialData.map((e) => e.toMap()).toList()));
-      _emitRealtime(initialData);
-      return initialData;
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List<dynamic> list = json.decode(jsonStr);
+        entries = list.map((e) => LeaderboardEntry.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      } catch (_) {}
     }
 
-    try {
-      final List<dynamic> list = json.decode(jsonStr);
-      final entries = list.map((e) => LeaderboardEntry.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+    final group01Count = entries.where((e) => e.groupName == 'Nhóm 01').length;
+    if (entries.isEmpty || group01Count < 30) {
+      final default30 = _createDefault30Members();
+      // Giữ lại các sinh viên thuộc nhóm do giáo viên mới tạo thêm
+      final otherEntries = entries.where((e) => e.groupName != 'Nhóm 01' && !e.groupName.contains('KTHP')).toList();
+      entries = [...default30, ...otherEntries];
       entries.sort((a, b) => b.xp.compareTo(a.xp));
       _cachedEntries = entries;
+      await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
       _emitRealtime(entries);
       return entries;
-    } catch (_) {
-      _cachedEntries = [];
-      return [];
     }
+
+    entries.sort((a, b) => b.xp.compareTo(a.xp));
+    _cachedEntries = entries;
+    _emitRealtime(entries);
+    return entries;
   }
 
   Future<void> updateUserLeaderboard({
@@ -230,7 +408,7 @@ class LeaderboardDataSource {
           streakDays: 1,
           testsCompleted: 0,
           badges: const ['Tân binh EduMaster'],
-          groupName: groupName ?? 'Nhóm F - KTHP',
+          groupName: groupName ?? 'Nhóm 01',
         ),
       );
     }
@@ -241,7 +419,7 @@ class LeaderboardDataSource {
     _emitRealtime(entries);
   }
 
-  // ── Quản lý nhóm học tập (Dành cho Giáo viên & Sinh viên) ─────────────────
+  // ── Quản lý nhóm học tập (Giáo viên tạo nhóm, phân công SV) ─────────────
 
   Future<List<String>> getGroups() async {
     final prefs = await _getPrefs();
@@ -254,16 +432,16 @@ class LeaderboardDataSource {
       } catch (_) {}
     }
 
-    if (groups.isEmpty) {
-      groups = [
-        'Nhóm 01 - KTHP',
-        'Nhóm 02 - Flutter Pro',
-        'Nhóm 03 - Lập Trình Di Động',
-      ];
-      await prefs.setString(_groupsListKey, json.encode(groups));
+    // Mặc định hệ thống chỉ có "Nhóm 01" (30 thành viên). Các nhóm khác do GV tự tạo.
+    if (!groups.contains('Nhóm 01')) {
+      groups.insert(0, 'Nhóm 01');
     }
+    // Lọc bỏ các nhóm cũ nếu còn sót lại
+    groups.removeWhere((g) => g.contains('KTHP') || g.contains('Flutter Pro') || g.contains('Lập Trình Di Động'));
 
-    // Luôn bảo đảm các nhóm có thành viên trong entries đều xuất hiện
+    await prefs.setString(_groupsListKey, json.encode(groups));
+
+    // Đảm bảo mọi nhóm có sinh viên trong entries đều được hiển thị cho GV
     final entries = await getEntries();
     for (final e in entries) {
       final g = e.groupName.trim();
@@ -292,8 +470,8 @@ class LeaderboardDataSource {
     final prefs = await _getPrefs();
     await prefs.setString(_groupsListKey, json.encode(groups));
 
-    // Chuyển các sinh viên trong nhóm bị xóa về nhóm mặc định
-    final fallbackGroup = groups.isNotEmpty ? groups.first : 'Nhóm 01 - KTHP';
+    // Chuyển các sinh viên trong nhóm bị xóa về Nhóm 01
+    final fallbackGroup = groups.isNotEmpty ? groups.first : 'Nhóm 01';
     final entries = await getEntries();
     bool modified = false;
     for (int i = 0; i < entries.length; i++) {
@@ -357,6 +535,7 @@ class LeaderboardDataSource {
     }
   }
 
+  /// Giáo viên chuyển sinh viên sang một nhóm học khác
   Future<void> moveStudentToGroup(String studentId, String newGroupName) async {
     final cleanGroup = newGroupName.trim();
     if (cleanGroup.isEmpty) return;
@@ -380,7 +559,43 @@ class LeaderboardDataSource {
       final prefs = await _getPrefs();
       await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
       _emitRealtime(entries);
+
+      // Nếu là sinh viên demo, đồng bộ luôn vào profile
+      if (old.id == 'user_student_1' || old.userName.contains('Bùi Ngọc')) {
+        final profile = await getUserProfile(email: 'student@edumaster.edu.vn');
+        await saveUserProfile(profile.copyWith(currentGroup: cleanGroup));
+      }
     }
+  }
+
+  /// Giáo viên thêm mới một sinh viên vào nhóm học
+  Future<void> addStudentToGroup({
+    required String name,
+    required String groupName,
+    int initialXp = 0,
+  }) async {
+    final cleanGroup = groupName.trim();
+    final cleanName = name.trim();
+    if (cleanGroup.isEmpty || cleanName.isEmpty) return;
+    await createGroup(cleanGroup);
+
+    final entries = await getEntries();
+    final newStudent = LeaderboardEntry(
+      id: 'user_sv_${DateTime.now().millisecondsSinceEpoch}',
+      userName: cleanName,
+      avatarUrl: '',
+      xp: initialXp,
+      streakDays: 1,
+      testsCompleted: 0,
+      badges: const ['Tân binh EduMaster'],
+      groupName: cleanGroup,
+    );
+    entries.add(newStudent);
+    entries.sort((a, b) => b.xp.compareTo(a.xp));
+    _cachedEntries = entries;
+    final prefs = await _getPrefs();
+    await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+    _emitRealtime(entries);
   }
 
   Future<void> updateXp(String userId, int addedXp) async {
@@ -413,7 +628,13 @@ class LeaderboardDataSource {
     final targetEmail = (email ?? _currentActiveEmail ?? prefs.getString('edumaster_current_session_email') ?? '').trim().toLowerCase();
 
     if (targetEmail.isNotEmpty && _profileCache.containsKey(targetEmail)) {
-      return _profileCache[targetEmail]!;
+      final p = _profileCache[targetEmail]!;
+      if (targetEmail == 'student@edumaster.edu.vn' && p.currentGroup.contains('KTHP')) {
+        final fixed = p.copyWith(currentGroup: 'Nhóm 01');
+        _profileCache[targetEmail] = fixed;
+        return fixed;
+      }
+      return p;
     }
 
     final key = '$_profileKeyPrefix$targetEmail';
@@ -421,7 +642,10 @@ class LeaderboardDataSource {
 
     if (jsonStr != null && jsonStr.isNotEmpty) {
       try {
-        final profile = UserProfile.fromMap(json.decode(jsonStr) as Map<String, dynamic>);
+        var profile = UserProfile.fromMap(json.decode(jsonStr) as Map<String, dynamic>);
+        if (targetEmail == 'student@edumaster.edu.vn' && (profile.currentGroup.isEmpty || profile.currentGroup.contains('KTHP') || profile.currentGroup == 'Sinh viên EduMaster')) {
+          profile = profile.copyWith(currentGroup: 'Nhóm 01', totalXp: 2190);
+        }
         if (targetEmail.isNotEmpty) _profileCache[targetEmail] = profile;
         return profile;
       } catch (_) {}
@@ -434,10 +658,10 @@ class LeaderboardDataSource {
         uid: 'user_student_1',
         name: 'Bùi Ngọc (Sinh viên)',
         email: 'student@edumaster.edu.vn',
-        totalXp: 1850,
-        streakDays: 5,
-        badges: ['Tân binh EduMaster', 'Chiến binh Học tập'],
-        currentGroup: 'Nhóm 01 - KTHP',
+        totalXp: 2190,
+        streakDays: 8,
+        badges: ['Tân binh EduMaster', 'Khám phá Từ điển'],
+        currentGroup: 'Nhóm 01',
       );
     } else if (targetEmail == 'teacher@edumaster.edu.vn') {
       profile = const UserProfile(
@@ -458,7 +682,7 @@ class LeaderboardDataSource {
         totalXp: 0,
         streakDays: 0,
         badges: const [],
-        currentGroup: 'Sinh viên EduMaster',
+        currentGroup: 'Nhóm 01',
       );
     }
 

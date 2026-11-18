@@ -47,10 +47,16 @@ class AuthLocalDataSource {
         email: 'student@edumaster.edu.vn',
         password: '123456',
         role: 'student',
-        group: 'Sinh viên EduMaster',
+        group: 'Nhóm 01',
         createdAt: DateTime.now(),
       ));
       needsSave = true;
+    } else {
+      final sIdx = users.indexWhere((u) => u.email.trim().toLowerCase() == 'student@edumaster.edu.vn');
+      if (sIdx >= 0 && users[sIdx].group != 'Nhóm 01') {
+        users[sIdx] = users[sIdx].copyWith(group: 'Nhóm 01');
+        needsSave = true;
+      }
     }
 
     // Ensure default teacher account exists
@@ -138,7 +144,7 @@ class AuthLocalDataSource {
       email: cleanEmail,
       password: cleanPassword,
       role: cleanRole == 'teacher' ? 'teacher' : 'student',
-      group: cleanRole == 'teacher' ? 'Bộ môn Lập trình' : 'Sinh viên EduMaster',
+      group: cleanRole == 'teacher' ? 'Bộ môn Lập trình' : 'Nhóm 01',
       createdAt: DateTime.now(),
     );
 

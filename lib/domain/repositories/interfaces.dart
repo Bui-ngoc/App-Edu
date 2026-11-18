@@ -77,6 +77,11 @@ abstract class ILeaderboardRepository {
   Future<void> deleteGroup(String groupName);
   Future<void> renameGroup(String oldName, String newName);
   Future<void> moveStudentToGroup(String studentId, String newGroupName);
+  Future<void> addStudentToGroup({
+    required String name,
+    required String groupName,
+    int initialXp = 0,
+  });
 }
 
 abstract class IAiTutorRepository {

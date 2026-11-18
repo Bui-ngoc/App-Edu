@@ -67,4 +67,17 @@ class LeaderboardRepositoryImpl implements ILeaderboardRepository {
   Future<void> moveStudentToGroup(String studentId, String newGroupName) {
     return _dataSource.moveStudentToGroup(studentId, newGroupName);
   }
+
+  @override
+  Future<void> addStudentToGroup({
+    required String name,
+    required String groupName,
+    int initialXp = 0,
+  }) {
+    return _dataSource.addStudentToGroup(
+      name: name,
+      groupName: groupName,
+      initialXp: initialXp,
+    );
+  }
 }
