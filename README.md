@@ -1,11 +1,8 @@
 # 🎓 EduMaster - Siêu Ứng Dụng Giáo Dục & Ôn Tập Song Ngữ Tích Hợp AI Tutor, Chống Gian Lận & Camera
 
 > **Báo cáo Dự án Bài tập lớn / Kết thúc học phần (BTL_KTHP)**  
-> **Trường:** Đại học Phenikaa — Khoa Công nghệ Thông tin  
-> **Nhóm thực hiện:** Nhóm F — Giáo dục và Ôn tập  
+> **Trường:** HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG  
 > **Công nghệ:** Flutter (Dart 3.x), Android SDK, SQLite FTS, SharedPreferences, Google Gemini AI, Camera Mobile Scanner  
-> **Đánh giá tiêu chuẩn:** Đạt mức **Xuất sắc (100/100 điểm)** trên tất cả tiêu chí thẩm định  
-
 ---
 
 ## 🚀 ĐIỂM NỔI BẬT & ĐỘT PHÁ CÔNG NGHỆ

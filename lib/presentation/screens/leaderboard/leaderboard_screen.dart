@@ -77,14 +77,14 @@ class LeaderboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // WEEKDAY STREAK TRACKER DOTS
+                  // WEEKDAY STREAK TRACKER DOTS (Calculated dynamically from user's streakDays)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildDayDot('T2', true),
-                      _buildDayDot('T3', true),
-                      _buildDayDot('T4', true),
-                      _buildDayDot('T5', true),
+                      _buildDayDot('T2', streakDays >= 1),
+                      _buildDayDot('T3', streakDays >= 2),
+                      _buildDayDot('T4', streakDays >= 3),
+                      _buildDayDot('T5', streakDays >= 4),
                       _buildDayDot('T6', streakDays >= 5),
                       _buildDayDot('T7', streakDays >= 6),
                       _buildDayDot('CN', streakDays >= 7),
@@ -168,12 +168,12 @@ class LeaderboardScreen extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildBadgeCard('🎖️ Tân binh EduMaster', 'Hoàn thành bài đầu tiên', true),
-                _buildBadgeCard('🔥 7 Ngày Chăm chỉ', 'Duy trì chuỗi 7 ngày', streakDays >= 7),
-                _buildBadgeCard('🧠 Bậc thầy SM-2', 'Ôn tập xuất sắc Flashcards', totalXp >= 1000),
-                _buildBadgeCard('⚡ Thợ săn Điểm 10', 'Đạt điểm tuyệt đối bài thi', totalXp >= 1500),
-                _buildBadgeCard('🌐 Chuyên gia Song ngữ', 'Hoàn thành ôn tập 2 ngôn ngữ', true),
-                _buildBadgeCard('🏆 Chiến binh Bền bỉ', 'Duy trì chuỗi 30 ngày', streakDays >= 30),
+                _buildBadgeCard('🎖️ Tân binh EduMaster', 'Hoàn thành bài đầu tiên', totalXp > 0 || profile.badges.contains('Tân binh EduMaster')),
+                _buildBadgeCard('🔥 7 Ngày Chăm chỉ', 'Duy trì chuỗi 7 ngày', streakDays >= 7 || profile.badges.contains('7 Ngày Chăm chỉ')),
+                _buildBadgeCard('🧠 Bậc thầy SM-2', 'Ôn tập xuất sắc Flashcards', totalXp >= 1000 || profile.badges.contains('Bậc thầy SM-2')),
+                _buildBadgeCard('⚡ Thợ săn Điểm 10', 'Đạt điểm tuyệt đối bài thi', totalXp >= 1500 || profile.badges.contains('Thợ săn Điểm 10')),
+                _buildBadgeCard('🌐 Chuyên gia Song ngữ', 'Hoàn thành ôn tập 2 ngôn ngữ', profile.badges.contains('Chuyên gia Song ngữ') || profile.badges.contains('Ngôi sao Song ngữ')),
+                _buildBadgeCard('🏆 Chiến binh Bền bỉ', 'Duy trì chuỗi 30 ngày', streakDays >= 30 || profile.badges.contains('Chiến binh Bền bỉ')),
               ],
             ),
             const SizedBox(height: 24),

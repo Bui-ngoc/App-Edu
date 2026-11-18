@@ -138,7 +138,7 @@ class AuthLocalDataSource {
       email: cleanEmail,
       password: cleanPassword,
       role: cleanRole == 'teacher' ? 'teacher' : 'student',
-      group: cleanRole == 'teacher' ? 'Bộ môn Lập trình' : 'Nhóm F - Lập trình Di động',
+      group: cleanRole == 'teacher' ? 'Bộ môn Lập trình' : 'Sinh viên EduMaster',
       createdAt: DateTime.now(),
     );
 
@@ -296,10 +296,12 @@ class AuthLocalDataSource {
     final prefs = await _getPrefs();
     await prefs.setBool(_isLoggedInKey, false);
     await prefs.remove(_currentSessionKey);
+    _leaderboardDataSource.clearProfileCache();
   }
 
   Future<void> _syncProfile(AuthUser user) async {
-    final currentProfile = await _leaderboardDataSource.getUserProfile();
+    final email = user.email.trim().toLowerCase();
+    final currentProfile = await _leaderboardDataSource.getUserProfile(email: email);
     final updated = currentProfile.copyWith(
       name: user.name,
       email: user.email,

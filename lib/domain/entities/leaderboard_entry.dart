@@ -38,10 +38,10 @@ class LeaderboardEntry {
       userName: map['userName']?.toString() ?? 'Thành viên',
       avatarUrl: map['avatarUrl']?.toString() ?? '',
       xp: (map['xp'] as num?)?.toInt() ?? 0,
-      streakDays: (map['streakDays'] as num?)?.toInt() ?? 1,
+      streakDays: (map['streakDays'] as num?)?.toInt() ?? 0,
       testsCompleted: (map['testsCompleted'] as num?)?.toInt() ?? 0,
       badges: (map['badges'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      groupName: map['groupName']?.toString() ?? 'Nhóm F - KTHP',
+      groupName: map['groupName']?.toString() ?? 'Sinh viên EduMaster',
     );
   }
 }
@@ -62,9 +62,9 @@ class UserProfile {
     required this.email,
     this.localAvatarPath,
     this.totalXp = 0,
-    this.streakDays = 1,
-    this.badges = const ['Tân binh EduMaster'],
-    this.currentGroup = 'Nhóm F - Lập trình Di động',
+    this.streakDays = 0,
+    this.badges = const [],
+    this.currentGroup = 'Sinh viên EduMaster',
   });
 
   UserProfile copyWith({
@@ -107,10 +107,10 @@ class UserProfile {
       name: map['name']?.toString() ?? 'Sinh viên CNTT',
       email: map['email']?.toString() ?? 'student@edumaster.edu.vn',
       localAvatarPath: map['localAvatarPath']?.toString(),
-      totalXp: (map['totalXp'] as num?)?.toInt() ?? 150,
-      streakDays: (map['streakDays'] as num?)?.toInt() ?? 3,
-      badges: (map['badges'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['Tân binh EduMaster'],
-      currentGroup: map['currentGroup']?.toString() ?? 'Nhóm F - Lập trình Di động',
+      totalXp: (map['totalXp'] as num?)?.toInt() ?? 0,
+      streakDays: (map['streakDays'] as num?)?.toInt() ?? 0,
+      badges: (map['badges'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      currentGroup: map['currentGroup']?.toString() ?? 'Sinh viên EduMaster',
     );
   }
 }
