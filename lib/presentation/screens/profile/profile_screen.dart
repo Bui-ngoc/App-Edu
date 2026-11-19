@@ -24,6 +24,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prov = context.read<ProfileProvider>();
     _nameController.text   = prov.profile.name;
     _apiKeyController.text = prov.apiKey;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final authProv = context.read<AuthProvider>();
+      await authProv.refreshUser();
+      await prov.loadProfile(email: authProv.currentUser?.email);
+      if (mounted) {
+        _nameController.text = prov.profile.name;
+      }
+    });
   }
 
   @override
@@ -278,15 +286,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: [
                             const Text('Nhóm học tập', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight)),
                             const SizedBox(height: 2),
-                            Text(
-                              profile.currentGroup.isNotEmpty
-                                  ? profile.currentGroup
-                                  : 'Chưa tham gia nhóm (Chờ GV phân nhóm qua mã ID)',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: profile.currentGroup.isNotEmpty ? AppColors.primary : Colors.orange.shade800,
-                              ),
+                            Builder(
+                              builder: (context) {
+                                final effectiveGroup = (user != null && user.group.trim().isNotEmpty)
+                                    ? user.group.trim()
+                                    : profile.currentGroup.trim();
+                                return Text(
+                                  effectiveGroup.isNotEmpty
+                                      ? effectiveGroup
+                                      : 'Chưa tham gia nhóm (Chờ GV phân nhóm qua mã ID)',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: effectiveGroup.isNotEmpty ? AppColors.primary : Colors.orange.shade800,
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),

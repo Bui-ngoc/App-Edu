@@ -1,9 +1,13 @@
 # 🏛️ BÁO CÁO TỔNG QUAN DỰ ÁN & THIẾT KẾ KIẾN TRÚC
 ## HỆ THỐNG SIÊU ỨNG DỤNG GIÁO DỤC & ÔN TẬP SONG NGỮ EDUMASTER
 
-> **Học phần:** Lập trình Thiết bị Di động (Mobile Application Development - INT1449)  
-> **Đơn vị đào tạo:** Khoa Công nghệ Thông tin — Trường Đại học Phenikaa  
-> **Nhóm thực hiện:** Nhóm F — Giáo dục và Ôn tập  
+> **Học phần:** Phát triển ứng dụng cho các thiết bị di động (INT1449)  
+> **Lớp:** INT1449-20261-02  
+> **Đơn vị đào tạo:** Học viện Công nghệ Bưu chính Viễn thông (PTIT)  
+> **Nhóm thực hiện:** Nhóm F (Chủ đề: 32, 34, 35, 36 kết hợp 33)  
+> - Bùi Phương Ngọc — B24DCCC215  
+> - Nguyễn Minh Phương — B24DCCC231  
+> - Nguyễn Thị Yến Vi — B24DCCC286  
 > **Nền tảng:** Flutter SDK (Dart 3.x), Android Cross-Platform, Clean Architecture  
 > **Mục tiêu đánh giá:** Đạt mức **Xuất sắc (100%)** trên tất cả 7 tiêu chí thẩm định.
 
@@ -20,13 +24,14 @@ EduMaster là một siêu ứng dụng học tập và thi cử toàn diện tí
    - **Biểu đồ Thống kê Điểm số (`Score Distribution Histogram Chart`)**: Trực quan hóa phân bố điểm số thang 10 (Kém <5.0, TB 5.0-6.9, Khá 7.0-8.4, Giỏi 8.5-10.0), tỉ lệ Đạt/Trượt.
    - **Mã QR & Bộ đề**: Mở lại mã QR và xem chi tiết danh sách câu hỏi.
 3. **Lịch sử phòng thi đã tạo (`TeacherExamHistoryScreen`)**: Quản lý lịch sử các phòng thi đã tạo, mở lại báo cáo thống kê bất kỳ lúc nào.
+4. **Quản lý Nhóm học tập & Đồng bộ thời gian thực (`LeaderboardScreen`)**: Tạo nhóm, đổi tên, xóa nhóm, thêm sinh viên bằng Mã ID hoặc Email sinh viên; tích hợp cơ chế Auto-Enrollment tự động ghi danh mới vào hệ thống và đồng bộ thời gian thực hai chiều.
 
 ### 1.2. Luồng Sinh viên (Student Flow):
 1. **Ôn tập trắc nghiệm song ngữ 300 câu**: Chế độ Luyện tập tự do, Thi thử 20 phút, Làm lại câu sai, Lọc theo khối chủ đề.
 2. **Flashcards SuperMemo SM-2**: Thẻ ghi nhớ ngắt quãng khoa học, lật thẻ 3D, nhập CSV, phát âm TTS.
 3. **Phòng thi trực tuyến**: Nhập mã PIN hoặc **Quét mã QR bằng Camera** vào làm bài, hệ thống ghi nhận gian lận khi thoát app.
 4. **Từ điển IT Offline (SQLite FTS)**: Tra cứu siêu tốc $O(\log N)$, Từ của ngày (Word of the Day), Bookmark.
-5. **Bảng xếp hạng thi đua Realtime**: Tích lũy XP, chuỗi ngày Streak và Huy hiệu thành tích (Badges).
+5. **Bảng xếp hạng thi đua & Nhóm học tập Realtime**: Tích lũy XP, chuỗi ngày Streak, Huy hiệu thành tích (Badges), tự động hiển thị nhóm được GV phân công và thứ hạng thi đua.
 
 ---
 

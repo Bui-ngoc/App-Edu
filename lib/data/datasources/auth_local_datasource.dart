@@ -12,8 +12,8 @@ class AuthLocalDataSource {
   SharedPreferences? _prefs;
   List<AuthUser>? _cachedUsers;
 
-  AuthLocalDataSource({required LeaderboardDataSource leaderboardDataSource})
-      : _leaderboardDataSource = leaderboardDataSource;
+  AuthLocalDataSource({LeaderboardDataSource? leaderboardDataSource})
+      : _leaderboardDataSource = leaderboardDataSource ?? LeaderboardDataSource();
 
   Future<SharedPreferences> _getPrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -56,6 +56,7 @@ class AuthLocalDataSource {
     final email = prefs.getString(_currentSessionKey);
     if (email == null || email.isEmpty) return null;
 
+    _cachedUsers = null;
     final users = await getRegisteredUsers();
     try {
       return users.firstWhere(
@@ -168,24 +169,74 @@ class AuthLocalDataSource {
 
 
 
-  /// Find a user by Student/Teacher ID or Email
+  /// Find a user by Student/Teacher ID, Email, or Name
   Future<AuthUser?> getUserById(String idOrEmail) async {
+    _cachedUsers = null;
     final clean = idOrEmail.trim().toLowerCase();
     if (clean.isEmpty) return null;
     final users = await getRegisteredUsers();
-    try {
-      return users.firstWhere(
-        (u) =>
-            u.id.toLowerCase() == clean ||
-            u.email.toLowerCase() == clean,
-      );
-    } catch (_) {
-      return null;
+
+    // 1. Khớp chính xác theo ID hoặc Email
+    for (final u in users) {
+      if (u.id.toLowerCase() == clean || u.email.toLowerCase() == clean) {
+        return u;
+      }
     }
+
+    // 2. Khớp theo tên sinh viên (tìm kiếm mờ)
+    for (final u in users) {
+      if (!u.isTeacher && u.name.toLowerCase().contains(clean)) {
+        return u;
+      }
+    }
+
+    return null;
+  }
+
+  /// Đăng ký hoặc tự động ghi danh sinh viên mới khi GV nhập mã ID/Tên mới
+  Future<AuthUser> registerOrEnrollStudent({
+    required String id,
+    String? name,
+    required String group,
+  }) async {
+    final cleanId = id.trim().toUpperCase();
+    final cleanName = (name != null && name.trim().isNotEmpty) ? name.trim() : 'Sinh viên ($cleanId)';
+    final email = cleanId.contains('@') ? cleanId.toLowerCase() : '${cleanId.toLowerCase()}@edumaster.edu.vn';
+
+    final users = await getRegisteredUsers();
+    final existingIdx = users.indexWhere((u) => u.id.toUpperCase() == cleanId || u.email.toLowerCase() == email);
+    if (existingIdx >= 0) {
+      final updated = users[existingIdx].copyWith(group: group.trim());
+      users[existingIdx] = updated;
+      _cachedUsers = users;
+      final prefs = await _getPrefs();
+      await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
+      await _syncProfile(updated);
+      return updated;
+    }
+
+    final newUser = AuthUser(
+      id: cleanId,
+      name: cleanName,
+      email: email,
+      password: 'password123',
+      role: 'student',
+      group: group.trim(),
+      createdAt: DateTime.now(),
+    );
+
+    users.add(newUser);
+    _cachedUsers = users;
+
+    final prefs = await _getPrefs();
+    await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
+    await _syncProfile(newUser);
+    return newUser;
   }
 
   /// Update user's study group
   Future<void> updateUserGroup(String userId, String newGroupName) async {
+    _cachedUsers = null;
     final users = await getRegisteredUsers();
     final cleanId = userId.trim().toLowerCase();
     final idx = users.indexWhere((u) => u.id.toLowerCase() == cleanId);

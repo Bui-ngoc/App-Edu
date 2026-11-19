@@ -8,6 +8,8 @@ class LeaderboardRepositoryImpl implements ILeaderboardRepository {
   LeaderboardRepositoryImpl({LeaderboardDataSource? dataSource})
       : _dataSource = dataSource ?? LeaderboardDataSource();
 
+  LeaderboardDataSource get dataSource => _dataSource;
+
   @override
   Stream<List<LeaderboardEntry>> getRealtimeLeaderboard() {
     return _dataSource.leaderboardStream;
@@ -69,8 +71,18 @@ class LeaderboardRepositoryImpl implements ILeaderboardRepository {
   }
 
   @override
-  Future<void> moveStudentToGroup(String studentId, String newGroupName) {
-    return _dataSource.moveStudentToGroup(studentId, newGroupName);
+  Future<void> moveStudentToGroup(
+    String studentId,
+    String newGroupName, {
+    String? studentName,
+    String? studentEmail,
+  }) {
+    return _dataSource.moveStudentToGroup(
+      studentId,
+      newGroupName,
+      studentName: studentName,
+      studentEmail: studentEmail,
+    );
   }
 
   @override

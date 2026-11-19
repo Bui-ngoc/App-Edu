@@ -4,15 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 
 class LeaderboardDataSource {
-  static const String _profileKeyPrefix = 'edumaster_user_profile_v7_';
-  static const String _leaderboardKeyPrefix = 'edumaster_leaderboard_list_v7_';
-  static const String _groupsListKeyPrefix = 'edumaster_study_groups_list_v7_';
+  static const String _profileKeyPrefix = 'edumaster_user_profile_v8_';
+  static const String _globalLeaderboardKey = 'edumaster_global_leaderboard_list_v8';
+  static const String _globalGroupsListKey = 'edumaster_global_study_groups_list_v8';
 
   String _userId = 'default';
   String _activeEmail = '';
 
-  String get _leaderboardKey => '$_leaderboardKeyPrefix${_userId}_${_activeEmail.replaceAll('@', '_').replaceAll('.', '_')}';
-  String get _groupsListKey => '$_groupsListKeyPrefix${_userId}_${_activeEmail.replaceAll('@', '_').replaceAll('.', '_')}';
+  String get _leaderboardKey => _globalLeaderboardKey;
+  String get _groupsListKey => _globalGroupsListKey;
 
   void switchUser(String userId, {String? email}) {
     final cleanId = userId.trim().toLowerCase();
@@ -376,19 +376,13 @@ class LeaderboardDataSource {
     }
 
     if (entries.isEmpty) {
-      // Demo Teacher & Demo Student get demo group 01, while NEW accounts start clean []
-      if (_userId == 'user_teacher_1' || _userId == 'user_student_1' || _userId == 'sv1001' || _userId == 'gv2001' || _userId.contains('student@edumaster.edu.vn') || _userId.contains('teacher@edumaster.edu.vn')) {
-        final default30 = _createDefault30Members();
-        entries = [...default30];
-        entries.sort((a, b) => b.xp.compareTo(a.xp));
-        _cachedEntries = entries;
-        await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
-        _emitRealtime(entries);
-        return entries;
-      }
-      _cachedEntries = [];
-      _emitRealtime([]);
-      return [];
+      final default30 = _createDefault30Members();
+      entries = [...default30];
+      entries.sort((a, b) => b.xp.compareTo(a.xp));
+      _cachedEntries = entries;
+      await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+      _emitRealtime(entries);
+      return entries;
     }
 
     entries.sort((a, b) => b.xp.compareTo(a.xp));
@@ -452,13 +446,8 @@ class LeaderboardDataSource {
     }
 
     if (groups.isEmpty) {
-      if (_userId == 'user_teacher_1' || _userId == 'user_student_1' || _userId == 'sv1001' || _userId == 'gv2001' || _userId.contains('student@edumaster.edu.vn') || _userId.contains('teacher@edumaster.edu.vn')) {
-        groups = ['Nhóm 01'];
-        await prefs.setString(_groupsListKey, json.encode(groups));
-        return groups;
-      }
-      // NEW Teacher / Student accounts start with 0 created groups []!
-      return [];
+      groups = ['Nhóm 01'];
+      await prefs.setString(_groupsListKey, json.encode(groups));
     }
     // Lọc bỏ các nhóm cũ nếu còn sót lại
     groups.removeWhere((g) => g.contains('KTHP') || g.contains('Flutter Pro') || g.contains('Lập Trình Di Động'));
@@ -559,19 +548,25 @@ class LeaderboardDataSource {
     }
   }
 
-  /// Giáo viên chuyển sinh viên sang một nhóm học khác
-  Future<void> moveStudentToGroup(String studentId, String newGroupName) async {
+  /// Giáo viên chuyển hoặc thêm sinh viên sang một nhóm học khác
+  Future<void> moveStudentToGroup(
+    String studentId,
+    String newGroupName, {
+    String? studentName,
+    String? studentEmail,
+  }) async {
     final cleanGroup = newGroupName.trim();
     if (cleanGroup.isEmpty) return;
     await createGroup(cleanGroup);
 
     final entries = await getEntries();
-    final idx = entries.indexWhere((e) => e.id == studentId);
+    final cleanId = studentId.trim();
+    final idx = entries.indexWhere((e) => e.id.toLowerCase() == cleanId.toLowerCase());
     if (idx >= 0) {
       final old = entries[idx];
       entries[idx] = LeaderboardEntry(
         id: old.id,
-        userName: old.userName,
+        userName: studentName ?? old.userName,
         avatarUrl: old.avatarUrl,
         xp: old.xp,
         streakDays: old.streakDays,
@@ -579,16 +574,30 @@ class LeaderboardDataSource {
         badges: old.badges,
         groupName: cleanGroup,
       );
-      _cachedEntries = entries;
-      final prefs = await _getPrefs();
-      await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
-      _emitRealtime(entries);
+    } else {
+      // Sinh viên mới chưa có trong danh sách bảng xếp hạng -> Thêm mới vào nhóm
+      entries.add(
+        LeaderboardEntry(
+          id: cleanId,
+          userName: studentName ?? 'Sinh viên ($cleanId)',
+          avatarUrl: '',
+          xp: 0,
+          streakDays: 1,
+          testsCompleted: 0,
+          badges: const ['Tân binh EduMaster'],
+          groupName: cleanGroup,
+        ),
+      );
+    }
+    _cachedEntries = entries;
+    final prefs = await _getPrefs();
+    await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+    _emitRealtime(entries);
 
-      // Nếu là sinh viên demo, đồng bộ luôn vào profile
-      if (old.id == 'user_student_1' || old.userName.contains('Bùi Ngọc')) {
-        final profile = await getUserProfile(email: 'student@edumaster.edu.vn');
-        await saveUserProfile(profile.copyWith(currentGroup: cleanGroup));
-      }
+    // Đồng bộ trực tiếp vào UserProfile nếu có email
+    if (studentEmail != null && studentEmail.trim().isNotEmpty) {
+      final profile = await getUserProfile(email: studentEmail);
+      await saveUserProfile(profile.copyWith(currentGroup: cleanGroup));
     }
   }
 
@@ -649,28 +658,58 @@ class LeaderboardDataSource {
   /// Get user profile per user email. Always reads fresh data from disk.
   Future<UserProfile> getUserProfile({String? email}) async {
     final prefs = await _getPrefs();
-    final targetEmail = (email ?? _currentActiveEmail ?? prefs.getString('edumaster_current_session_email') ?? '').trim().toLowerCase();
+    final currentSessionEmail = prefs.getString('edumaster_current_session_email') ?? '';
+    final targetEmail = (email != null && email.trim().isNotEmpty
+        ? email.trim()
+        : currentSessionEmail).trim().toLowerCase();
 
     final key = '$_profileKeyPrefix$targetEmail';
     final jsonStr = prefs.getString(key);
 
+    // Lấy thông tin nhóm mới nhất từ danh sách AuthUser đã đăng ký
+    String groupFromAuth = '';
+    String nameFromAuth = 'Thành viên mới';
+    final authUsersJson = prefs.getString('edumaster_registered_users_v2');
+    if (authUsersJson != null && authUsersJson.isNotEmpty) {
+      try {
+        final List<dynamic> list = json.decode(authUsersJson);
+        final found = list.firstWhere(
+          (u) =>
+              u['email']?.toString().trim().toLowerCase() == targetEmail ||
+              u['id']?.toString().trim().toLowerCase() == targetEmail,
+          orElse: () => null,
+        );
+        if (found != null) {
+          groupFromAuth = found['group']?.toString().trim() ?? '';
+          nameFromAuth = found['name']?.toString().trim() ?? nameFromAuth;
+        }
+      } catch (_) {}
+    }
+
     if (jsonStr != null && jsonStr.isNotEmpty) {
       try {
         final profile = UserProfile.fromMap(json.decode(jsonStr) as Map<String, dynamic>);
+        // Nếu auth user đã được GV phân nhóm nhưng profile chưa cập nhật, tự động sync!
+        if (groupFromAuth.isNotEmpty && profile.currentGroup != groupFromAuth) {
+          final updated = profile.copyWith(currentGroup: groupFromAuth);
+          if (targetEmail.isNotEmpty) _profileCache[targetEmail] = updated;
+          await saveUserProfile(updated);
+          return updated;
+        }
         if (targetEmail.isNotEmpty) _profileCache[targetEmail] = profile;
         return profile;
       } catch (_) {}
     }
 
-    // Clean data for registered user: 0 XP, 0 Streak, empty group
+    // Clean data for registered user: 0 XP, 0 Streak, kèm nhóm từ Auth nếu có
     UserProfile profile = UserProfile(
       uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'Thành viên mới',
+      name: nameFromAuth,
       email: targetEmail,
       totalXp: 0,
       streakDays: 0,
       badges: const [],
-      currentGroup: '',
+      currentGroup: groupFromAuth,
     );
 
     if (targetEmail.isNotEmpty) {
@@ -733,7 +772,6 @@ class LeaderboardDataSource {
   /// Save user profile for a specific user
   Future<void> saveUserProfile(UserProfile profile) async {
     final email = profile.email.trim().toLowerCase();
-    _currentActiveEmail = email;
     if (email.isNotEmpty) {
       _profileCache[email] = profile;
     }

@@ -18,11 +18,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final authProv = context.read<AuthProvider>();
       final lProv = context.read<LeaderboardProvider>();
       final pProv = context.read<ProfileProvider>();
-      if (pProv.profile.currentGroup.isNotEmpty) {
-        lProv.selectGroup(pProv.profile.currentGroup);
+      await authProv.refreshUser();
+      await pProv.loadProfile(email: authProv.currentUser?.email);
+      final effectiveGroup = (authProv.currentUser?.group.isNotEmpty ?? false)
+          ? authProv.currentUser!.group
+          : pProv.profile.currentGroup;
+      if (effectiveGroup.isNotEmpty) {
+        lProv.selectGroup(effectiveGroup);
       }
       lProv.loadLeaderboard();
     });
@@ -156,92 +162,154 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
 
 
-  // ── Dialog: Giáo viên thêm sinh viên vào nhóm BẰNG MÃ ID ──────────────
+  // ── Dialog: Giáo viên thêm sinh viên vào nhóm BẰNG MÃ ID / EMAIL ───────
   void _showAddStudentToGroupDialog(BuildContext context, String targetGroup) {
     final lProv = context.read<LeaderboardProvider>();
     final studentIdController = TextEditingController();
+    bool isSubmitting = false;
+    String? errorMessage;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Icon(Icons.person_add_rounded, color: AppColors.secondary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Thêm SV vào $targetGroup',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      barrierDismissible: !isSubmitting,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.person_add_rounded, color: AppColors.secondary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Thêm SV vào $targetGroup',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Nhập mã ID Sinh viên (ví dụ: SV1001, SV4592...):',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: studentIdController,
-              decoration: const InputDecoration(
-                labelText: 'Mã ID Sinh viên',
-                hintText: 'SV1001',
-                prefixIcon: Icon(Icons.badge_rounded),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '💡 Sinh viên có thể sao chép mã ID của mình tại mục Hồ sơ cá nhân.',
-              style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondary,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () async {
-              final studentId = studentIdController.text.trim();
-              if (studentId.isEmpty) return;
-
-              final res = await lProv.addStudentToGroupById(
-                studentId: studentId,
-                targetGroup: targetGroup,
-              );
-
-              if (res.success) {
-                if (ctx.mounted) Navigator.pop(ctx);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('✅ ${res.message}'),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
-                }
-              } else {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('⚠️ ${res.message}'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Thêm vào nhóm'),
+            ],
           ),
-        ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Nhập mã ID hoặc Email của sinh viên cần thêm:',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: studentIdController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Mã ID hoặc Email Sinh viên',
+                    hintText: 'Ví dụ: SV1001 hoặc email sinh viên...',
+                    prefixIcon: Icon(Icons.badge_rounded),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (_) {
+                    if (errorMessage != null) {
+                      setDialogState(() => errorMessage = null);
+                    }
+                  },
+                ),
+                if (errorMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline_rounded, size: 16, color: AppColors.error),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            errorMessage!,
+                            style: const TextStyle(fontSize: 12, color: AppColors.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                const Text(
+                  '💡 Sinh viên có thể sao chép Mã ID của mình tại mục Hồ sơ cá nhân. Giáo viên cũng có thể nhập Email hoặc Họ tên sinh viên để phân nhóm.',
+                  style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondary,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      final studentId = studentIdController.text.trim();
+                      if (studentId.isEmpty) {
+                        setDialogState(() => errorMessage = 'Vui lòng nhập mã ID hoặc tên sinh viên.');
+                        return;
+                      }
+
+                      setDialogState(() {
+                        isSubmitting = true;
+                        errorMessage = null;
+                      });
+
+                      try {
+                        final res = await lProv.addStudentToGroupById(
+                          studentId: studentId,
+                          targetGroup: targetGroup,
+                        );
+
+                        if (res.success) {
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('✅ ${res.message}'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          }
+                        } else {
+                          if (ctx.mounted) {
+                            setDialogState(() {
+                              isSubmitting = false;
+                              errorMessage = res.message;
+                            });
+                          }
+                        }
+                      } catch (e) {
+                        if (ctx.mounted) {
+                          setDialogState(() {
+                            isSubmitting = false;
+                            errorMessage = 'Đã xảy ra lỗi: ${e.toString()}';
+                          });
+                        }
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Thêm vào nhóm'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -529,9 +597,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget _buildGroupRankingTab(BuildContext context, {required bool isTeacher}) {
     final lProv = context.watch<LeaderboardProvider>();
     final pProv = context.watch<ProfileProvider>();
+    final authProv = context.watch<AuthProvider>();
+    final authUser = authProv.currentUser;
     final userProfile = pProv.profile;
 
-    if (!isTeacher && userProfile.currentGroup.trim().isEmpty) {
+    final effectiveGroup = (authUser != null && authUser.group.trim().isNotEmpty)
+        ? authUser.group.trim()
+        : userProfile.currentGroup.trim();
+
+    if (!isTeacher && effectiveGroup.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(28.0),
@@ -563,16 +637,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       );
     }
 
-    final selectedGroup = isTeacher ? lProv.selectedGroup : userProfile.currentGroup;
+    final selectedGroup = isTeacher ? lProv.selectedGroup : effectiveGroup;
     final filteredList = lProv.entries.where((e) => e.groupName == selectedGroup).toList()
       ..sort((a, b) => b.xp.compareTo(a.xp));
     final availableGroups = lProv.availableGroups;
 
     int myRank = 0;
     LeaderboardEntry? myEntry;
+    final currentUserId = authUser?.id.trim().toLowerCase() ?? '';
+    final currentUserName = authUser?.name.trim().toLowerCase() ?? userProfile.name.trim().toLowerCase();
     for (int i = 0; i < filteredList.length; i++) {
       final e = filteredList[i];
-      if (e.id == userProfile.uid || e.id == 'user_current' || e.userName.contains(userProfile.name)) {
+      if ((currentUserId.isNotEmpty && e.id.toLowerCase() == currentUserId) ||
+          e.id == userProfile.uid ||
+          e.id == 'user_current' ||
+          (currentUserName.isNotEmpty && e.userName.toLowerCase().contains(currentUserName))) {
         myRank = i + 1;
         myEntry = e;
         break;
@@ -589,7 +668,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: () => lProv.loadLeaderboard(force: true),
+      onRefresh: () async {
+        await authProv.refreshUser();
+        await pProv.loadProfile(email: authUser?.email);
+        await lProv.loadLeaderboard(force: true);
+      },
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

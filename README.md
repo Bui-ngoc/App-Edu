@@ -1,7 +1,12 @@
 # 🎓 EduMaster - Siêu Ứng Dụng Giáo Dục & Ôn Tập Song Ngữ Tích Hợp AI Tutor, Chống Gian Lận & Camera
 
 > **Báo cáo Dự án Bài tập lớn / Kết thúc học phần (BTL_KTHP)**  
-> **Trường:** HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG 
+> **Trường:** HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG (PTIT)  
+> **Học phần:** Phát triển ứng dụng cho các thiết bị di động (INT1449) — **Lớp:** INT1449-20261-02  
+> **Nhóm thực hiện:** Nhóm F (Chủ đề: 32, 34, 35, 36 kết hợp 33)  
+> - Bùi Phương Ngọc — B24DCCC215  
+> - Nguyễn Minh Phương — B24DCCC231  
+> - Nguyễn Thị Yến Vi — B24DCCC286  
 > **Công nghệ:** Flutter (Dart 3.x), Android SDK, SQLite FTS, SharedPreferences, Google Gemini AI, Camera Mobile Scanner  
 
 ---

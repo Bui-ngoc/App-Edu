@@ -111,10 +111,20 @@ class LeaderboardProvider extends ChangeNotifier {
     await loadLeaderboard(force: true);
   }
 
-  Future<void> moveStudentToGroup(String studentId, String newGroupName) async {
+  Future<void> moveStudentToGroup(
+    String studentId,
+    String newGroupName, {
+    String? studentName,
+    String? studentEmail,
+  }) async {
     final clean = newGroupName.trim();
     if (clean.isEmpty) return;
-    await _repo.moveStudentToGroup(studentId, clean);
+    await _repo.moveStudentToGroup(
+      studentId,
+      clean,
+      studentName: studentName,
+      studentEmail: studentEmail,
+    );
     await loadLeaderboard(force: true);
   }
 
@@ -135,41 +145,56 @@ class LeaderboardProvider extends ChangeNotifier {
     required String targetGroup,
   }) async {
     final cleanId = studentId.trim();
+    final cleanGroup = targetGroup.trim();
     if (cleanId.isEmpty) {
       return (success: false, message: 'Vui lòng nhập mã ID sinh viên.', studentName: '');
     }
+    if (cleanGroup.isEmpty) {
+      return (success: false, message: 'Tên nhóm học không hợp lệ.', studentName: '');
+    }
 
-    final authDataSource = AuthLocalDataSource(leaderboardDataSource: _repo as LeaderboardDataSource);
-    final user = await authDataSource.getUserById(cleanId);
+    final authDataSource = AuthLocalDataSource();
+    var user = await authDataSource.getUserById(cleanId);
 
-    if (user == null || user.isTeacher) {
+    if (user != null && user.isTeacher) {
       return (
         success: false,
-        message: 'Không tìm thấy tài khoản Sinh viên với mã ID "$cleanId". Vui lòng kiểm tra lại!',
+        message: 'Mã ID "$cleanId" là tài khoản Giảng viên, không thể thêm vào nhóm của Sinh viên.',
         studentName: ''
       );
     }
 
-    // 1. Update user group in auth local datasource
-    await authDataSource.updateUserGroup(user.id, targetGroup);
+    // Nếu sinh viên chưa có trong Auth, tự động ghi danh mới vào hệ thống!
+    user ??= await authDataSource.registerOrEnrollStudent(
+      id: cleanId,
+      name: 'Sinh viên ($cleanId)',
+      group: cleanGroup,
+    );
 
-    // 2. Explicitly save student UserProfile with currentGroup = targetGroup
-    final leaderboardDs = _repo as LeaderboardDataSource;
-    final studentProfile = await leaderboardDs.getUserProfile(email: user.email);
+    // 1. Cập nhật nhóm học trong auth local datasource
+    await authDataSource.updateUserGroup(user.id, cleanGroup);
+
+    // 2. Lưu UserProfile với currentGroup = cleanGroup
+    final studentProfile = await _repo.getUserProfile(email: user.email);
     final updatedProfile = studentProfile.copyWith(
       name: user.name,
       email: user.email,
-      currentGroup: targetGroup,
+      currentGroup: cleanGroup,
     );
-    await leaderboardDs.saveUserProfile(updatedProfile);
+    await _repo.saveUserProfile(updatedProfile);
 
-    // 3. Move student in leaderboard entries
-    await moveStudentToGroup(user.id, targetGroup);
+    // 3. Chuyển / thêm sinh viên vào danh sách bảng xếp hạng thời gian thực của nhóm
+    await moveStudentToGroup(
+      user.id,
+      cleanGroup,
+      studentName: user.name,
+      studentEmail: user.email,
+    );
     await loadLeaderboard(force: true);
 
     return (
       success: true,
-      message: 'Đã thêm sinh viên ${user.name} (Mã ID: ${user.id}) vào "$targetGroup"',
+      message: 'Đã thêm sinh viên ${user.name} (Mã ID: ${user.id}) vào "$cleanGroup"',
       studentName: user.name,
     );
   }

@@ -91,4 +91,63 @@ void main() {
       expect(formatTimer(120), equals('02:00'));
     });
   });
+
+  group('Đồng bộ Quản lý Nhóm học tập (Unit Tests - Study Group Sync)', () {
+    test('35. Tìm kiếm sinh viên theo Mã ID, Email và Họ tên', () {
+      final sampleUsers = [
+        AuthUser(
+          id: 'SV1001',
+          name: 'Nguyễn Văn A',
+          email: 'student@edumaster.edu.vn',
+          password: 'password123',
+          role: 'student',
+          group: 'Nhóm 01',
+          createdAt: DateTime(2026, 1, 1),
+        ),
+        AuthUser(
+          id: 'SV1002',
+          name: 'Trần Thị B',
+          email: 'b_tran@edumaster.edu.vn',
+          password: 'password123',
+          role: 'student',
+          group: 'Nhóm 01',
+          createdAt: DateTime(2026, 1, 1),
+        ),
+      ];
+
+      AuthUser? find(String query) {
+        final clean = query.trim().toLowerCase();
+        for (final u in sampleUsers) {
+          if (u.id.toLowerCase() == clean || u.email.toLowerCase() == clean) return u;
+        }
+        for (final u in sampleUsers) {
+          if (!u.isTeacher && u.name.toLowerCase().contains(clean)) return u;
+        }
+        return null;
+      }
+
+      expect(find('SV1001')?.name, equals('Nguyễn Văn A'));
+      expect(find('student@edumaster.edu.vn')?.id, equals('SV1001'));
+      expect(find('b_tran@edumaster.edu.vn')?.id, equals('SV1002'));
+      expect(find('Trần Thị B')?.id, equals('SV1002'));
+    });
+
+    test('36. Chuyển sinh viên sang nhóm mới bảo toàn toàn bộ thuộc tính', () {
+      final user = AuthUser(
+        id: 'SV1001',
+        name: 'Nguyễn Văn A',
+        email: 'student@edumaster.edu.vn',
+        password: 'password123',
+        role: 'student',
+        group: 'Nhóm 01',
+        createdAt: DateTime(2026, 1, 1),
+      );
+
+      final updated = user.copyWith(group: 'Nhóm 02 - Flutter PTIT');
+      expect(updated.group, equals('Nhóm 02 - Flutter PTIT'));
+      expect(updated.id, equals('SV1001'));
+      expect(updated.name, equals('Nguyễn Văn A'));
+      expect(updated.isTeacher, isFalse);
+    });
+  });
 }

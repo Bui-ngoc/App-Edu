@@ -74,6 +74,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Reload current user data from storage (e.g. after teacher assigns group)
+  Future<void> refreshUser() async {
+    if (_isLoggedIn) {
+      final updated = await _authRepo.getCurrentUser();
+      if (updated != null) {
+        _currentUser = updated;
+        notifyListeners();
+      }
+    }
+  }
+
   Future<bool> login({
     required String email,
     required String password,

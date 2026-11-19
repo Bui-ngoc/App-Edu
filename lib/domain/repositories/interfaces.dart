@@ -75,7 +75,12 @@ abstract class ILeaderboardRepository {
   Future<void> createGroup(String groupName);
   Future<void> deleteGroup(String groupName);
   Future<void> renameGroup(String oldName, String newName);
-  Future<void> moveStudentToGroup(String studentId, String newGroupName);
+  Future<void> moveStudentToGroup(
+    String studentId,
+    String newGroupName, {
+    String? studentName,
+    String? studentEmail,
+  });
   Future<void> addStudentToGroup({
     required String name,
     required String groupName,

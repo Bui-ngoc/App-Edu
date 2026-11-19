@@ -32,11 +32,20 @@ import 'presentation/screens/main_navigation_screen.dart';
 Future<void> _clearLegacyDataOnFirstRun() async {
   try {
     final prefs = await SharedPreferences.getInstance();
-    const legacyCleanedFlag = 'edumaster_legacy_cleaned_v9';
+    const legacyCleanedFlag = 'edumaster_legacy_cleaned_v10';
     if (!(prefs.getBool(legacyCleanedFlag) ?? false)) {
       final keys = prefs.getKeys().toList();
       for (final k in keys) {
-        if (k.startsWith('edumaster_') && !k.contains('_v9')) {
+        // Bảo vệ toàn diện dữ liệu tài khoản, hồ sơ sinh viên, nhóm học và BXH
+        if (k.contains('registered_users') ||
+            k.contains('leaderboard') ||
+            k.contains('study_groups') ||
+            k.contains('user_profile') ||
+            k.contains('session') ||
+            k.contains('is_user_logged_in')) {
+          continue;
+        }
+        if (k.startsWith('edumaster_legacy_') || k.startsWith('edumaster_v1_') || k.startsWith('edumaster_v2_')) {
           await prefs.remove(k);
         }
       }

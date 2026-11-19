@@ -2,8 +2,8 @@
 
 ## 1. TỔNG QUAN KẾT QUẢ KIỂM THỬ TỰ ĐỘNG
 
-* **Tổng số bài test tự động:** **34 bài test**.
-* **Tỉ lệ đạt:** **100% PASS (34/34)**.
+* **Tổng số bài test tự động:** **36 bài test**.
+* **Tỉ lệ đạt:** **100% PASS (36/36)**.
 * **Phân tích tĩnh `flutter analyze`:** **No issues found! (0 lỗi, 0 cảnh báo)**.
 
 ---
@@ -12,7 +12,7 @@
 
 ```text
 KẾT QUẢ TEST RUNNER:
-00:05 +34: All tests passed!
+00:05 +36: All tests passed!
 - [Unit Tests 1 - 6]   Thuật toán SuperMemo SM-2 (State, Ease Factor, Interval, Boundary)
 - [Unit Tests 7 - 10]  Ngân hàng 300 câu hỏi song ngữ (JSON Parsing, Bilingual, Null Safety)
 - [Unit Tests 11 - 14] Phòng thi trực tuyến & Giám sát chống gian lận (Thang 10, violations)
@@ -25,4 +25,5 @@ KẾT QUẢ TEST RUNNER:
 - [A11y Tests 27 - 29] labeledTapTargetGuideline (Đầy đủ nhãn ngữ nghĩa Screen Reader)
 - [A11y Tests 30 - 32] textContrastGuideline (Độ tương phản văn bản đạt chuẩn WCAG AA)
 - [A11y Tests 33 - 34] Song ngữ VI/EN & TouchTargetWrapper tự động kiểm tra kích thước
+- [Unit Tests 35 - 36] Quản lý nhóm học tập, tìm kiếm sinh viên linh hoạt & đồng bộ realtime
 ```

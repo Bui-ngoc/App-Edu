@@ -3,9 +3,13 @@
 
 ---
 
-* **Học phần:** Lập trình Thiết bị Di động (Mobile Application Development - INT1449)
-* **Khoa:** Công nghệ Thông tin — Trường Đại học Phenikaa
-* **Nhóm thực hiện:** Nhóm F — Giáo dục và Ôn tập
+* **Học phần:** Phát triển ứng dụng cho các thiết bị di động (INT1449)
+* **Lớp:** INT1449-20261-02
+* **Đơn vị đào tạo:** Học viện Công nghệ Bưu chính Viễn thông (PTIT)
+* **Nhóm thực hiện:** Nhóm F (Chủ đề: 32, 34, 35, 36 kết hợp 33)
+  * **Bùi Phương Ngọc** — B24DCCC215
+  * **Nguyễn Minh Phương** — B24DCCC231
+  * **Nguyễn Thị Yến Vi** — B24DCCC286
 * **Công nghệ nền tảng:** Flutter (Dart 3.x), Android SDK, SQLite FTS, SharedPreferences, Gemini AI, Camera Mobile Scanner
 * **Đánh giá mục tiêu:** Đạt mức **Xuất sắc (100/100 điểm)** trên tất cả 7 tiêu chí thẩm định
 
@@ -67,6 +71,11 @@ Dự án **EduMaster** được thiết kế thành một hệ sinh thái học 
 * **Lịch sử phòng thi đã tạo (`TeacherExamHistoryScreen`)**:
   * Lưu trữ toàn bộ danh sách phòng thi do Giáo viên khởi tạo, mở lại báo cáo thống kê bất kỳ lúc nào.
   * Hệ thống bắt đầu hoàn toàn sạch (0 dữ liệu rác/mẫu).
+* **Quản lý Nhóm học tập & Phân công Sinh viên (`LeaderboardScreen - Tab Quản lý nhóm`)**:
+  * Giáo viên khởi tạo các nhóm học tập chuyên biệt (Nhóm 01, Nhóm 02...), đổi tên nhóm, xóa nhóm.
+  * Thêm sinh viên bằng **Mã ID hoặc Email sinh viên**.
+  * Cơ chế **Auto-Enrollment**: Tự động ghi danh sinh viên mới nếu chưa có tài khoản trong hệ thống, đảm bảo thao tác của Giảng viên luôn thành công 100%.
+  * **Đồng bộ thời gian thực hai chiều**: Ngay khi Giảng viên thêm sinh viên vào nhóm, tài khoản của sinh viên đó được cập nhật trực tiếp; khi sinh viên đăng nhập hoặc mở màn hình, ứng dụng tự động hiển thị đúng nhóm học tập, thứ hạng và điểm thi đua EXP.
 
 ### 1.3. Phân hệ Sinh viên (Student Flow)
 * **Phân hệ #32: Ôn tập trắc nghiệm song ngữ (300 câu)**:
@@ -86,8 +95,9 @@ Dự án **EduMaster** được thiết kế thành một hệ sinh thái học 
   * Tự động chấm điểm thang 10, thưởng XP và lưu lịch sử thi cá nhân.
 * **Phân hệ #35: Từ điển IT Offline (SQLite FTS)**:
   * Tìm kiếm tức thì $O(\log N)$, Từ của ngày (Word of the Day), đánh dấu Bookmark.
-* **Phân hệ #36: Bảng xếp hạng thi đua Realtime**:
+* **Phân hệ #36: Bảng xếp hạng thi đua Realtime & Nhóm học tập**:
   * Điểm kinh nghiệm XP, chuỗi ngày Streak và hệ thống Huy hiệu thành tích (Badges).
+  * Xem thông tin nhóm học tập được Giảng viên phân công, theo dõi thứ hạng cá nhân và khoảng cách điểm số với người dẫn đầu nhóm.
 
 ---
 
@@ -131,12 +141,12 @@ Sử dụng bảng ảo FTS4 (`CREATE VIRTUAL TABLE dictionary_fts USING fts4`) 
 
 ## PHẦN 5: BÁO CÁO KIỂM THỬ CHẤT LƯỢNG PHẦN MỀM (TIÊU CHÍ 5)
 
-* **Tổng số bài test tự động:** **34 bài test** (Pass 100%).
+* **Tổng số bài test tự động:** **36 bài test** (Pass 100%).
 * **Phân tích tĩnh `flutter analyze`:** **No issues found! (0 lỗi, 0 cảnh báo)**.
 
 ```text
 KẾT QUẢ TEST RUNNER:
-00:05 +34: All tests passed!
+00:05 +36: All tests passed!
 - [Unit Tests 1 - 6]   Thuật toán SuperMemo SM-2
 - [Unit Tests 7 - 10]  Ngân hàng 300 câu hỏi song ngữ
 - [Unit Tests 11 - 14] Phòng thi trực tuyến & Giám sát chống gian lận
@@ -149,4 +159,5 @@ KẾT QUẢ TEST RUNNER:
 - [A11y Tests 27 - 29] labeledTapTargetGuideline (Nhãn ngữ nghĩa Screen Reader)
 - [A11y Tests 30 - 32] textContrastGuideline (Độ tương phản WCAG AA)
 - [A11y Tests 33 - 34] Song ngữ VI/EN & TouchTargetWrapper tự động kiểm tra kích thước
+- [Unit Tests 35 - 36] Quản lý nhóm học tập, tìm kiếm sinh viên & đồng bộ realtime
 ```
