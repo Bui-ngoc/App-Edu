@@ -1,14 +1,13 @@
 // lib/data/datasources/local_ai_engine.dart
 //
-// Bộ não AI Ngoại tuyến Thông minh (Smart Local AI Engine & NLP Synthesizer)
-// Hỗ trợ trả lời ĐỘNG cho MỌI câu hỏi:
+// Bộ não AI Ngoại tuyến Thông minh (Smart Local AI Engine & Knowledge Base)
+// Chỉ trả lời các chủ đề kiến thức có sẵn trong hệ thống ngoại tuyến:
 //   1. So sánh & Phân biệt các khái niệm (List vs Tuple, final vs const...)
-//   2. Khái niệm CNTT, Flutter, Dart, Kiến trúc, Thuật toán, CSDL
-//   3. Tính toán số học & công thức toán học
-//   4. Tổng hợp ngữ nghĩa tự nhiên (Semantic Natural Language Synthesis)
+//   2. Khái niệm CNTT, Flutter, Dart, Clean Architecture, Thuật toán, CSDL
+//   3. Tính toán số học & công thức toán học/điểm thi
 
 class LocalAiEngine {
-  /// Entry point chính: Phân tích prompt và sinh câu trả lời động
+  /// Entry point chính: Tra cứu kho kiến thức ngoại tuyến có sẵn
   static String processQuery(String prompt) {
     final clean = prompt.trim();
     if (clean.isEmpty) {
@@ -29,8 +28,10 @@ class LocalAiEngine {
     final kbResult = _lookupKnowledgeBase(lower);
     if (kbResult != null) return kbResult;
 
-    // 4. Nếu là câu hỏi chung / câu hỏi đời sống / câu hỏi tự do
-    return _synthesizeDynamicResponse(clean, lower);
+    // 4. Nếu câu hỏi KHÔNG có sẵn trong bộ kiến thức ngoại tuyến
+    return '📴 **Chế độ AI Ngoại tuyến (Offline):**\n\n'
+        'Bộ não AI Ngoại tuyến hiện tại chỉ hỗ trợ giải đáp các chủ đề kiến thức có sẵn trong hệ thống (như *Clean Architecture trong Flutter, Phân biệt List và Tuple, Thuật toán SM-2, So sánh final & const, SQLite FTS, Công thức tính điểm...*).\n\n'
+        '💡 **Gợi ý:** Để hỏi đáp mở rộng MỌI chủ đề tự do khác, bạn vui lòng gạt công tắc phía trên sang **Chế độ AI Trực tuyến (Online Gemini 1.5)** nhé!';
   }
 
   // ==========================================================================
@@ -293,54 +294,5 @@ class LocalAiEngine {
     }
 
     return null;
-  }
-
-  // ==========================================================================
-  // 4. BỘ TỔNG HỢP NGỮ NGHĨA TỰ NHIÊN ĐỘNG (Dynamic Semantic Synthesizer)
-  // ==========================================================================
-  static String _synthesizeDynamicResponse(String raw, String lower) {
-    // Phân tích ý định câu hỏi (Intent Analysis)
-    final isWhat = lower.contains('là gì') || lower.contains('khái niệm') || lower.contains('what');
-    final isHow = lower.contains('làm sao') || lower.contains('thế nào') || lower.contains('cách') || lower.contains('how');
-    final isWhy = lower.contains('tại sao') || lower.contains('vì sao') || lower.contains('lý do') || lower.contains('why');
-
-    // Làm sạch câu hỏi để trích xuất chủ đề cốt lõi
-    final topic = raw
-        .replaceAll(RegExp(r'(là gì|như thế nào|tại sao|vì sao|hãy giải thích|hãy cho biết|\?|!|\.)', caseSensitive: false), '')
-        .trim();
-
-    final topicDisplay = topic.isNotEmpty ? topic : raw;
-
-    if (isWhat) {
-      return '**Giải đáp về "$topicDisplay":**\n\n'
-          '1. **Định nghĩa & Bản chất:**\n'
-          '   - **$topicDisplay** là một khái niệm/chủ đề quan trọng trong lĩnh vực học tập, khoa học hoặc cuộc sống.\n'
-          '   - Đóng vai trò then chốt trong việc xây dựng nền tảng tư duy và giải quyết các bài toán liên quan.\n\n'
-          '2. **Ý nghĩa thực tiễn:**\n'
-          '   - Nắm vững khái niệm này giúp bạn áp dụng hiệu quả vào công việc, nghiên cứu và thực hành.\n'
-          '   - Bạn có thể hỏi sâu hơn về công thức, ví dụ minh họa hoặc so sánh cụ thể để mình hỗ trợ nhé!';
-    }
-
-    if (isHow) {
-      return '**Hướng dẫn các bước thực hiện: "$topicDisplay"**\n\n'
-          '1. **Bước 1 — Xác định mục tiêu & Chuẩn bị:**\n'
-          '   - Phân tích rõ kết quả cần đạt được và chuẩn bị các công cụ/kiến thức cần thiết.\n\n'
-          '2. **Bước 2 — Triển khai từng bước:**\n'
-          '   - Thực hiện theo quy trình chuẩn, chú ý các quy tắc an toàn và kiểm tra từng công đoạn.\n\n'
-          '3. **Bước 3 — Đánh giá & Rút kinh nghiệm:**\n'
-          '   - Kiểm tra lại kết quả đầu ra và tinh chỉnh để đạt hiệu quả tối ưu.';
-    }
-
-    if (isWhy) {
-      return '**Phân tích lý do & Ý nghĩa của "$topicDisplay":**\n\n'
-          '1. **Mục đích căn bản:** Xuất phát từ nhu cầu giải quyết các bài toán thực tế, nâng cao hiệu quả và tính chính xác.\n'
-          '2. **Lợi ích mang lại:** Tối ưu hóa thời gian, nâng cao chất lượng và tránh các sai sót không đáng có.';
-    }
-
-    // Phản hồi tổng quát trực tiếp
-    return '**Phản hồi về "$topicDisplay":**\n\n'
-        'Cảm ơn bạn đã đặt câu hỏi về **$topicDisplay**.\n\n'
-        '- **Tóm tắt:** Đây là một vấn đề quan trọng cần tìm hiểu bản chất và nguyên lý hoạt động.\n'
-        '- **Gợi ý:** Bạn có thể đặt câu hỏi chi tiết hơn như *"So sánh A và B"*, *"Cách thực hiện..."*, hoặc *"Công thức tính toán..."* để mình hỗ trợ tốt nhất nhé!';
   }
 }

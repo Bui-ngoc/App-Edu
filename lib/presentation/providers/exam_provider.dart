@@ -265,16 +265,18 @@ class ExamProvider extends ChangeNotifier with WidgetsBindingObserver {
     required int durationMinutes,
     required List<QuizQuestion> questions,
   }) async {
+    final profile = await _leaderboardRepo.getUserProfile();
     final room = ExamRoom(
       id: roomId.trim().toUpperCase(),
       title: title.trim(),
-      creatorName: teacherName.trim(),
+      creatorName: teacherName.trim().isNotEmpty ? teacherName.trim() : profile.name,
+      creatorId: profile.uid,
       durationMinutes: durationMinutes,
       questions: questions,
       createdAt: DateTime.now(),
     );
     await _examRepo.createRoom(room);
-    await loadRooms();
+    await loadRooms(force: true);
   }
 
   // Anti-cheat lifecycle detection: student minimizes or switches away from app

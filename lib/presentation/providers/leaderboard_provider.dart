@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 import '../../domain/repositories/interfaces.dart';
+import '../../data/datasources/auth_local_datasource.dart';
 
 enum LeaderboardUiState { initial, loading, success, error }
 
@@ -128,6 +129,36 @@ class LeaderboardProvider extends ChangeNotifier {
     if (cleanName.isEmpty || cleanGroup.isEmpty) return;
     await _repo.addStudentToGroup(name: cleanName, groupName: cleanGroup, initialXp: initialXp);
     await loadLeaderboard(force: true);
+  }
+
+  Future<({bool success, String message, String studentName})> addStudentToGroupById({
+    required String studentId,
+    required String targetGroup,
+    required AuthLocalDataSource authDataSource,
+  }) async {
+    final cleanId = studentId.trim();
+    if (cleanId.isEmpty) {
+      return (success: false, message: 'Vui lòng nhập mã ID sinh viên.', studentName: '');
+    }
+
+    final user = await authDataSource.getUserById(cleanId);
+    if (user == null || user.isTeacher) {
+      return (
+        success: false,
+        message: 'Không tìm thấy tài khoản Sinh viên với mã ID "$cleanId". Vui lòng kiểm tra lại!',
+        studentName: ''
+      );
+    }
+
+    // Update student's group in auth database & leaderboard
+    await authDataSource.updateUserGroup(user.id, targetGroup);
+    await moveStudentToGroup(user.id, targetGroup);
+
+    return (
+      success: true,
+      message: 'Đã thêm sinh viên ${user.name} (Mã ID: ${user.id}) vào "$targetGroup"',
+      studentName: user.name,
+    );
   }
 
   int getRank(LeaderboardEntry entry) {

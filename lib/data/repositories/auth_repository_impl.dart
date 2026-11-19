@@ -39,13 +39,9 @@ class AuthRepositoryImpl implements IAuthRepository {
     return _dataSource.login(email: email, password: password);
   }
 
-  @override
-  Future<AuthUser> quickDemoLogin({String role = 'student'}) =>
-      _dataSource.quickDemoLogin(role: role);
 
-  @override
-  Future<AuthUser> switchRole(String email, String newRole) =>
-      _dataSource.switchRole(email, newRole);
+
+
 
   @override
   Future<void> logout() => _dataSource.logout();

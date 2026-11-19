@@ -5,8 +5,21 @@ import '../../domain/entities/leaderboard_entry.dart';
 
 class LeaderboardDataSource {
   static const String _profileKeyPrefix = 'edumaster_user_profile_';
-  static const String _leaderboardKey = 'edumaster_leaderboard_list_v5';
-  static const String _groupsListKey = 'edumaster_study_groups_list_v5';
+  static const String _leaderboardKeyPrefix = 'edumaster_leaderboard_list_v6_';
+  static const String _groupsListKeyPrefix = 'edumaster_study_groups_list_v6_';
+
+  String _userId = 'default';
+  String get _leaderboardKey => '$_leaderboardKeyPrefix$_userId';
+  String get _groupsListKey => '$_groupsListKeyPrefix$_userId';
+
+  void switchUser(String userId) {
+    final cleanId = userId.trim().toLowerCase();
+    final newId = cleanId.isEmpty ? 'default' : cleanId;
+    if (_userId != newId) {
+      _userId = newId;
+      _cachedEntries = null;
+    }
+  }
 
   SharedPreferences? _prefs;
   List<LeaderboardEntry>? _cachedEntries;
@@ -359,17 +372,20 @@ class LeaderboardDataSource {
       } catch (_) {}
     }
 
-    final group01Count = entries.where((e) => e.groupName == 'Nhóm 01').length;
-    if (entries.isEmpty || group01Count < 30) {
-      final default30 = _createDefault30Members();
-      // Giữ lại các sinh viên thuộc nhóm do giáo viên mới tạo thêm
-      final otherEntries = entries.where((e) => e.groupName != 'Nhóm 01' && !e.groupName.contains('KTHP')).toList();
-      entries = [...default30, ...otherEntries];
-      entries.sort((a, b) => b.xp.compareTo(a.xp));
-      _cachedEntries = entries;
-      await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
-      _emitRealtime(entries);
-      return entries;
+    if (entries.isEmpty) {
+      // Demo Teacher & Demo Student get demo group 01, while NEW accounts start clean []
+      if (_userId == 'user_teacher_1' || _userId == 'user_student_1' || _userId == 'sv1001' || _userId == 'gv2001' || _userId.contains('student@edumaster.edu.vn') || _userId.contains('teacher@edumaster.edu.vn')) {
+        final default30 = _createDefault30Members();
+        entries = [...default30];
+        entries.sort((a, b) => b.xp.compareTo(a.xp));
+        _cachedEntries = entries;
+        await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
+        _emitRealtime(entries);
+        return entries;
+      }
+      _cachedEntries = [];
+      _emitRealtime([]);
+      return [];
     }
 
     entries.sort((a, b) => b.xp.compareTo(a.xp));
@@ -432,9 +448,14 @@ class LeaderboardDataSource {
       } catch (_) {}
     }
 
-    // Mặc định hệ thống chỉ có "Nhóm 01" (30 thành viên). Các nhóm khác do GV tự tạo.
-    if (!groups.contains('Nhóm 01')) {
-      groups.insert(0, 'Nhóm 01');
+    if (groups.isEmpty) {
+      if (_userId == 'user_teacher_1' || _userId == 'user_student_1' || _userId == 'sv1001' || _userId == 'gv2001' || _userId.contains('student@edumaster.edu.vn') || _userId.contains('teacher@edumaster.edu.vn')) {
+        groups = ['Nhóm 01'];
+        await prefs.setString(_groupsListKey, json.encode(groups));
+        return groups;
+      }
+      // NEW Teacher / Student accounts start with 0 created groups []!
+      return [];
     }
     // Lọc bỏ các nhóm cũ nếu còn sót lại
     groups.removeWhere((g) => g.contains('KTHP') || g.contains('Flutter Pro') || g.contains('Lập Trình Di Động'));
@@ -651,46 +672,72 @@ class LeaderboardDataSource {
       } catch (_) {}
     }
 
-    // Default profiles for Demo Accounts vs Clean Data for New Accounts
-    UserProfile profile;
-    if (targetEmail == 'student@edumaster.edu.vn') {
-      profile = const UserProfile(
-        uid: 'user_student_1',
-        name: 'Bùi Ngọc (Sinh viên)',
-        email: 'student@edumaster.edu.vn',
-        totalXp: 2190,
-        streakDays: 8,
-        badges: ['Tân binh EduMaster', 'Khám phá Từ điển'],
-        currentGroup: 'Nhóm 01',
-      );
-    } else if (targetEmail == 'teacher@edumaster.edu.vn') {
-      profile = const UserProfile(
-        uid: 'user_teacher_1',
-        name: 'TS. Nguyễn Văn (Giáo viên)',
-        email: 'teacher@edumaster.edu.vn',
-        totalXp: 3500,
-        streakDays: 14,
-        badges: ['Giảng viên Xuất sắc', 'Bậc thầy Tạo đề'],
-        currentGroup: 'Bộ môn Lập trình',
-      );
-    } else {
-      // NEW REGISTERED USER: profile sạch 100% — 0 XP, 0 Streak, chưa có nhóm.
-      // GV sẽ phân nhóm, SV KHÔNG tự thấy dữ liệu demo "Nhóm 01".
-      profile = UserProfile(
-        uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
-        name: 'Thành viên mới',
-        email: targetEmail,
-        totalXp: 0,
-        streakDays: 0,
-        badges: const [],
-        currentGroup: '',  // để trống, GV phân nhóm sau
-      );
-    }
+    // Clean data for registered user: 0 XP, 0 Streak, empty group
+    UserProfile profile = UserProfile(
+      uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
+      name: 'Thành viên mới',
+      email: targetEmail,
+      totalXp: 0,
+      streakDays: 0,
+      badges: const [],
+      currentGroup: '',
+    );
 
     if (targetEmail.isNotEmpty) {
       await saveUserProfile(profile);
     }
     return profile;
+  }
+
+  /// Check and record daily streak when user enters the app/logs in
+  Future<({UserProfile profile, bool isNewStreak})> checkAndRecordDailyStreak({String? email}) async {
+    final prefs = await _getPrefs();
+    final profile = await getUserProfile(email: email);
+    final targetEmail = profile.email.trim().toLowerCase();
+
+    final lastActiveKey = 'edumaster_last_streak_date_$targetEmail';
+    final lastActiveStr = prefs.getString(lastActiveKey);
+    final todayStr = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
+
+    if (lastActiveStr == todayStr && profile.streakDays > 0) {
+      return (profile: profile, isNewStreak: false);
+    }
+
+    int newStreak = profile.streakDays;
+    if (lastActiveStr == null || lastActiveStr.isEmpty || profile.streakDays == 0) {
+      // First active day for user -> Day 1!
+      newStreak = 1;
+    } else {
+      try {
+        final parts = lastActiveStr.split('-');
+        final lastDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+        final todayDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+        final diffInDays = todayDate.difference(lastDate).inDays;
+
+        if (diffInDays == 1) {
+          newStreak = profile.streakDays + 1;
+        } else if (diffInDays > 1) {
+          newStreak = 1; // Reset streak if user missed days
+        }
+      } catch (_) {
+        newStreak = 1;
+      }
+    }
+
+    final updatedBadges = List<String>.from(profile.badges);
+    if (newStreak >= 1 && !updatedBadges.contains('Tân binh EduMaster')) {
+      updatedBadges.add('Tân binh EduMaster');
+    }
+
+    final updatedProfile = profile.copyWith(
+      streakDays: newStreak,
+      badges: updatedBadges,
+    );
+
+    await prefs.setString(lastActiveKey, todayStr);
+    await saveUserProfile(updatedProfile);
+
+    return (profile: updatedProfile, isNewStreak: true);
   }
 
   /// Save user profile for a specific user

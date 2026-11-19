@@ -35,9 +35,9 @@ class GeminiAiDataSource {
   // 2. gemini-3.8-flash: Bản Flash thế hệ mới nhất
   // 3. gemini-flash-latest: Bản Flash dự phòng
   static const List<String> _preferredModels = [
-    'gemini-flash-lite-latest',
-    'gemini-3.8-flash',
-    'gemini-flash-latest',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
+    'gemini-2.0-flash-exp',
   ];
 
   static const bool _buildDemoMode =

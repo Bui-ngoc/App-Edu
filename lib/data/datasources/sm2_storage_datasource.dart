@@ -11,7 +11,7 @@ class Sm2StorageDataSource {
   String _userId = 'default';
 
   String get _decksKey => '$_decksKeyPrefix$_userId';
-  String _cardKey(String deckId) => '${_cardsKeyPrefix}${_userId}_$deckId';
+  String _cardKey(String deckId) => '$_cardsKeyPrefix${_userId}_$deckId';
 
   SharedPreferences? _prefs;
   List<FlashcardDeck>? _cachedDecks;

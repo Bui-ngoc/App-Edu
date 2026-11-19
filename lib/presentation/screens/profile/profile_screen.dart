@@ -261,113 +261,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // ── Chuyển đổi Vai trò (Giáo viên ↔ Sinh viên) ────────────────────
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          isTeacher ? Icons.supervisor_account_rounded : Icons.school_rounded,
-                          color: isTeacher ? AppColors.secondary : AppColors.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Chuyển đổi vai trò tài khoản',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Hiện tại bạn đang ở vai trò: ${isTeacher ? "Giáo viên (GV)" : "Sinh viên (SV)"}.\nBấm nút bên dưới để chuyển nhanh giao diện sử dụng.',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight, height: 1.4),
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 46,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isTeacher ? AppColors.primary : AppColors.secondary,
-                          foregroundColor: Colors.white,
-                        ),
-                        icon: Icon(
-                          isTeacher ? Icons.school_rounded : Icons.supervisor_account_rounded,
-                          size: 20,
-                        ),
-                        label: Text(
-                          isTeacher ? 'Chuyển sang vai trò SINH VIÊN' : 'Chuyển sang vai trò GIÁO VIÊN',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        onPressed: () async {
-                          final targetRole = isTeacher ? 'student' : 'teacher';
-                          final success = await context.read<AuthProvider>().switchRole(targetRole);
-                          if (success && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Đã chuyển sang vai trò ${isTeacher ? "Sinh viên" : "Giáo viên"} thành công!',
-                                ),
-                                backgroundColor: AppColors.success,
+
+
+            // ── Nhóm học tập của Sinh viên ────────────────────────────────────
+            if (!isTeacher) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14.0),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.groups_rounded, color: AppColors.primary, size: 24),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Nhóm học tập', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight)),
+                            const SizedBox(height: 2),
+                            Text(
+                              profile.currentGroup.isNotEmpty
+                                  ? profile.currentGroup
+                                  : 'Chưa tham gia nhóm (Chờ GV phân nhóm qua mã ID)',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: profile.currentGroup.isNotEmpty ? AppColors.primary : Colors.orange.shade800,
                               ),
-                            );
-                          }
-                        },
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 12),
+            ],
 
-            // ── Stats row ───────────────────────────────────────────────────
-            Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14.0),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.flash_on_rounded, color: AppColors.accent, size: 28),
-                          const SizedBox(height: 4),
-                          Text('${profile.totalXp} XP',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          const Text('Điểm tích lũy', style: TextStyle(fontSize: 12)),
-                        ],
+            // ── Stats row (Chỉ hiển thị cho Sinh viên — GV không có EXP & Streak) ───
+            if (!isTeacher) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.flash_on_rounded, color: AppColors.accent, size: 28),
+                            const SizedBox(height: 4),
+                            Text('${profile.totalXp} XP',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            const Text('Điểm tích lũy', style: TextStyle(fontSize: 12)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14.0),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.local_fire_department_rounded,
-                              color: AppColors.warning, size: 28),
-                          const SizedBox(height: 4),
-                          Text('${profile.streakDays} Ngày',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          const Text('Chuỗi hoạt động', style: TextStyle(fontSize: 12)),
-                        ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.local_fire_department_rounded,
+                                color: AppColors.warning, size: 28),
+                            const SizedBox(height: 4),
+                            Text('${profile.streakDays} Ngày',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            const Text('Chuỗi hoạt động', style: TextStyle(fontSize: 12)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // ── Thông tin tài khoản ──────────────────────────────────────────
             Card(

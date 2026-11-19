@@ -19,8 +19,6 @@ abstract class IAuthRepository {
     required String email,
     required String password,
   });
-  Future<AuthUser> quickDemoLogin({String role = 'student'});
-  Future<AuthUser> switchRole(String email, String newRole);
   Future<void> logout();
 }
 
@@ -64,8 +62,9 @@ abstract class IDictionaryRepository {
 abstract class ILeaderboardRepository {
   Stream<List<LeaderboardEntry>> getRealtimeLeaderboard();
   Future<void> updateXp(String userId, int addedXp);
-  Future<UserProfile> getUserProfile();
+  Future<UserProfile> getUserProfile({String? email});
   Future<void> saveUserProfile(UserProfile profile);
+  Future<({UserProfile profile, bool isNewStreak})> checkAndRecordDailyStreak({String? email});
   Future<void> updateUserLeaderboard({
     required String userId,
     String? userName,

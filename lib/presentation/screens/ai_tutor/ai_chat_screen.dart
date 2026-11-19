@@ -139,19 +139,32 @@ class _AiChatScreenState extends State<AiChatScreen> {
       ),
       body: Column(
         children: [
-          // Dynamic Quick suggestions chips
+          // Dynamic Quick suggestions chips (Shows all available offline topics when Offline)
           Container(
             height: 44,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: ListView(
               scrollDirection: Axis.horizontal,
-              children: [
-                _buildQuickChip('⚡ Phân biệt List và Tuple'),
-                _buildQuickChip('🧠 Thuật toán SM-2 là gì?'),
-                _buildQuickChip('🔍 So sánh final và const'),
-                _buildQuickChip('🏗️ Clean Architecture trong Flutter'),
-                _buildQuickChip('📊 Tính điểm thi: đúng 16/20 câu'),
-              ],
+              children: isOnline
+                  ? [
+                      _buildQuickChip('⚡ Phân biệt List và Tuple'),
+                      _buildQuickChip('🧠 Thuật toán SM-2 là gì?'),
+                      _buildQuickChip('🔍 So sánh final và const'),
+                      _buildQuickChip('🏛️ Clean Architecture trong Flutter'),
+                      _buildQuickChip('📊 Tính điểm thi: đúng 16/20 câu'),
+                    ]
+                  : [
+                      _buildQuickChip('🏛️ Clean Architecture trong Flutter'),
+                      _buildQuickChip('⚡ Phân biệt List và Tuple'),
+                      _buildQuickChip('🧠 Thuật toán SM-2 là gì?'),
+                      _buildQuickChip('🔒 So sánh final và const'),
+                      _buildQuickChip('⚖️ StatelessWidget vs StatefulWidget'),
+                      _buildQuickChip('💾 SQLite FTS là gì?'),
+                      _buildQuickChip('🔄 SQL vs NoSQL'),
+                      _buildQuickChip('📡 Future vs Stream'),
+                      _buildQuickChip('⚡ Async Await trong Dart'),
+                      _buildQuickChip('📊 Tính điểm thi: đúng 16/20 câu'),
+                    ],
             ),
           ),
           const Divider(height: 1, thickness: 1, color: Color(0x1F000000)),

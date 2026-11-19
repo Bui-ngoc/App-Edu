@@ -3,7 +3,8 @@ import 'quiz_question.dart';
 class ExamRoom {
   final String id; // Exam PIN / Room ID (e.g. "EXAM892")
   final String title;
-  final String creatorName; // Teacher
+  final String creatorName; // Teacher Name
+  final String creatorId; // Teacher User ID / Email
   final int durationMinutes;
   final List<QuizQuestion> questions;
   final DateTime createdAt;
@@ -12,6 +13,7 @@ class ExamRoom {
     required this.id,
     required this.title,
     required this.creatorName,
+    this.creatorId = '',
     required this.durationMinutes,
     required this.questions,
     required this.createdAt,
@@ -22,6 +24,7 @@ class ExamRoom {
       'id': id,
       'title': title,
       'creatorName': creatorName,
+      'creatorId': creatorId,
       'durationMinutes': durationMinutes,
       'questions': questions.map((q) => q.toMap()).toList(),
       'createdAt': createdAt.toIso8601String(),
@@ -33,6 +36,7 @@ class ExamRoom {
       id: map['id']?.toString() ?? '',
       title: map['title']?.toString() ?? 'Phòng thi trực tuyến',
       creatorName: map['creatorName']?.toString() ?? 'Giảng viên',
+      creatorId: map['creatorId']?.toString() ?? '',
       durationMinutes: (map['durationMinutes'] as num?)?.toInt() ?? 15,
       questions: (map['questions'] as List<dynamic>?)
               ?.map((e) => QuizQuestion.fromMap(Map<String, dynamic>.from(e as Map)))

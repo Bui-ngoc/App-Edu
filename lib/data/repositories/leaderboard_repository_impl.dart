@@ -19,8 +19,13 @@ class LeaderboardRepositoryImpl implements ILeaderboardRepository {
   }
 
   @override
-  Future<UserProfile> getUserProfile() {
-    return _dataSource.getUserProfile();
+  Future<UserProfile> getUserProfile({String? email}) {
+    return _dataSource.getUserProfile(email: email);
+  }
+
+  @override
+  Future<({UserProfile profile, bool isNewStreak})> checkAndRecordDailyStreak({String? email}) {
+    return _dataSource.checkAndRecordDailyStreak(email: email);
   }
 
   @override

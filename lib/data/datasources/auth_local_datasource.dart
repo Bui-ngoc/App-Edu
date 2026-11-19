@@ -4,7 +4,7 @@ import '../../domain/entities/auth_user.dart';
 import 'leaderboard_datasource.dart';
 
 class AuthLocalDataSource {
-  static const String _usersKey = 'edumaster_registered_users';
+  static const String _usersKey = 'edumaster_registered_users_v2';
   static const String _currentSessionKey = 'edumaster_current_session_email';
   static const String _isLoggedInKey = 'edumaster_is_user_logged_in';
 
@@ -20,7 +20,7 @@ class AuthLocalDataSource {
     return _prefs!;
   }
 
-  /// Get list of registered users. Seed default accounts if missing.
+  /// Get list of registered users.
   Future<List<AuthUser>> getRegisteredUsers() async {
     if (_cachedUsers != null && _cachedUsers!.isNotEmpty) {
       return _cachedUsers!;
@@ -35,46 +35,6 @@ class AuthLocalDataSource {
         final List<dynamic> list = json.decode(jsonStr);
         users = list.map((e) => AuthUser.fromMap(Map<String, dynamic>.from(e as Map))).toList();
       } catch (_) {}
-    }
-
-    bool needsSave = false;
-
-    // Ensure default student account exists
-    if (!users.any((u) => u.email.trim().toLowerCase() == 'student@edumaster.edu.vn')) {
-      users.add(AuthUser(
-        id: 'user_student_1',
-        name: 'Bùi Ngọc (Sinh viên)',
-        email: 'student@edumaster.edu.vn',
-        password: '123456',
-        role: 'student',
-        group: 'Nhóm 01',
-        createdAt: DateTime.now(),
-      ));
-      needsSave = true;
-    } else {
-      final sIdx = users.indexWhere((u) => u.email.trim().toLowerCase() == 'student@edumaster.edu.vn');
-      if (sIdx >= 0 && users[sIdx].group != 'Nhóm 01') {
-        users[sIdx] = users[sIdx].copyWith(group: 'Nhóm 01');
-        needsSave = true;
-      }
-    }
-
-    // Ensure default teacher account exists
-    if (!users.any((u) => u.email.trim().toLowerCase() == 'teacher@edumaster.edu.vn')) {
-      users.add(AuthUser(
-        id: 'user_teacher_1',
-        name: 'TS. Nguyễn Văn (Giáo viên)',
-        email: 'teacher@edumaster.edu.vn',
-        password: '123456',
-        role: 'teacher',
-        group: 'Bộ môn Lập trình',
-        createdAt: DateTime.now(),
-      ));
-      needsSave = true;
-    }
-
-    if (needsSave || jsonStr == null || jsonStr.isEmpty) {
-      await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
     }
 
     _cachedUsers = users;
@@ -112,7 +72,7 @@ class AuthLocalDataSource {
     required String email,
     required String password,
     String role = 'student',
-    String group = 'Thành viên EduMaster',
+    String group = '',
   }) async {
     final cleanEmail = email.trim().toLowerCase();
     final cleanPassword = password.trim();
@@ -144,8 +104,6 @@ class AuthLocalDataSource {
       email: cleanEmail,
       password: cleanPassword,
       role: cleanRole == 'teacher' ? 'teacher' : 'student',
-      // Tài khoản mới KHÔNG được assign nhóm sẵn — GV sẽ phân nhóm sau.
-      // Giáo viên được tự động vào bộ môn của trường.
       group: cleanRole == 'teacher' ? 'Bộ môn Lập trình' : '',
       createdAt: DateTime.now(),
     );
@@ -208,58 +166,7 @@ class AuthLocalDataSource {
     return user;
   }
 
-  /// Quick Demo Login (for grading/quick presentation)
-  Future<AuthUser> quickDemoLogin({String role = 'student'}) async {
-    final users = await getRegisteredUsers();
-    final targetRole = role.toLowerCase();
-    AuthUser? demoUser;
 
-    try {
-      demoUser = users.firstWhere((u) => u.role == targetRole);
-    } catch (_) {
-      if (users.isNotEmpty) demoUser = users.first;
-    }
-
-    if (demoUser != null) {
-      final prefs = await _getPrefs();
-      await prefs.setString(_currentSessionKey, demoUser.email);
-      await prefs.setBool(_isLoggedInKey, true);
-      await _syncProfile(demoUser);
-      return demoUser;
-    }
-
-    final isTeacher = targetRole == 'teacher';
-    return register(
-      name: isTeacher ? 'TS. Nguyễn Văn (Giáo viên)' : 'Bùi Ngọc (Sinh viên)',
-      email: isTeacher ? 'teacher@edumaster.edu.vn' : 'student@edumaster.edu.vn',
-      password: '123456',
-      role: isTeacher ? 'teacher' : 'student',
-    );
-  }
-
-  /// Switch role for current account
-  Future<AuthUser> switchRole(String email, String newRole) async {
-    final users = await getRegisteredUsers();
-    final cleanEmail = email.trim().toLowerCase();
-    final cleanRole = newRole.trim().toLowerCase() == 'teacher' ? 'teacher' : 'student';
-
-    final userIdx = users.indexWhere((u) => u.email.trim().toLowerCase() == cleanEmail);
-    if (userIdx >= 0) {
-      final oldUser = users[userIdx];
-      final updatedUser = oldUser.copyWith(
-        role: cleanRole,
-        group: cleanRole == 'teacher' ? 'Giảng viên' : 'Sinh viên',
-      );
-      users[userIdx] = updatedUser;
-      _cachedUsers = users;
-
-      final prefs = await _getPrefs();
-      await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
-      await _syncProfile(updatedUser);
-      return updatedUser;
-    }
-    throw Exception('Không tìm thấy người dùng');
-  }
 
   /// Find a user by Student/Teacher ID or Email
   Future<AuthUser?> getUserById(String idOrEmail) async {
@@ -270,9 +177,7 @@ class AuthLocalDataSource {
       return users.firstWhere(
         (u) =>
             u.id.toLowerCase() == clean ||
-            u.email.toLowerCase() == clean ||
-            (clean == 'sv1001' && u.id == 'user_student_1') ||
-            (clean == 'gv2001' && u.id == 'user_teacher_1'),
+            u.email.toLowerCase() == clean,
       );
     } catch (_) {
       return null;
@@ -283,10 +188,7 @@ class AuthLocalDataSource {
   Future<void> updateUserGroup(String userId, String newGroupName) async {
     final users = await getRegisteredUsers();
     final cleanId = userId.trim().toLowerCase();
-    final idx = users.indexWhere((u) =>
-        u.id.toLowerCase() == cleanId ||
-        (cleanId == 'sv1001' && u.id == 'user_student_1') ||
-        (cleanId == 'gv2001' && u.id == 'user_teacher_1'));
+    final idx = users.indexWhere((u) => u.id.toLowerCase() == cleanId);
 
     if (idx >= 0) {
       final updated = users[idx].copyWith(group: newGroupName.trim());

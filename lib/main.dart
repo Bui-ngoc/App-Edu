@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_strings.dart';
 import 'core/constants/app_colors.dart';
@@ -28,8 +29,25 @@ import 'presentation/providers/auth_provider.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/main_navigation_screen.dart';
 
+Future<void> _clearLegacyDataOnFirstRun() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    const legacyCleanedFlag = 'edumaster_legacy_cleaned_v9';
+    if (!(prefs.getBool(legacyCleanedFlag) ?? false)) {
+      final keys = prefs.getKeys().toList();
+      for (final k in keys) {
+        if (k.startsWith('edumaster_') && !k.contains('_v9')) {
+          await prefs.remove(k);
+        }
+      }
+      await prefs.setBool(legacyCleanedFlag, true);
+    }
+  } catch (_) {}
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await _clearLegacyDataOnFirstRun();
 
   // Instantiate data sources
   final quizLocalDataSource = QuizLocalDataSource();
@@ -56,7 +74,8 @@ void main() async {
           create: (_) => AuthProvider(
             authRepo: authRepo,
             quizDataSource: quizLocalDataSource,
-            flashcardDataSource: sm2StorageDataSource,
+            sm2DataSource: sm2StorageDataSource,
+            examDataSource: examStorageDataSource,
           ),
         ),
         ChangeNotifierProvider(

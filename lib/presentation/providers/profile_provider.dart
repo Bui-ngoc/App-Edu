@@ -36,17 +36,29 @@ class ProfileProvider extends ChangeNotifier {
     loadProfile();
   }
 
-  Future<void> loadProfile() async {
+  Future<void> loadProfile({String? email}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _profile   = await _repo.getUserProfile();
+      _profile   = await _repo.getUserProfile(email: email);
       _apiKey    = await _aiDataSource.getApiKey();
       _isDemoMode = await _aiDataSource.isDemoMode();
     } catch (_) {}
     _isLoading = false;
     notifyListeners();
+  }
+
+  /// Record daily streak on user login / app launch
+  Future<bool> checkDailyStreak({String? email}) async {
+    try {
+      final res = await _repo.checkAndRecordDailyStreak(email: email);
+      _profile = res.profile;
+      notifyListeners();
+      return res.isNewStreak;
+    } catch (_) {
+      return false;
+    }
   }
 
   void toggleTheme() {

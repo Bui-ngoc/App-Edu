@@ -4,14 +4,11 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../providers/profile_provider.dart';
 import '../providers/auth_provider.dart';
-import '../providers/exam_provider.dart';
 import 'quiz/quiz_hub_screen.dart';
-import 'flashcards/flashcard_deck_screen.dart';
 import 'online_exam/exam_hub_screen.dart';
 import 'dictionary/dictionary_screen.dart';
 import 'leaderboard/leaderboard_screen.dart';
 import 'ai_tutor/ai_chat_screen.dart';
-import 'scanner/qr_scanner_screen.dart';
 import 'profile/profile_screen.dart';
 import 'teacher/teacher_exam_history_screen.dart';
 
@@ -25,23 +22,38 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  Future<void> _handleQrScan(BuildContext context, bool isTeacher) async {
-    final scannedCode = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => const QrScannerScreen()),
-    );
-    if (scannedCode != null && scannedCode.isNotEmpty && context.mounted) {
-      if (!isTeacher) {
-        // If student scans QR, switch to Exam tab and join
-        setState(() {
-          _currentIndex = 2;
-        });
-        await context.read<ExamProvider>().joinRoom(scannedCode);
-      } else {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final user = context.read<AuthProvider>().currentUser;
+      final profProv = context.read<ProfileProvider>();
+      await profProv.loadProfile(email: user?.email);
+      final isNewStreak = await profProv.checkDailyStreak(email: user?.email);
+      if (isNewStreak && mounted) {
+        final streak = profProv.profile.streakDays;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Mã QR phòng thi: $scannedCode')),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '🔥 Khởi động học tập: Bạn đã đạt Chuỗi Ngày $streak hôm nay!',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
-    }
+    });
   }
 
   @override
@@ -64,7 +76,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ]
         : const [
             QuizHubScreen(),
-            FlashcardDeckScreen(),
             ExamHubScreen(),
             DictionaryScreen(),
             LeaderboardScreen(),
@@ -95,11 +106,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               icon: Icon(Icons.quiz_outlined),
               selectedIcon: Icon(Icons.quiz_rounded, color: AppColors.primary),
               label: 'Trắc nghiệm',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.style_outlined),
-              selectedIcon: Icon(Icons.style_rounded, color: AppColors.primary),
-              label: 'Flashcards',
             ),
             NavigationDestination(
               icon: Icon(Icons.timer_outlined),
@@ -165,12 +171,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 MaterialPageRoute(builder: (_) => const AiChatScreen()),
               );
             },
-          ),
-          // QR Scanner shortcut
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner_rounded),
-            tooltip: 'Quét mã QR bằng Camera',
-            onPressed: () => _handleQrScan(context, isTeacher),
           ),
           // Profile & Avatar shortcut
           Padding(
