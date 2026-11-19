@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 import '../../domain/repositories/interfaces.dart';
 import '../../data/datasources/auth_local_datasource.dart';
+import '../../data/datasources/leaderboard_datasource.dart';
 
 enum LeaderboardUiState { initial, loading, success, error }
 
@@ -45,8 +46,6 @@ class LeaderboardProvider extends ChangeNotifier {
   String _selectedGroup = 'Nhóm 01';
   String get selectedGroup => _selectedGroup;
 
-  /// CHỈ SO SÁNH GIỮA CÁC SINH VIÊN CÙNG NHÓM HỌC
-  /// Tuyệt đối không so sánh toàn trường.
   List<LeaderboardEntry> get filteredEntries {
     final list = _entries.where((e) => e.groupName == _selectedGroup).toList();
     list.sort((a, b) => b.xp.compareTo(a.xp));
@@ -134,14 +133,15 @@ class LeaderboardProvider extends ChangeNotifier {
   Future<({bool success, String message, String studentName})> addStudentToGroupById({
     required String studentId,
     required String targetGroup,
-    required AuthLocalDataSource authDataSource,
   }) async {
     final cleanId = studentId.trim();
     if (cleanId.isEmpty) {
       return (success: false, message: 'Vui lòng nhập mã ID sinh viên.', studentName: '');
     }
 
+    final authDataSource = AuthLocalDataSource(leaderboardDataSource: _repo as LeaderboardDataSource);
     final user = await authDataSource.getUserById(cleanId);
+
     if (user == null || user.isTeacher) {
       return (
         success: false,
@@ -150,9 +150,22 @@ class LeaderboardProvider extends ChangeNotifier {
       );
     }
 
-    // Update student's group in auth database & leaderboard
+    // 1. Update user group in auth local datasource
     await authDataSource.updateUserGroup(user.id, targetGroup);
+
+    // 2. Explicitly save student UserProfile with currentGroup = targetGroup
+    final leaderboardDs = _repo as LeaderboardDataSource;
+    final studentProfile = await leaderboardDs.getUserProfile(email: user.email);
+    final updatedProfile = studentProfile.copyWith(
+      name: user.name,
+      email: user.email,
+      currentGroup: targetGroup,
+    );
+    await leaderboardDs.saveUserProfile(updatedProfile);
+
+    // 3. Move student in leaderboard entries
     await moveStudentToGroup(user.id, targetGroup);
+    await loadLeaderboard(force: true);
 
     return (
       success: true,

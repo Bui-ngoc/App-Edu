@@ -4,21 +4,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 
 class LeaderboardDataSource {
-  static const String _profileKeyPrefix = 'edumaster_user_profile_';
-  static const String _leaderboardKeyPrefix = 'edumaster_leaderboard_list_v6_';
-  static const String _groupsListKeyPrefix = 'edumaster_study_groups_list_v6_';
+  static const String _profileKeyPrefix = 'edumaster_user_profile_v7_';
+  static const String _leaderboardKeyPrefix = 'edumaster_leaderboard_list_v7_';
+  static const String _groupsListKeyPrefix = 'edumaster_study_groups_list_v7_';
 
   String _userId = 'default';
-  String get _leaderboardKey => '$_leaderboardKeyPrefix$_userId';
-  String get _groupsListKey => '$_groupsListKeyPrefix$_userId';
+  String _activeEmail = '';
 
-  void switchUser(String userId) {
+  String get _leaderboardKey => '$_leaderboardKeyPrefix${_userId}_${_activeEmail.replaceAll('@', '_').replaceAll('.', '_')}';
+  String get _groupsListKey => '$_groupsListKeyPrefix${_userId}_${_activeEmail.replaceAll('@', '_').replaceAll('.', '_')}';
+
+  void switchUser(String userId, {String? email}) {
     final cleanId = userId.trim().toLowerCase();
-    final newId = cleanId.isEmpty ? 'default' : cleanId;
-    if (_userId != newId) {
-      _userId = newId;
-      _cachedEntries = null;
+    _userId = cleanId.isEmpty ? 'default' : cleanId;
+    if (email != null && email.trim().isNotEmpty) {
+      _activeEmail = email.trim().toLowerCase();
+      _currentActiveEmail = _activeEmail;
     }
+    _cachedEntries = null;
   }
 
   SharedPreferences? _prefs;
@@ -643,30 +646,17 @@ class LeaderboardDataSource {
     }
   }
 
-  /// Get user profile per user email. Newly registered users get clean 0 XP / 0 Streak Days profile.
+  /// Get user profile per user email. Always reads fresh data from disk.
   Future<UserProfile> getUserProfile({String? email}) async {
     final prefs = await _getPrefs();
     final targetEmail = (email ?? _currentActiveEmail ?? prefs.getString('edumaster_current_session_email') ?? '').trim().toLowerCase();
-
-    if (targetEmail.isNotEmpty && _profileCache.containsKey(targetEmail)) {
-      final p = _profileCache[targetEmail]!;
-      if (targetEmail == 'student@edumaster.edu.vn' && p.currentGroup.contains('KTHP')) {
-        final fixed = p.copyWith(currentGroup: 'Nhóm 01');
-        _profileCache[targetEmail] = fixed;
-        return fixed;
-      }
-      return p;
-    }
 
     final key = '$_profileKeyPrefix$targetEmail';
     final jsonStr = prefs.getString(key);
 
     if (jsonStr != null && jsonStr.isNotEmpty) {
       try {
-        var profile = UserProfile.fromMap(json.decode(jsonStr) as Map<String, dynamic>);
-        if (targetEmail == 'student@edumaster.edu.vn' && (profile.currentGroup.isEmpty || profile.currentGroup.contains('KTHP') || profile.currentGroup == 'Sinh viên EduMaster')) {
-          profile = profile.copyWith(currentGroup: 'Nhóm 01', totalXp: 2190);
-        }
+        final profile = UserProfile.fromMap(json.decode(jsonStr) as Map<String, dynamic>);
         if (targetEmail.isNotEmpty) _profileCache[targetEmail] = profile;
         return profile;
       } catch (_) {}

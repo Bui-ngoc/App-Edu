@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/exam.dart';
 
 class ExamStorageDataSource {
-  static const String _globalRoomsKey = 'edumaster_global_exam_rooms_v7';
+  static const String _globalRoomsKey = 'edumaster_global_exam_rooms_v8';
   static const String _resultsKeyPrefix = 'edumaster_exam_results_';
   static const String _historyKeyPrefix = 'edumaster_exam_history_';
   static const String _liveKeyPrefix = 'edumaster_live_sessions_';
@@ -54,25 +54,31 @@ class ExamStorageDataSource {
     return rooms;
   }
 
-  /// Get created exam rooms for a specific teacher ID or current user
+  /// Get created exam rooms (always reload from storage to ensure history persistence)
   Future<List<ExamRoom>> getRooms() async {
+    _cachedGlobalRooms = null; // force reload from disk
     final allRooms = await getGlobalRooms();
-    final cleanUser = _userId.trim().toLowerCase();
-
-    return allRooms.where((r) =>
-      r.creatorId.trim().toLowerCase() == cleanUser ||
-      r.creatorName.trim().toLowerCase() == cleanUser ||
-      r.id.toLowerCase().contains(cleanUser)
-    ).toList();
+    return allRooms;
   }
 
   Future<void> saveRoom(ExamRoom room) async {
+    final cleanUser = _userId.trim();
+    final updatedRoom = ExamRoom(
+      id: room.id,
+      title: room.title,
+      creatorName: room.creatorName,
+      creatorId: room.creatorId.isNotEmpty ? room.creatorId : cleanUser,
+      durationMinutes: room.durationMinutes,
+      questions: room.questions,
+      createdAt: room.createdAt,
+    );
+
     final rooms = await getGlobalRooms();
-    final idx = rooms.indexWhere((r) => r.id.toUpperCase() == room.id.toUpperCase());
+    final idx = rooms.indexWhere((r) => r.id.toUpperCase() == updatedRoom.id.toUpperCase());
     if (idx >= 0) {
-      rooms[idx] = room;
+      rooms[idx] = updatedRoom;
     } else {
-      rooms.add(room);
+      rooms.add(updatedRoom);
     }
     _cachedGlobalRooms = rooms;
 
@@ -81,6 +87,7 @@ class ExamStorageDataSource {
   }
 
   Future<ExamRoom?> getRoomById(String id) async {
+    _cachedGlobalRooms = null;
     final rooms = await getGlobalRooms();
     try {
       return rooms.firstWhere((r) => r.id.toUpperCase() == id.trim().toUpperCase());
