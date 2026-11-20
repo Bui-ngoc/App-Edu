@@ -183,6 +183,53 @@ class LocalAiEngine {
   // 3. KHO TRI THỨC CHUYÊN SÂU (Deep Knowledge Base)
   // ==========================================================================
   static String? _lookupKnowledgeBase(String lower) {
+    // ── Flutter ─────────────────────────────────────────────────────────────
+    if (lower.contains('flutter')) {
+      return '📱 **Flutter là gì? Khung phát triển ứng dụng đa nền tảng của Google:**\n\n'
+          '**Flutter** là bộ công cụ phát triển phần mềm giao diện người dùng (UI Software Development Kit - SDK) mã nguồn mở do Google sáng lập, sử dụng ngôn ngữ lập trình **Dart**.\n\n'
+          '✨ **Các đặc điểm cốt lõi nổi bật:**\n'
+          '1. **Single Codebase (Một mã nguồn duy nhất):** Cho phép lập trình viên viết mã một lần và biên dịch trực tiếp ra mã máy gốc (Native ARM / x86) cho cả **Android, iOS, Web, Windows, macOS và Linux**.\n'
+          '2. **Triết lý "Everything is a Widget":** Toàn bộ giao diện từ nút bấm, kiểu chữ, bố cục cho đến toàn màn hình đều là các Widget lồng ghép nhau thành một Cây Widget (Widget Tree).\n'
+          '3. **Hiệu năng siêu mượt (60 - 120 FPS):** Tự tích hợp bộ dựng hình đồ họa riêng (Skia / Impeller) vẽ trực tiếp trên màn hình mà không cần cầu nối (Bridge) thông dịch trung gian.\n'
+          '4. **Hot Reload thần tốc:** Cập nhật thay đổi giao diện và logic chỉ trong dưới 1 giây mà vẫn giữ nguyên trạng thái ứng dụng đang chạy.\n'
+          '5. **Kiến trúc phân tầng chuẩn mực:** Dễ dàng áp dụng mô hình Clean Architecture, phân tách rõ ràng Domain, Data và Presentation.\n\n'
+          '🎓 **Ứng dụng trong EduMaster:** Flutter được áp dụng toàn diện để xây dựng siêu ứng dụng song ngữ tích hợp AI Tutor, thuật toán ôn tập SM-2, camera giám sát thi và bảng xếp hạng thời gian thực!';
+    }
+
+    // ── Ngôn ngữ Dart ───────────────────────────────────────────────────────
+    if (lower.contains('dart')) {
+      return '🎯 **Ngôn ngữ lập trình Dart là gì?**\n\n'
+          '**Dart** là ngôn ngữ lập trình hướng đối tượng (OOP), định kiểu tĩnh mạnh mẽ (Strongly Typed) do Google phát triển, được tối ưu hóa tối đa cho việc xây dựng giao diện người dùng phản hồi nhanh.\n\n'
+          '🚀 **Ưu điểm công nghệ vượt trội:**\n'
+          '1. **Cơ chế biên dịch kép (Dual Compilation):**\n'
+          '   - **JIT (Just-In-Time):** Biên dịch nhanh trong môi trường phát triển (Debug), kích hoạt tính năng Stateful Hot Reload.\n'
+          '   - **AOT (Ahead-Of-Time):** Biên dịch mã máy nhị phân native khi đóng gói bản phát hành (Release APK / AAB), giúp ứng dụng mở tức thì và tiết kiệm pin.\n'
+          '2. **Sound Null Safety:** Ngăn chặn triệt để lỗi sập ứng dụng kinh điển do con trỏ Null (`NullPointerException`) ngay từ khi gõ code.\n'
+          '3. **Dart 3 Hiện đại:** Cung cấp tính năng Records (Tuple), Pattern Matching, Class Modifiers giúp viết mã ngắn gọn và an toàn.\n'
+          '4. **Lập trình bất đồng bộ xuất sắc:** Sử dụng Event Loop kết hợp `Future`, `Stream`, `async/await` xử lý đa tác vụ mà không gây nghẽn luồng UI chính.';
+    }
+
+    // ── Widget trong Flutter ────────────────────────────────────────────────
+    if (lower.contains('widget')) {
+      return '🧱 **Widget trong Flutter là gì?**\n\n'
+          'Trong Flutter, *"Mọi thứ đều là Widget"* (Everything is a Widget). Widget là khối xây dựng cơ bản và bắt buộc để định hình giao diện và cấu trúc ứng dụng.\n\n'
+          '🔹 **2 Loại Widget cốt lõi:**\n'
+          '1. **StatelessWidget:** Widget bất biến (Immutable), nội dung không tự thay đổi sau khi được dựng (ví dụ: `Text`, `Icon`, `Container`).\n'
+          '2. **StatefulWidget:** Widget động, quản lý đối tượng `State<T>` có thể cập nhật dữ liệu và vẽ lại giao diện khi gọi `setState()` (ví dụ: `Checkbox`, `TextField`, đồng hồ đếm ngược).\n\n'
+          '🔹 **Cây Widget (Widget Tree):** Cấu trúc phân cấp hình cây từ `MaterialApp` ➔ `Scaffold` ➔ `AppBar`/`Body` ➔ `Column`/`Row` ➔ các thành phần con.';
+    }
+
+    // ── Giới thiệu EduMaster ────────────────────────────────────────────────
+    if (lower.contains('edumaster') || (lower.contains('ứng dụng') && lower.contains('này'))) {
+      return '🎓 **Hệ thống Siêu ứng dụng Giáo dục EduMaster:**\n\n'
+          'EduMaster là ứng dụng ôn thi trắc nghiệm song ngữ thông minh tích hợp AI Tutor, phát triển theo chuẩn Clean Architecture trên nền tảng Flutter/Dart bởi Nhóm F (PTIT).\n\n'
+          '🏆 **Các chủ đề cốt lõi:**\n'
+          '1. **Chủ đề #32:** Ôn tập trắc nghiệm song ngữ Anh - Việt với ngân hàng 300 câu hỏi CNTT và AI giải thích câu sai.\n'
+          '2. **Chủ đề #34:** Phòng thi trực tuyến có camera giám sát, phát hiện rời màn hình và chống gian lận đa tầng.\n'
+          '3. **Chủ đề #35:** Từ điển thuật ngữ CNTT SQLite FTS và flashcard thuật toán SM-2 ngắt quãng.\n'
+          '4. **Chủ đề #36:** Bảng xếp hạng nhóm học tập thời gian thực, giảng viên quản lý nhóm và theo dõi sinh viên.';
+    }
+
     // ── SM-2 Algorithm ──────────────────────────────────────────────────────
     if (lower.contains('sm-2') || lower.contains('sm2') || lower.contains('supermemo')) {
       return '🧠 **Thuật toán lặp lại ngắt quãng SuperMemo SM-2:**\n\n'

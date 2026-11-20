@@ -31,13 +31,13 @@ class GeminiAiDataSource {
   }
 
   // Danh sách model theo thứ tự ưu tiên:
-  // 1. gemini-flash-lite-latest: Phản hồi cực nhanh (1-2s), ổn định cao
-  // 2. gemini-3.8-flash: Bản Flash thế hệ mới nhất
-  // 3. gemini-flash-latest: Bản Flash dự phòng
+  // 1. gemini-1.5-flash: Ổn định, phản hồi cực nhanh, thông dụng nhất
+  // 2. gemini-2.0-flash: Bản Flash thế hệ mới nhất
+  // 3. gemini-1.5-pro: Bản Pro dự phòng
   static const List<String> _preferredModels = [
     'gemini-1.5-flash',
+    'gemini-2.0-flash',
     'gemini-1.5-pro',
-    'gemini-2.0-flash-exp',
   ];
 
   static const bool _buildDemoMode =
@@ -96,16 +96,46 @@ class GeminiAiDataSource {
 
   // ── Main AI entry point ───────────────────────────────────────────────────
 
-  /// askAi: ném exception khi lỗi — để UI hiện thông báo rõ ràng
+  /// askAi: Ưu tiên gọi Gemini trực tuyến, tự động fallback mượt mà sang LocalAiEngine nếu gặp sự cố
   Future<String> askAi(String prompt) async {
-    // 1) Offline / Demo Mode → không cần mạng
+    // 1) Offline / Demo Mode → không cần mạng, dùng ngay trí tuệ nhân tạo cục bộ
     if (await isDemoMode()) {
       return LocalAiEngine.processQuery(prompt);
     }
 
-    // 2) Online — gọi Gemini
-    final apiKey = await getApiKey();
-    return await _callGeminiWithFallback(apiKey, prompt);
+    // 2) Online Mode — thử kết nối Google Gemini API
+    try {
+      final apiKey = await getApiKey();
+      // Chỉ gửi request nếu có API key hợp lệ
+      if (apiKey.isNotEmpty && !apiKey.startsWith('AQ.')) {
+        final onlineAnswer = await _callGeminiWithFallback(apiKey, prompt);
+        if (onlineAnswer.trim().isNotEmpty) {
+          return onlineAnswer;
+        }
+      }
+    } catch (_) {
+      // Khi gặp sự cố mạng, HTTP error hoặc key chưa sẵn sàng,
+      // chuyển tiếp ngay sang Bộ não tri thức cục bộ bên dưới
+    }
+
+    // 3) Fallback thông minh: Dùng kho tri thức chuyên sâu của LocalAiEngine
+    final localResult = LocalAiEngine.processQuery(prompt);
+    if (!localResult.contains('Chế độ AI Ngoại tuyến (Offline):')) {
+      return localResult;
+    }
+
+    // Nếu câu hỏi nằm ngoài kho tri thức có sẵn và chưa kết nối được Gemini API
+    return '🤖 **EduMaster AI Tutor (Chế độ Trực tuyến):**\n\n'
+        'Hiện tại hệ thống chưa nhận được phản hồi từ máy chủ Google Gemini (do khóa API trực tuyến chưa được cấu hình hoặc kết nối Internet gián đoạn).\n\n'
+        '💡 **Cách khắc phục để hỏi đáp tự do mọi chủ đề:**\n'
+        '1. Kiểm tra kết nối Internet trên thiết bị của bạn.\n'
+        '2. Vào mục **Hồ sơ & Cài đặt** ➔ **Cấu hình AI Tutor** ➔ Nhập khóa **Google Gemini API Key** cá nhân (nhận miễn phí tại [aistudio.google.com](https://aistudio.google.com)).\n\n'
+        '📚 **Bạn cũng có thể hỏi ngay các chủ đề đã được tích hợp sẵn:**\n'
+        '• *Flutter là gì?*, *Ngôn ngữ Dart là gì?*, *Widget trong Flutter*\n'
+        '• *Phân biệt List và Tuple*, *So sánh final và const*\n'
+        '• *StatelessWidget vs StatefulWidget*, *Future vs Stream*\n'
+        '• *Thuật toán SM-2*, *Clean Architecture trong Flutter*\n'
+        '• *Cơ sở dữ liệu SQLite & FTS*, *Công thức tính điểm thi trắc nghiệm...*';
   }
 
   // ── Gọi Gemini API với cơ chế tự động chuyển model và key dự phòng ─────────
@@ -114,13 +144,15 @@ class GeminiAiDataSource {
     final cleanApiKey = sanitizeKey(apiKey);
     final cleanDefault = sanitizeKey(_defaultApiKey);
 
-    // Danh sách các key sẽ thử:
-    // 1. Key hiện tại (người dùng nhập hoặc key mặc định)
-    // 2. Key dự phòng _defaultApiKey
+    // Danh sách các key hợp lệ sẽ thử
     final candidateKeys = <String>[];
-    if (cleanApiKey.isNotEmpty) candidateKeys.add(cleanApiKey);
-    if (!candidateKeys.contains(cleanDefault) && cleanDefault.isNotEmpty) {
+    if (cleanApiKey.isNotEmpty && !cleanApiKey.startsWith('AQ.')) candidateKeys.add(cleanApiKey);
+    if (!candidateKeys.contains(cleanDefault) && cleanDefault.isNotEmpty && !cleanDefault.startsWith('AQ.')) {
       candidateKeys.add(cleanDefault);
+    }
+
+    if (candidateKeys.isEmpty) {
+      throw Exception('Chưa có khóa Google Gemini API hợp lệ.');
     }
 
     final promptText =
@@ -161,7 +193,7 @@ class GeminiAiDataSource {
                 },
                 body: body,
               )
-              .timeout(const Duration(seconds: 15));
+              .timeout(const Duration(seconds: 12));
 
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body) as Map<String, dynamic>;

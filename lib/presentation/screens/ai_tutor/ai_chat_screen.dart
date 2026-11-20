@@ -147,6 +147,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
               scrollDirection: Axis.horizontal,
               children: isOnline
                   ? [
+                      _buildQuickChip('📱 Flutter là gì?'),
+                      _buildQuickChip('🎯 Ngôn ngữ Dart là gì?'),
                       _buildQuickChip('⚡ Phân biệt List và Tuple'),
                       _buildQuickChip('🧠 Thuật toán SM-2 là gì?'),
                       _buildQuickChip('🔍 So sánh final và const'),
@@ -154,6 +156,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
                       _buildQuickChip('📊 Tính điểm thi: đúng 16/20 câu'),
                     ]
                   : [
+                      _buildQuickChip('📱 Flutter là gì?'),
+                      _buildQuickChip('🎯 Ngôn ngữ Dart là gì?'),
                       _buildQuickChip('🏛️ Clean Architecture trong Flutter'),
                       _buildQuickChip('⚡ Phân biệt List và Tuple'),
                       _buildQuickChip('🧠 Thuật toán SM-2 là gì?'),

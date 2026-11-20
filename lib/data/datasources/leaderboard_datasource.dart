@@ -7,6 +7,7 @@ class LeaderboardDataSource {
   static const String _profileKeyPrefix = 'edumaster_user_profile_v8_';
   static const String _globalLeaderboardKey = 'edumaster_global_leaderboard_list_v8';
   static const String _globalGroupsListKey = 'edumaster_global_study_groups_list_v8';
+  static const String _groupOwnersKey = 'edumaster_group_creators_map_v8';
 
   String _userId = 'default';
   String _activeEmail = '';
@@ -52,312 +53,8 @@ class LeaderboardDataSource {
     }
   }
 
-  /// 30 thành viên mẫu của "Nhóm 01" với điểm tích lũy hoạt động EXP để xếp hạng
-  static List<LeaderboardEntry> _createDefault30Members() {
-    return const [
-      LeaderboardEntry(
-        id: 'user_u01',
-        userName: 'Đặng Mai Phương',
-        avatarUrl: '',
-        xp: 3650,
-        streakDays: 24,
-        testsCompleted: 48,
-        badges: ['Thợ săn Tri thức', 'Bậc thầy Trắc nghiệm', '14 Ngày Chăm chỉ'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u02',
-        userName: 'Phạm Hoàng Nam',
-        avatarUrl: '',
-        xp: 3420,
-        streakDays: 20,
-        testsCompleted: 44,
-        badges: ['Thần đồng Lập trình', 'Top Server'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u03',
-        userName: 'Vũ Thị Minh Châu',
-        avatarUrl: '',
-        xp: 3290,
-        streakDays: 18,
-        testsCompleted: 41,
-        badges: ['Chiến binh Bền bỉ', 'Ngôi sao Song ngữ'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u04',
-        userName: 'Trần Bảo Long',
-        avatarUrl: '',
-        xp: 3100,
-        streakDays: 16,
-        testsCompleted: 38,
-        badges: ['Chiến binh SM-2', 'Chuyên gia IT'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u05',
-        userName: 'Bùi Gia Huy',
-        avatarUrl: '',
-        xp: 2950,
-        streakDays: 15,
-        testsCompleted: 36,
-        badges: ['Kiến trúc sư Clean Code'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u06',
-        userName: 'Nguyễn Thị Hải Yến',
-        avatarUrl: '',
-        xp: 2820,
-        streakDays: 14,
-        testsCompleted: 33,
-        badges: ['Người tiên phong'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u07',
-        userName: 'Ngô Thanh Thảo',
-        avatarUrl: '',
-        xp: 2710,
-        streakDays: 13,
-        testsCompleted: 31,
-        badges: ['Ngôi sao Song ngữ'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u08',
-        userName: 'Đỗ Tuấn Kiệt',
-        avatarUrl: '',
-        xp: 2580,
-        streakDays: 12,
-        testsCompleted: 29,
-        badges: ['Bậc thầy SM-2'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u09',
-        userName: 'Lê Minh Tuấn',
-        avatarUrl: '',
-        xp: 2450,
-        streakDays: 11,
-        testsCompleted: 27,
-        badges: ['Tân binh Chăm chỉ'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u10',
-        userName: 'Trịnh Đức Anh',
-        avatarUrl: '',
-        xp: 2320,
-        streakDays: 10,
-        testsCompleted: 25,
-        badges: ['Chăm chỉ Mỗi ngày'],
-        groupName: 'Nhóm 01',
-      ),
-      // Tài khoản Sinh viên demo trong Nhóm 01
-      LeaderboardEntry(
-        id: 'user_student_1',
-        userName: 'Bùi Ngọc (Sinh viên)',
-        avatarUrl: '',
-        xp: 2190,
-        streakDays: 8,
-        testsCompleted: 22,
-        badges: ['Tân binh EduMaster', 'Khám phá Từ điển'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u12',
-        userName: 'Hoàng Quốc Bảo',
-        avatarUrl: '',
-        xp: 2080,
-        streakDays: 8,
-        testsCompleted: 21,
-        badges: ['Khám phá Tri thức'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u13',
-        userName: 'Mai Xuân Bách',
-        avatarUrl: '',
-        xp: 1970,
-        streakDays: 7,
-        testsCompleted: 20,
-        badges: ['Học viên Tích cực'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u14',
-        userName: 'Đinh Phương Linh',
-        avatarUrl: '',
-        xp: 1880,
-        streakDays: 7,
-        testsCompleted: 19,
-        badges: ['Ngôi sao Từ vựng'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u15',
-        userName: 'Dương Quang Vinh',
-        avatarUrl: '',
-        xp: 1790,
-        streakDays: 6,
-        testsCompleted: 18,
-        badges: ['Chiến binh Bứt phá'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u16',
-        userName: 'Lý Hải Đăng',
-        avatarUrl: '',
-        xp: 1710,
-        streakDays: 6,
-        testsCompleted: 17,
-        badges: ['Chiến binh Bền bỉ'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u17',
-        userName: 'Phan Thu Trang',
-        avatarUrl: '',
-        xp: 1630,
-        streakDays: 5,
-        testsCompleted: 16,
-        badges: ['Tân binh Xuất sắc'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u18',
-        userName: 'Hà Công Minh',
-        avatarUrl: '',
-        xp: 1560,
-        streakDays: 5,
-        testsCompleted: 15,
-        badges: ['Người kiên trì'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u19',
-        userName: 'Võ Hoàng Yến',
-        avatarUrl: '',
-        xp: 1490,
-        streakDays: 5,
-        testsCompleted: 14,
-        badges: ['Chiến binh Học tập'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u20',
-        userName: 'Chu Văn An',
-        avatarUrl: '',
-        xp: 1420,
-        streakDays: 4,
-        testsCompleted: 14,
-        badges: ['Học viên Tinh nhuệ'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u21',
-        userName: 'Tạ Đình Phong',
-        avatarUrl: '',
-        xp: 1350,
-        streakDays: 4,
-        testsCompleted: 13,
-        badges: ['Học viên Năng nổ'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u22',
-        userName: 'Đoàn Minh Trí',
-        avatarUrl: '',
-        xp: 1280,
-        streakDays: 4,
-        testsCompleted: 12,
-        badges: ['Bứt phá Vươn lên'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u23',
-        userName: 'Cao Thị Thanh',
-        avatarUrl: '',
-        xp: 1210,
-        streakDays: 3,
-        testsCompleted: 11,
-        badges: ['Người đồng hành'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u24',
-        userName: 'Lương Triều Vĩ',
-        avatarUrl: '',
-        xp: 1150,
-        streakDays: 3,
-        testsCompleted: 10,
-        badges: ['Tân binh Nỗ lực'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u25',
-        userName: 'Tống Khánh Linh',
-        avatarUrl: '',
-        xp: 1090,
-        streakDays: 3,
-        testsCompleted: 9,
-        badges: ['Hạt giống Tri thức'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u26',
-        userName: 'Hồ Ngọc Hà',
-        avatarUrl: '',
-        xp: 1020,
-        streakDays: 2,
-        testsCompleted: 8,
-        badges: ['Bước đầu Vững chắc'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u27',
-        userName: 'Đào Trọng Nghĩa',
-        avatarUrl: '',
-        xp: 960,
-        streakDays: 2,
-        testsCompleted: 7,
-        badges: ['Tân binh'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u28',
-        userName: 'Quách Tuấn Du',
-        avatarUrl: '',
-        xp: 900,
-        streakDays: 2,
-        testsCompleted: 6,
-        badges: ['Khởi đầu Mới'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u29',
-        userName: 'Nghiêm Xuân Tú',
-        avatarUrl: '',
-        xp: 840,
-        streakDays: 1,
-        testsCompleted: 5,
-        badges: ['Khám phá EduMaster'],
-        groupName: 'Nhóm 01',
-      ),
-      LeaderboardEntry(
-        id: 'user_u30',
-        userName: 'Lâm Khánh Chi',
-        avatarUrl: '',
-        xp: 780,
-        streakDays: 1,
-        testsCompleted: 4,
-        badges: ['Tân binh Nhập môn'],
-        groupName: 'Nhóm 01',
-      ),
-    ];
-  }
+  // Không khởi tạo dữ liệu mẫu mock (tránh tự động hiển thị Nhóm 01 cho giảng viên mới)
+  static List<LeaderboardEntry> _createDefault30Members() => const [];
 
   Future<List<LeaderboardEntry>> getEntries() async {
     if (_cachedEntries != null && _cachedEntries!.isNotEmpty) {
@@ -375,14 +72,14 @@ class LeaderboardDataSource {
       } catch (_) {}
     }
 
-    if (entries.isEmpty) {
-      final default30 = _createDefault30Members();
-      entries = [...default30];
-      entries.sort((a, b) => b.xp.compareTo(a.xp));
-      _cachedEntries = entries;
+    // Tự động làm sạch các tài khoản mẫu mock từ phiên bản cũ (user_u01..user_u30 hoặc Nhóm 01 mẫu)
+    final initialLength = entries.length;
+    entries.removeWhere((e) =>
+        e.id.startsWith('user_u') ||
+        (e.groupName == 'Nhóm 01' && (e.id.startsWith('user_') || e.id.contains('u'))));
+
+    if (entries.length != initialLength) {
       await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
-      _emitRealtime(entries);
-      return entries;
     }
 
     entries.sort((a, b) => b.xp.compareTo(a.xp));
@@ -421,7 +118,7 @@ class LeaderboardDataSource {
           streakDays: 1,
           testsCompleted: 0,
           badges: const ['Tân binh EduMaster'],
-          groupName: groupName ?? 'Nhóm 01',
+          groupName: groupName ?? '',
         ),
       );
     }
@@ -431,6 +128,8 @@ class LeaderboardDataSource {
     await prefs.setString(_leaderboardKey, json.encode(entries.map((e) => e.toMap()).toList()));
     _emitRealtime(entries);
   }
+
+  // ── Quản lý nhóm học tập (Giáo viên tạo nhóm, phân công SV) ─────────────
 
   // ── Quản lý nhóm học tập (Giáo viên tạo nhóm, phân công SV) ─────────────
 
@@ -445,27 +144,68 @@ class LeaderboardDataSource {
       } catch (_) {}
     }
 
-    if (groups.isEmpty) {
-      groups = ['Nhóm 01'];
-      await prefs.setString(_groupsListKey, json.encode(groups));
+    // Lọc bỏ 'Nhóm 01' nếu nó chỉ là nhóm mẫu mock cũ và không có sinh viên thực tế nào
+    final entries = await getEntries();
+    final hasRealStudentsInNhom01 = entries.any((e) => e.groupName == 'Nhóm 01' && !e.id.startsWith('user_u'));
+    if (!hasRealStudentsInNhom01) {
+      groups.remove('Nhóm 01');
     }
-    // Lọc bỏ các nhóm cũ nếu còn sót lại
+    // Lọc bỏ các nhóm rác khác nếu còn sót lại
     groups.removeWhere((g) => g.contains('KTHP') || g.contains('Flutter Pro') || g.contains('Lập Trình Di Động'));
 
-    await prefs.setString(_groupsListKey, json.encode(groups));
-
-    // Đảm bảo mọi nhóm có sinh viên trong entries đều được hiển thị cho GV
-    final entries = await getEntries();
+    // Đảm bảo mọi nhóm có sinh viên thực tế thuộc về đều được hiển thị
     for (final e in entries) {
       final g = e.groupName.trim();
       if (g.isNotEmpty && !groups.contains(g)) {
         groups.add(g);
       }
     }
+
+    await prefs.setString(_groupsListKey, json.encode(groups));
     return groups;
   }
 
-  Future<void> createGroup(String groupName) async {
+  Future<Map<String, String>> _getGroupOwners() async {
+    final prefs = await _getPrefs();
+    final jsonStr = prefs.getString(_groupOwnersKey);
+    if (jsonStr == null || jsonStr.isEmpty) return {};
+    try {
+      return Map<String, String>.from(json.decode(jsonStr));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> _saveGroupOwners(Map<String, String> owners) async {
+    final prefs = await _getPrefs();
+    await prefs.setString(_groupOwnersKey, json.encode(owners));
+  }
+
+  /// Trả về danh sách nhóm do giáo viên cụ thể quản lý (tài khoản mới bắt đầu với 0 nhóm)
+  Future<List<String>> getTeacherGroups(String teacherId) async {
+    final cleanId = teacherId.trim().toLowerCase();
+    final allGroups = await getGroups();
+    if (cleanId.isEmpty) return allGroups;
+
+    final owners = await _getGroupOwners();
+
+    // Đối với các nhóm thực tế đã tạo từ trước mà chưa ghi nhận chủ sở hữu (ví dụ nhom test),
+    // tự động gán cho giáo viên hiện tại để bảo toàn nhóm đã tạo
+    bool updatedOwners = false;
+    for (final grp in allGroups) {
+      if (!owners.containsKey(grp)) {
+        owners[grp] = cleanId;
+        updatedOwners = true;
+      }
+    }
+    if (updatedOwners) {
+      await _saveGroupOwners(owners);
+    }
+
+    return allGroups.where((g) => owners[g]?.toLowerCase() == cleanId).toList();
+  }
+
+  Future<void> createGroup(String groupName, {String? teacherId}) async {
     final clean = groupName.trim();
     if (clean.isEmpty) return;
     final groups = await getGroups();
@@ -474,17 +214,25 @@ class LeaderboardDataSource {
       final prefs = await _getPrefs();
       await prefs.setString(_groupsListKey, json.encode(groups));
     }
+    if (teacherId != null && teacherId.trim().isNotEmpty) {
+      final owners = await _getGroupOwners();
+      owners[clean] = teacherId.trim().toLowerCase();
+      await _saveGroupOwners(owners);
+    }
   }
 
-  Future<void> deleteGroup(String groupName) async {
+  Future<void> deleteGroup(String groupName, {String? teacherId}) async {
     final clean = groupName.trim();
     final groups = await getGroups();
     groups.remove(clean);
     final prefs = await _getPrefs();
     await prefs.setString(_groupsListKey, json.encode(groups));
 
-    // Chuyển các sinh viên trong nhóm bị xóa về Nhóm 01
-    final fallbackGroup = groups.isNotEmpty ? groups.first : 'Nhóm 01';
+    final owners = await _getGroupOwners();
+    owners.remove(clean);
+    await _saveGroupOwners(owners);
+
+    final fallbackGroup = groups.isNotEmpty ? groups.first : '';
     final entries = await getEntries();
     bool modified = false;
     for (int i = 0; i < entries.length; i++) {
@@ -509,7 +257,7 @@ class LeaderboardDataSource {
     }
   }
 
-  Future<void> renameGroup(String oldName, String newName) async {
+  Future<void> renameGroup(String oldName, String newName, {String? teacherId}) async {
     final cleanOld = oldName.trim();
     final cleanNew = newName.trim();
     if (cleanNew.isEmpty || cleanOld == cleanNew) return;
@@ -523,6 +271,14 @@ class LeaderboardDataSource {
     }
     final prefs = await _getPrefs();
     await prefs.setString(_groupsListKey, json.encode(groups));
+
+    final owners = await _getGroupOwners();
+    final oldOwner = owners.remove(cleanOld);
+    final newOwner = oldOwner ?? (teacherId != null && teacherId.trim().isNotEmpty ? teacherId.trim().toLowerCase() : null);
+    if (newOwner != null) {
+      owners[cleanNew] = newOwner;
+    }
+    await _saveGroupOwners(owners);
 
     final entries = await getEntries();
     bool modified = false;

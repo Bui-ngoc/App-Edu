@@ -56,18 +56,23 @@ class LeaderboardRepositoryImpl implements ILeaderboardRepository {
   }
 
   @override
-  Future<void> createGroup(String groupName) {
-    return _dataSource.createGroup(groupName);
+  Future<List<String>> getTeacherGroups(String teacherId) {
+    return _dataSource.getTeacherGroups(teacherId);
   }
 
   @override
-  Future<void> deleteGroup(String groupName) {
-    return _dataSource.deleteGroup(groupName);
+  Future<void> createGroup(String groupName, {String? teacherId}) {
+    return _dataSource.createGroup(groupName, teacherId: teacherId);
   }
 
   @override
-  Future<void> renameGroup(String oldName, String newName) {
-    return _dataSource.renameGroup(oldName, newName);
+  Future<void> deleteGroup(String groupName, {String? teacherId}) {
+    return _dataSource.deleteGroup(groupName, teacherId: teacherId);
+  }
+
+  @override
+  Future<void> renameGroup(String oldName, String newName, {String? teacherId}) {
+    return _dataSource.renameGroup(oldName, newName, teacherId: teacherId);
   }
 
   @override

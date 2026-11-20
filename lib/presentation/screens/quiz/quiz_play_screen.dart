@@ -514,23 +514,35 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.lightbulb_rounded, color: AppColors.accent, size: 20),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    'Giải thích từ EduMaster',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  const Icon(Icons.lightbulb_rounded, color: AppColors.accent, size: 18),
+                                  const SizedBox(width: 6),
+                                  const Expanded(
+                                    child: Text(
+                                      'Giải thích từ EduMaster',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                  const Spacer(),
+                                  const SizedBox(width: 4),
                                   TextButton.icon(
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                      visualDensity: VisualDensity.compact,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
                                     onPressed: prov.isExplaining ? null : () => prov.requestAiExplanation(),
                                     icon: prov.isExplaining
                                         ? const SizedBox(
-                                            width: 14,
-                                            height: 14,
+                                            width: 12,
+                                            height: 12,
                                             child: CircularProgressIndicator(strokeWidth: 2),
                                           )
-                                        : const Icon(Icons.psychology_alt_rounded, size: 18),
-                                    label: Text(prov.isExplaining ? 'Đang hỏi...' : 'Xem AI giải thích'),
+                                        : const Icon(Icons.auto_awesome, size: 15, color: AppColors.primary),
+                                    label: Text(
+                                      prov.isExplaining ? 'Đang hỏi...' : 'Xem AI giải thích',
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
                                   ),
                                 ],
                               ),

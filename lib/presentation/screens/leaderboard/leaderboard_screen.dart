@@ -30,7 +30,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       if (effectiveGroup.isNotEmpty) {
         lProv.selectGroup(effectiveGroup);
       }
-      lProv.loadLeaderboard();
+      final teacherId = (authProv.currentUser?.isTeacher ?? false)
+          ? (authProv.currentUser?.id ?? authProv.currentUser?.email ?? '')
+          : null;
+      lProv.loadLeaderboard(teacherId: teacherId);
     });
   }
 
@@ -77,7 +80,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             onPressed: () async {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                await context.read<LeaderboardProvider>().createGroup(name);
+                final teacherId = context.read<AuthProvider>().currentUser?.id ??
+                    context.read<AuthProvider>().currentUser?.email ?? '';
+                await context.read<LeaderboardProvider>().createGroup(name, teacherId: teacherId);
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -117,7 +122,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             onPressed: () async {
               final newName = controller.text.trim();
               if (newName.isNotEmpty && newName != oldName) {
-                await context.read<LeaderboardProvider>().renameGroup(oldName, newName);
+                final teacherId = context.read<AuthProvider>().currentUser?.id ??
+                    context.read<AuthProvider>().currentUser?.email ?? '';
+                await context.read<LeaderboardProvider>().renameGroup(oldName, newName, teacherId: teacherId);
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -145,7 +152,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
             onPressed: () async {
-              await context.read<LeaderboardProvider>().deleteGroup(groupName);
+              final teacherId = context.read<AuthProvider>().currentUser?.id ??
+                  context.read<AuthProvider>().currentUser?.email ?? '';
+              await context.read<LeaderboardProvider>().deleteGroup(groupName, teacherId: teacherId);
               if (ctx.mounted) Navigator.pop(ctx);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -363,10 +372,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   // ==========================================================================
   Widget _buildTeacherGroupManagementTab(BuildContext context) {
     final lProv = context.watch<LeaderboardProvider>();
-    final groups = lProv.availableGroups;
+    final authProv = context.watch<AuthProvider>();
+    final teacherId = authProv.currentUser?.id ?? authProv.currentUser?.email ?? '';
+    final groups = lProv.getGroupsForTeacher(teacherId);
 
     return RefreshIndicator(
-      onRefresh: () => lProv.loadLeaderboard(force: true),
+      onRefresh: () => lProv.loadLeaderboard(force: true, teacherId: teacherId),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -637,10 +648,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       );
     }
 
-    final selectedGroup = isTeacher ? lProv.selectedGroup : effectiveGroup;
-    final filteredList = lProv.entries.where((e) => e.groupName == selectedGroup).toList()
+    final teacherId = isTeacher ? (authUser?.id ?? authUser?.email ?? '') : '';
+    final availableGroups = isTeacher ? lProv.getGroupsForTeacher(teacherId) : lProv.availableGroups;
+    final selectedGroup = isTeacher
+        ? (lProv.selectedGroup.isNotEmpty && availableGroups.contains(lProv.selectedGroup)
+            ? lProv.selectedGroup
+            : (availableGroups.isNotEmpty ? availableGroups.first : ''))
+        : effectiveGroup;
+    final filteredList = lProv.entries.where((e) => e.groupName == selectedGroup && selectedGroup.isNotEmpty).toList()
       ..sort((a, b) => b.xp.compareTo(a.xp));
-    final availableGroups = lProv.availableGroups;
 
     int myRank = 0;
     LeaderboardEntry? myEntry;
@@ -705,7 +721,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          selectedGroup,
+                          selectedGroup.isNotEmpty ? selectedGroup : (isTeacher ? 'Chưa có nhóm nào' : 'Chưa có nhóm'),
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -746,28 +762,53 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             const SizedBox(height: 12),
 
             if (isTeacher) ...[
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: availableGroups.map((grp) {
-                    final isSelected = selectedGroup == grp;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: ChoiceChip(
-                        selected: isSelected,
-                        label: Text(grp),
-                        selectedColor: AppColors.secondary,
-                        labelStyle: TextStyle(
-                          fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.white : Colors.black87,
-                        ),
-                        onSelected: (_) => lProv.selectGroup(grp),
+              if (availableGroups.isEmpty)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(Icons.emoji_events_outlined, size: 40, color: Colors.grey.shade400),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Chưa có dữ liệu bảng xếp hạng',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Bạn chưa tạo nhóm học nào. Hãy qua tab "Quản Lý Nhóm" để tạo nhóm đầu tiên.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+                          ),
+                        ],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
+                )
+              else
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: availableGroups.map((grp) {
+                      final isSelected = selectedGroup == grp;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: ChoiceChip(
+                          selected: isSelected,
+                          label: Text(grp),
+                          selectedColor: AppColors.secondary,
+                          labelStyle: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            color: isSelected ? Colors.white : Colors.black87,
+                          ),
+                          onSelected: (_) => lProv.selectGroup(grp),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
               const SizedBox(height: 16),
             ],
 
@@ -865,7 +906,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Center(
-                  child: Text('Chưa có sinh viên nào trong nhóm "$selectedGroup"', style: const TextStyle(color: Colors.grey)),
+                  child: Text(
+                    selectedGroup.isNotEmpty
+                        ? 'Chưa có sinh viên nào trong nhóm "$selectedGroup"'
+                        : 'Chưa có dữ liệu sinh viên trong nhóm',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
                 ),
               )
             else

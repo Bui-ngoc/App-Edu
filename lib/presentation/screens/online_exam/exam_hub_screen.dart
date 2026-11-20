@@ -212,11 +212,14 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                   children: [
                     const Icon(Icons.preview_rounded, color: AppColors.primary),
                     const SizedBox(width: 8),
-                    Text(
-                      'Danh sách câu hỏi trong đề (${questions.length} câu)',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    Expanded(
+                      child: Text(
+                        'Danh sách câu hỏi trong đề (${questions.length} câu)',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.close),
                       onPressed: () => Navigator.of(ctx).pop(),
@@ -590,15 +593,16 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                   Row(
                     children: [
                       Expanded(
-                        flex: 3,
+                        flex: 11,
                         child: TextField(
                           controller: _createPinController,
                           textCapitalization: TextCapitalization.characters,
                           decoration: InputDecoration(
                             labelText: 'Mã PIN phòng',
                             hintText: 'VD: KTHP2026',
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                             border: const OutlineInputBorder(),
-                            prefixIcon: const Icon(Icons.vpn_key_rounded),
+                            prefixIcon: const Icon(Icons.vpn_key_rounded, size: 20),
                             suffixIcon: IconButton(
                               icon: const Icon(Icons.casino_outlined, size: 20),
                               tooltip: 'Sinh mã PIN ngẫu nhiên',
@@ -607,17 +611,19 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       Expanded(
-                        flex: 2,
+                        flex: 9,
                         child: TextField(
                           controller: _createDurationController,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
-                            labelText: 'Thời gian (phút)',
+                            labelText: 'Thời gian',
+                            suffixText: 'phút',
                             hintText: '15, 60...',
+                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                             border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.timer_outlined),
+                            prefixIcon: Icon(Icons.timer_outlined, size: 20),
                           ),
                         ),
                       ),
@@ -747,20 +753,27 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                   // ── TYPE 2: GIẢNG VIÊN TỰ SOẠN ĐỀ MỚI ──────────────
                   if (_examSourceType == 2) ...[
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Câu hỏi tự soạn: ${_customQuestions.length} câu',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        Expanded(
+                          child: Text(
+                            'Câu hỏi tự soạn: ${_customQuestions.length} câu',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 8),
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.secondary,
                             foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                             visualDensity: VisualDensity.compact,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           icon: const Icon(Icons.add, size: 16),
-                          label: const Text('Thêm câu hỏi'),
+                          label: const Text('Thêm câu hỏi', style: TextStyle(fontSize: 12)),
                           onPressed: () async {
                             final q = await CreateCustomQuestionDialog.show(
                               context,
@@ -819,9 +832,19 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                   Row(
                     children: [
                       Expanded(
+                        flex: 2,
                         child: OutlinedButton.icon(
-                          icon: const Icon(Icons.visibility_rounded, size: 18),
-                          label: const Text('Xem trước'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                            side: const BorderSide(color: AppColors.secondary),
+                          ),
+                          icon: const Icon(Icons.visibility_rounded, size: 16, color: AppColors.secondary),
+                          label: const Text(
+                            'Xem trước',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.secondary),
+                          ),
                           onPressed: () {
                             final qs = _buildQuestionsForNewRoom();
                             _previewQuestions(context, qs);
@@ -830,11 +853,12 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        flex: 2,
+                        flex: 3,
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.secondary,
                             foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                           ),
                           onPressed: () async {
                             final title = _createTitleController.text.trim();
@@ -880,8 +904,13 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                               _showQrDialog(context, pin, title);
                             }
                           },
-                          icon: const Icon(Icons.add_circle_outline_rounded),
-                          label: const Text('Tạo phòng & Mã QR'),
+                          icon: const Icon(Icons.qr_code_rounded, size: 18),
+                          label: const Text(
+                            'Tạo phòng & QR',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ],
@@ -996,17 +1025,21 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.secondary : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 18, color: isSelected ? Colors.white : AppColors.textSecondaryLight),
               const SizedBox(height: 4),
               Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

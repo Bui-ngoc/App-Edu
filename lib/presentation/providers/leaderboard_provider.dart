@@ -43,7 +43,17 @@ class LeaderboardProvider extends ChangeNotifier {
   List<String> _groups = [];
   List<String> get availableGroups => _groups;
 
-  String _selectedGroup = 'Nhóm 01';
+  List<String> _teacherGroups = [];
+  List<String> get teacherGroups => _teacherGroups;
+
+  List<String> getGroupsForTeacher(String teacherId) {
+    if (teacherId.trim().isNotEmpty) {
+      return _teacherGroups;
+    }
+    return _groups;
+  }
+
+  String _selectedGroup = '';
   String get selectedGroup => _selectedGroup;
 
   List<LeaderboardEntry> get filteredEntries {
@@ -81,34 +91,36 @@ class LeaderboardProvider extends ChangeNotifier {
 
   // ── Quản lý Nhóm học tập (Dành cho Giáo viên) ───────────────────────────
 
-  Future<void> createGroup(String groupName) async {
+  Future<void> createGroup(String groupName, {String? teacherId}) async {
     final clean = groupName.trim();
     if (clean.isEmpty) return;
-    await _repo.createGroup(clean);
+    await _repo.createGroup(clean, teacherId: teacherId);
     _selectedGroup = clean;
-    await loadLeaderboard(force: true);
+    await loadLeaderboard(force: true, teacherId: teacherId);
   }
 
-  Future<void> deleteGroup(String groupName) async {
+  Future<void> deleteGroup(String groupName, {String? teacherId}) async {
     final clean = groupName.trim();
     if (clean.isEmpty) return;
-    await _repo.deleteGroup(clean);
-    await loadLeaderboard(force: true);
+    await _repo.deleteGroup(clean, teacherId: teacherId);
+    await loadLeaderboard(force: true, teacherId: teacherId);
     if (_groups.isNotEmpty) {
       _selectedGroup = _groups.first;
+    } else {
+      _selectedGroup = '';
     }
     notifyListeners();
   }
 
-  Future<void> renameGroup(String oldName, String newName) async {
+  Future<void> renameGroup(String oldName, String newName, {String? teacherId}) async {
     final cleanOld = oldName.trim();
     final cleanNew = newName.trim();
     if (cleanNew.isEmpty || cleanOld == cleanNew) return;
-    await _repo.renameGroup(cleanOld, cleanNew);
+    await _repo.renameGroup(cleanOld, cleanNew, teacherId: teacherId);
     if (_selectedGroup == cleanOld) {
       _selectedGroup = cleanNew;
     }
-    await loadLeaderboard(force: true);
+    await loadLeaderboard(force: true, teacherId: teacherId);
   }
 
   Future<void> moveStudentToGroup(
@@ -228,18 +240,25 @@ class LeaderboardProvider extends ChangeNotifier {
     await loadLeaderboard(force: true);
   }
 
-  Future<void> loadLeaderboard({bool force = false}) async {
+  Future<void> loadLeaderboard({bool force = false, String? teacherId}) async {
     if (!force && _entries.isNotEmpty && _state == LeaderboardUiState.success) return;
     _state = LeaderboardUiState.loading;
     notifyListeners();
 
     try {
       _groups = await _repo.getGroups();
+      if (teacherId != null && teacherId.trim().isNotEmpty) {
+        _teacherGroups = await _repo.getTeacherGroups(teacherId);
+      } else {
+        _teacherGroups = List.from(_groups);
+      }
       _entries = await _repo.getRealtimeLeaderboard().first;
       _entries.sort((a, b) => b.xp.compareTo(a.xp));
 
       if (_groups.isNotEmpty && !_groups.contains(_selectedGroup)) {
         _selectedGroup = _groups.first;
+      } else if (_groups.isEmpty) {
+        _selectedGroup = '';
       }
       _state = LeaderboardUiState.success;
     } catch (e) {
