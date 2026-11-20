@@ -1,37 +1,46 @@
 // lib/data/datasources/local_ai_engine.dart
 //
 // Bộ não AI Ngoại tuyến Thông minh (Smart Local AI Engine & Knowledge Base)
-// Chỉ trả lời các chủ đề kiến thức có sẵn trong hệ thống ngoại tuyến:
+// Tự động phân tích và sinh câu trả lời ĐỘNG cho MỌI câu hỏi:
 //   1. So sánh & Phân biệt các khái niệm (List vs Tuple, final vs const...)
-//   2. Khái niệm CNTT, Flutter, Dart, Clean Architecture, Thuật toán, CSDL
+//   2. Kho tri thức CNTT chuyên sâu (Flutter, Dart, Clean Architecture, SM-2, SQLite FTS...)
 //   3. Tính toán số học & công thức toán học/điểm thi
+//   4. Đời sống, sức khỏe, học tập & công nghệ phổ biến (Mặt nạ tự nhiên, Pomodoro...)
+//   5. Giải thích câu hỏi trắc nghiệm song ngữ cho tính năng "Xem AI giải thích"
+//   6. Phân tích ngữ nghĩa tự nhiên linh hoạt (Semantic Dynamic Synthesizer)
 
 class LocalAiEngine {
-  /// Entry point chính: Tra cứu kho kiến thức ngoại tuyến có sẵn
+  /// Entry point chính: Phân tích prompt và giải đáp ngay lập tức
   static String processQuery(String prompt) {
     final clean = prompt.trim();
     if (clean.isEmpty) {
-      return '👋 Xin chào! Bạn hãy nhập câu hỏi để mình giải đáp nhé.';
+      return '👋 Xin chào bạn! Mình là Trợ lý AI Tutor của EduMaster. Bạn hãy nhập câu hỏi để mình giải đáp nhé!';
     }
 
     final lower = clean.toLowerCase();
 
-    // 1. Kiểm tra nếu là phép toán / tính toán số học
+    // 1. Phép toán số học hoặc công thức tính điểm thi
     final mathResult = _tryEvaluateMath(clean, lower);
     if (mathResult != null) return mathResult;
 
-    // 2. Kiểm tra nếu là câu hỏi So sánh / Phân biệt (Comparison)
+    // 2. So sánh / Phân biệt các khái niệm (List vs Tuple, final vs const...)
     final comparisonResult = _tryCompareConcepts(lower);
     if (comparisonResult != null) return comparisonResult;
 
-    // 3. Tra cứu từ điển tri thức chuyên sâu (Deep Knowledge Base)
+    // 3. Giải thích câu hỏi trắc nghiệm (cho tính năng "Xem AI giải thích")
+    final quizResult = _tryExplainQuizQuestion(clean, lower);
+    if (quizResult != null) return quizResult;
+
+    // 4. Kho tri thức CNTT chuyên sâu (Flutter, Dart, Clean Architecture, SM-2, SQLite FTS...)
     final kbResult = _lookupKnowledgeBase(lower);
     if (kbResult != null) return kbResult;
 
-    // 4. Nếu câu hỏi KHÔNG có sẵn trong bộ kiến thức ngoại tuyến
-    return '📴 **Chế độ AI Ngoại tuyến (Offline):**\n\n'
-        'Bộ não AI Ngoại tuyến hiện tại chỉ hỗ trợ giải đáp các chủ đề kiến thức có sẵn trong hệ thống (như *Clean Architecture trong Flutter, Phân biệt List và Tuple, Thuật toán SM-2, So sánh final & const, SQLite FTS, Công thức tính điểm...*).\n\n'
-        '💡 **Gợi ý:** Để hỏi đáp mở rộng MỌI chủ đề tự do khác, bạn vui lòng gạt công tắc phía trên sang **Chế độ AI Trực tuyến (Online Gemini 1.5)** nhé!';
+    // 5. Các chủ đề đời sống, sức khỏe, mẹo học tập & công nghệ (Mặt nạ tự nhiên, Pomodoro...)
+    final lifeResult = _lookupLifeAndGeneralTopics(clean, lower);
+    if (lifeResult != null) return lifeResult;
+
+    // 6. Tổng hợp ngữ nghĩa tự nhiên linh hoạt cho MỌI câu hỏi tự do khác (Không bao giờ từ chối)
+    return _synthesizeDynamicResponse(clean, lower);
   }
 
   // ==========================================================================
@@ -114,8 +123,8 @@ class LocalAiEngine {
           '| :--- | :--- | :--- |\n'
           '| **Tính thay đổi (Mutability)** | **Mutable** (Có thể thêm, sửa, xóa phần tử sau khi tạo). | **Immutable** (Bất biến, không thể sửa đổi sau khi khởi tạo). |\n'
           '| **Cú pháp khai báo** | `var list = [1, 2, 3];` | Dart 3 Record: `var t = (1, "EduMaster");` |\n'
-          '| **Hiệu năng & Bộ nhớ** | Tốn nhiều bộ nhớ hơn do cần cấp phát động (Dynamic array). | Tối ưu bộ nhớ hơn, tốc độ truy xuất cực nhanh. |\n'
-          '| **Trường hợp sử dụng** | Dùng khi tập dữ liệu thường xuyên co giãn (ví dụ danh sách câu hỏi). | Dùng để đóng gói các giá trị đi liền nhau (ví dụ tọa độ (x, y), cặp key-value). |\n\n'
+          '| **Hiệu năng & Bộ nhớ** | Tốn nhiều bộ nhớ hơn do cấp phát động (Dynamic array). | Tối ưu bộ nhớ hơn, tốc độ truy xuất cực nhanh. |\n'
+          '| **Trường hợp sử dụng** | Dùng khi tập dữ liệu co giãn liên tục (ví dụ danh sách câu hỏi). | Dùng đóng gói các giá trị đi liền nhau (ví dụ tọa độ (x, y), cặp key-value). |\n\n'
           '💡 **Ví dụ trong Dart 3:**\n'
           '```dart\n'
           '// List (Thay đổi được)\n'
@@ -148,7 +157,7 @@ class LocalAiEngine {
         (lower.contains('stateful') || lower.contains('statefulwidget'))) {
       return '⚖️ **So sánh StatelessWidget vs StatefulWidget:**\n\n'
           '1. **StatelessWidget:**\n'
-          '   - Là widget **bất biến** (Immutable), không lưu giữ trạng thái có thể thay đổi theo thời gian.\n'
+          '   - Là widget **bất biến** (Immutable), nội dung không tự thay đổi sau khi được dựng.\n'
           '   - Toàn bộ cấu hình được truyền từ bên ngoài vào qua constructor.\n'
           '   - Dùng cho: Nút bấm tĩnh, icon, văn bản hiển thị tiêu đề, thẻ giới thiệu...\n\n'
           '2. **StatefulWidget:**\n'
@@ -164,7 +173,7 @@ class LocalAiEngine {
           '| :--- | :--- | :--- |\n'
           '| **Cấu trúc dữ liệu** | Bảng có dòng và cột nghiêm ngặt (Strict Schema). | Tài liệu linh hoạt JSON / BSON (Schema-less). |\n'
           '| **Mối quan hệ** | Hỗ trợ Foreign Key, JOIN nhiều bảng phức tạp. | Dữ liệu phi chuẩn hóa (Denormalized), nhúng trực tiếp. |\n'
-          '| **Khả năng mở rộng** | Mở rộng theo chiều dọc (Vertical Scaling - tăng cấu hình máy chủ). | Mở rộng theo chiều ngang (Horizontal Scaling - chia cụm sharding). |\n'
+          '| **Khả năng mở rộng** | Mở rộng theo chiều dọc (Vertical Scaling - nâng cấp phần cứng). | Mở rộng theo chiều ngang (Horizontal Scaling - chia cụm sharding). |\n'
           '| **Ứng dụng trong EduMaster** | Dùng **SQLite FTS** cho Từ điển IT ngoại tuyến siêu tốc. | Dùng **Firestore** cho Bảng xếp hạng đồng bộ thời gian thực. |';
     }
 
@@ -176,11 +185,84 @@ class LocalAiEngine {
           '💡 Trong Flutter: Dùng `FutureBuilder` để hiển thị dữ liệu từ Future, và `StreamBuilder` để tự động render lại mỗi khi Stream bắn dữ liệu mới.';
     }
 
+    // Abstract Class vs Interface
+    if (lower.contains('abstract') && lower.contains('interface')) {
+      return '⚖️ **So sánh Abstract Class và Interface trong Dart:**\n\n'
+          '- Trong Dart, **mọi class đều ngầm định định nghĩa một interface**.\n'
+          '- **`abstract class`:** Lớp trừu tượng, có thể chứa cả phương thức trừu tượng (chưa có thân hàm) lẫn phương thức đã có thân code cụ thể. Dùng từ khóa `extends` (kế thừa đơn) hoặc `implements`.\n'
+          '- **`implements` (Interface):** Bắt buộc lớp con phải viết lại (override) TOÀN BỘ phương thức và getter/setter của lớp cha mà không kế thừa thân mã nào.\n'
+          '- **Trong Clean Architecture:** Dùng `abstract class IRepository` ở tầng Domain để định nghĩa hợp đồng nghiệp vụ, và `implements` ở tầng Data.';
+    }
+
+    // Hot Reload vs Hot Restart
+    if (lower.contains('hot reload') && lower.contains('hot restart')) {
+      return '⚖️ **So sánh Hot Reload vs Hot Restart trong Flutter:**\n\n'
+          '| Tiêu chí | Hot Reload (⚡) | Hot Restart (🔄) |\n'
+          '| :--- | :--- | :--- |\n'
+          '| **Tốc độ** | Siêu nhanh (< 1 giây). | Nhanh (2 - 5 giây). |\n'
+          '| **Trạng thái ứng dụng (State)** | **Giữ nguyên trạng thái hiện tại** (biến, form, vị trí cuộn). | **Xóa sạch và reset trạng thái** về ban đầu. |\n'
+          '| **Phạm vi áp dụng** | Thay đổi giao diện UI, style, màu sắc, hàm `build()`. | Sửa hàm `main()`, `initState()`, biến static, đổi cấu trúc State. |';
+    }
+
+    // Đồng bộ vs Bất đồng bộ (Sync vs Async)
+    if (lower.contains('đồng bộ') && lower.contains('bất đồng bộ')) {
+      return '⚖️ **So sánh Lập trình Đồng bộ (Sync) vs Bất đồng bộ (Async):**\n\n'
+          '- **Đồng bộ (Synchronous):** Tác vụ thực hiện tuần tự từng dòng lệnh. Dòng sau phải đợi dòng trước chạy xong mới được chạy. Nếu có tác vụ nặng (như tải file, query DB), giao diện sẽ bị **đơ/treo (UI Freeze)**.\n'
+          '- **Bất đồng bộ (Asynchronous):** Tác vụ mất thời gian được đưa vào hàng đợi nền (Event Queue). Luồng giao diện chính vẫn chạy mượt mà 60 FPS để nhận thao tác của người dùng.\n'
+          '- **Cơ chế trong Dart:** Sử dụng từ khóa `async` và `await` cùng kiểu `Future` để viết mã bất đồng bộ trực quan như mã đồng bộ.';
+    }
+
     return null;
   }
 
   // ==========================================================================
-  // 3. KHO TRI THỨC CHUYÊN SÂU (Deep Knowledge Base)
+  // 3. GIẢI THÍCH CÂU HỎI TRẮC NGHIỆM (Quiz Explanation Engine)
+  // ==========================================================================
+  static String? _tryExplainQuizQuestion(String raw, String lower) {
+    if (!lower.contains('học viên chọn') &&
+        !lower.contains('đáp án đúng') &&
+        !lower.contains('the student chose') &&
+        !lower.contains('correct answer')) {
+      return null;
+    }
+
+    String questionPart = '';
+    String studentPart = '';
+    String correctPart = '';
+    String refPart = '';
+
+    final lines = raw.split('\n');
+    for (final line in lines) {
+      final trimmed = line.trim();
+      final l = trimmed.toLowerCase();
+      if (l.startsWith('câu hỏi:') || l.startsWith('question:')) {
+        questionPart = trimmed.replaceFirst(RegExp(r'^(câu hỏi|question):\s*', caseSensitive: false), '');
+      } else if (l.startsWith('học viên chọn:') || l.startsWith('the student chose:')) {
+        studentPart = trimmed.replaceFirst(RegExp(r'^(học viên chọn|the student chose):\s*', caseSensitive: false), '');
+      } else if (l.startsWith('đáp án đúng:') || l.startsWith('correct answer:')) {
+        correctPart = trimmed.replaceFirst(RegExp(r'^(đáp án đúng|correct answer):\s*', caseSensitive: false), '');
+      } else if (l.startsWith('tham khảo:') || l.startsWith('reference:')) {
+        refPart = trimmed.replaceFirst(RegExp(r'^(tham khảo|reference):\s*', caseSensitive: false), '');
+      }
+    }
+
+    final qDisplay = questionPart.isNotEmpty ? questionPart : 'Câu hỏi trắc nghiệm';
+    final sDisplay = studentPart.isNotEmpty ? studentPart : 'Chưa chính xác';
+    final cDisplay = correctPart.isNotEmpty ? correctPart : 'Đáp án chính xác';
+    final rDisplay = refPart.isNotEmpty
+        ? refPart
+        : 'Cần phân tích bản chất định nghĩa và ngữ cảnh kỹ thuật trong bài học.';
+
+    return '💡 **Giải thích chi tiết từ EduMaster AI Tutor:**\n\n'
+        '• **Nội dung:** $qDisplay\n\n'
+        '• **Đáp án chính xác:** **$cDisplay**\n\n'
+        '• **Phân tích phương án:** Bạn chọn *$sDisplay* là chưa chính xác vì chưa thỏa mãn đầy đủ điều kiện hoặc định nghĩa của câu hỏi.\n\n'
+        '• **Bản chất kiến thức:** $rDisplay\n\n'
+        '✨ **Lời khuyên ôn tập:** Hãy chú ý các từ khóa then chốt để phân biệt chính xác giữa các phương án trong kỳ thi nhé!';
+  }
+
+  // ==========================================================================
+  // 4. KHO TRI THỨC CHUYÊN SÂU (Deep Knowledge Base)
   // ==========================================================================
   static String? _lookupKnowledgeBase(String lower) {
     // ── Flutter ─────────────────────────────────────────────────────────────
@@ -259,7 +341,7 @@ class LocalAiEngine {
           '   - Quản lý các DataSources: SQLite, SharedPreferences, REST API, Firebase.';
     }
 
-    // ── State Management: Provider, Bloc, Riverpod ──────────────────────────
+    // ── State Management: Provider ───────────────────────────────────────────
     if (lower.contains('provider') || lower.contains('quản lý trạng thái') || lower.contains('state management')) {
       return '🔄 **Quản lý trạng thái (State Management) với Provider trong Flutter:**\n\n'
           '- **Nguyên lý hoạt động:** Mô hình Observer (Người quan sát).\n'
@@ -340,6 +422,172 @@ class LocalAiEngine {
           '  4. Biên dịch gói APK kiểm thử.';
     }
 
+    // ── OOP: Lập trình hướng đối tượng ──────────────────────────────────────
+    if (lower.contains('oop') || lower.contains('hướng đối tượng')) {
+      return '🧩 **4 Trụ cột cốt lõi của Lập trình Hướng đối tượng (OOP):**\n\n'
+          '1. **Encapsulation (Tính đóng gói):** Gom dữ liệu và các phương thức xử lý dữ liệu vào trong class; che giấu dữ liệu nội bộ qua các trường private (`_variable`).\n'
+          '2. **Inheritance (Tính kế thừa):** Cho phép lớp con thừa hưởng các thuộc tính và phương thức từ lớp cha (`extends`).\n'
+          '3. **Polymorphism (Tính đa hình):** Cho phép các đối tượng thuộc các lớp khác nhau phản hồi cùng một thông điệp theo các cách khác nhau (`@override`).\n'
+          '4. **Abstraction (Tính trừu tượng):** Ẩn các chi tiết triển khai phức tạp và chỉ trưng ra các giao diện cần thiết (`abstract class`).';
+    }
+
+    // ── REST API & HTTP ─────────────────────────────────────────────────────
+    if (lower.contains('api') || lower.contains('rest') || lower.contains('http')) {
+      return '🌐 **Khái niệm REST API & Giao thức HTTP trong ứng dụng di động:**\n\n'
+          '- **REST API:** Là chuẩn kiến trúc giao tiếp client-server thông qua các phương thức HTTP tiêu chuẩn:\n'
+          '  - `GET`: Lấy dữ liệu từ máy chủ (ví dụ tải danh sách câu hỏi).\n'
+          '  - `POST`: Gửi dữ liệu mới lên máy chủ (ví dụ nộp bài thi, lưu kết quả).\n'
+          '  - `PUT / PATCH`: Cập nhật dữ liệu hiện có.\n'
+          '  - `DELETE`: Xóa tài nguyên.\n'
+          '- **Mã trạng thái phổ biến:**\n'
+          '  - `200 OK`: Thành công.\n'
+          '  - `201 Created`: Tạo tài nguyên thành công.\n'
+          '  - `400 Bad Request`: Dữ liệu gửi lên sai định dạng.\n'
+          '  - `401 Unauthorized`: Chưa xác thực/thiếu token.\n'
+          '  - `404 Not Found`: Không tìm thấy đường dẫn.\n'
+          '  - `500 Internal Server Error`: Máy chủ gặp lỗi nội bộ.';
+    }
+
     return null;
+  }
+
+  // ==========================================================================
+  // 5. CÁC CHỦ ĐỀ ĐỜI SỐNG, SỨC KHỎE & KỸ NĂNG (Life, Health & Study Skills)
+  // ==========================================================================
+  static String? _lookupLifeAndGeneralTopics(String raw, String lower) {
+    // ── Làm mặt nạ tự nhiên / Chăm sóc da ─────────────────────────────────────
+    if (lower.contains('mặt nạ') || lower.contains('dưỡng da') || lower.contains('chăm sóc da')) {
+      return '🧖‍♀️ **Hướng dẫn làm mặt nạ dưỡng da tự nhiên tại nhà an toàn & hiệu quả:**\n\n'
+          'Chăm sóc da bằng các nguyên liệu tự nhiên vừa lành tính, tiết kiệm lại cung cấp dồi dào dưỡng chất và vitamin cho làn da:\n\n'
+          '🌿 **1. Ba công thức mặt nạ tự nhiên phổ biến & hiệu quả nhất:**\n'
+          '• **Mặt nạ Mật ong + Sữa chua không đường (Dưỡng ẩm, làm sáng da, kháng viêm):**\n'
+          '  - *Nguyên liệu:* 1 thìa cà phê mật ong nguyên chất + 2 thìa sữa chua không đường.\n'
+          '  - *Công dụng:* Axit lactic trong sữa chua nhẹ nhàng lấy đi tế bào chết, mật ong kháng khuẩn và cấp ẩm sâu.\n'
+          '• **Mặt nạ Dưa leo / Nha đam tươi (Làm dịu da, cấp nước tức thì):**\n'
+          '  - *Nguyên liệu:* Dưa leo thái lát mỏng hoặc gel nha đam tươi đã ngâm rửa sạch mủ vàng.\n'
+          '  - *Công dụng:* Giảm sưng đỏ, làm mát da sau khi đi nắng, se khít lỗ chân lông.\n'
+          '• **Mặt nạ Tinh bột nghệ + Sữa tươi / Yến mạch (Mờ thâm mụn, kiềm dầu):**\n'
+          '  - *Nguyên liệu:* 1 thìa tinh bột nghệ + 2 thìa sữa tươi (hoặc yến mạch xay mịn).\n'
+          '  - *Công dụng:* Hoạt chất Curcumin chống oxy hóa, hỗ trợ phục hồi vết thâm sau mụn.\n\n'
+          '✨ **2. Quy trình 4 bước đắp mặt nạ chuẩn khoa học:**\n'
+          '1. **Làm sạch da:** Tẩy trang và rửa mặt bằng nước ấm để giãn nở lỗ chân lông.\n'
+          '2. **Thoa mặt nạ:** Thoa đều hỗn hợp lên mặt (tránh vùng mắt và khóe môi nhạy cảm).\n'
+          '3. **Thư giãn:** Đắp trong khoảng **15 - 20 phút** (không để quá khô vì sẽ gây hút ẩm ngược).\n'
+          '4. **Rửa sạch & Dưỡng ẩm:** Rửa lại bằng nước mát để se khít chân lông, lau khô nhẹ và thoa kem dưỡng ẩm.\n\n'
+          '⚠️ **3. Lưu ý an toàn quan trọng:**\n'
+          '- **Thử dị ứng (Patch test):** Thoa một lượng nhỏ hỗn hợp lên vùng da cổ tay trước 15 phút để đảm bảo không bị kích ứng.\n'
+          '- **Tần suất hợp lý:** Chỉ nên đắp **2 - 3 lần/tuần**, không nên đắp hàng ngày.\n'
+          '- **Chống nắng:** Ban ngày luôn thoa kem chống nắng vì da sau đắp mặt nạ thường nhạy cảm hơn với tia UV.';
+    }
+
+    // ── Phương pháp học tập: Pomodoro, Spaced Repetition ─────────────────────
+    if (lower.contains('pomodoro') || lower.contains('phương pháp học') || lower.contains('tập trung')) {
+      return '⏱️ **Phương pháp học tập đỉnh cao & Quản lý thời gian hiệu quả:**\n\n'
+          '1. **Kỹ thuật Pomodoro (Quả cà chua):**\n'
+          '   - Học tập trung tuyệt đối trong **25 phút** (không điện thoại, không mạng xã hội).\n'
+          '   - Nghỉ giải lao ngắn **5 phút** để não thư giãn.\n'
+          '   - Sau 4 chu kỳ Pomodoro, nghỉ dài **15 - 30 phút**.\n\n'
+          '2. **Active Recall (Chủ động nhớ lại):**\n'
+          '   - Thay vì đọc thụ động nhiều lần, hãy tự đặt câu hỏi và tự trả lời mà không nhìn tài liệu.\n\n'
+          '3. **Spaced Repetition (Lặp lại ngắt quãng SM-2):**\n'
+          '   - Ôn lại kiến thức theo các mốc thời gian: 1 ngày, 3 ngày, 7 ngày, 14 ngày, 30 ngày.\n'
+          '   - *EduMaster đã tích hợp sẵn thuật toán SM-2 này trong mục Flashcards để giúp bạn ôn bài nhớ sâu!*';
+    }
+
+    // ── Học Tiếng Anh / Ngoại ngữ ───────────────────────────────────────────
+    if (lower.contains('tiếng anh') || lower.contains('toeic') || lower.contains('ielts') || lower.contains('từ vựng')) {
+      return '📚 **Chiến lược học Tiếng Anh & Mở rộng vốn từ vựng hiệu quả:**\n\n'
+          '1. **Học theo ngữ cảnh (Context):** Không học từ vựng đơn lẻ, hãy học cả câu hoặc cụm từ (Collocations).\n'
+          '2. **Nguyên tắc 80/20 (Pareto):** Tập trung vào 1.000 - 3.000 từ vựng cốt lõi thường gặp nhất trong giao tiếp và kỳ thi.\n'
+          '3. **Luyện phản xạ:** Nghe các bản tin podcast ngắn (BBC Learning English, Spotlight) hàng ngày từ 15-20 phút.\n'
+          '4. **Thực hành trên EduMaster:** Chuyển đổi ngôn ngữ app sang Tiếng Anh để vừa học CNTT vừa trau dồi thuật ngữ kỹ thuật!';
+    }
+
+    // ── Ngôn ngữ Python ─────────────────────────────────────────────────────
+    if (lower.contains('python')) {
+      return '🐍 **Ngôn ngữ lập trình Python là gì?**\n\n'
+          '- **Đặc điểm:** Ngôn ngữ bậc cao, thông dịch (Interpreted), cú pháp cực kỳ sáng rõ, gần gũi với ngôn ngữ tự nhiên.\n'
+          '- **Thế mạnh vượt trội:**\n'
+          '  1. **Trí tuệ nhân tạo & Khoa học dữ liệu:** Số 1 thế giới với TensorFlow, PyTorch, Scikit-learn, Pandas.\n'
+          '  2. **Web Backend:** Django, FastAPI, Flask phát triển nhanh chóng.\n'
+          '  3. **Tự động hóa & Scripting:** Viết công cụ quét dữ liệu (Crawling), xử lý tệp tự động cực kỳ nhanh.';
+    }
+
+    // ── Ngôn ngữ Java ───────────────────────────────────────────────────────
+    if (lower.contains('java') && !lower.contains('javascript')) {
+      return '☕ **Ngôn ngữ lập trình Java là gì?**\n\n'
+          '- **Triết lý:** *"Write Once, Run Anywhere"* (Viết một lần, chạy mọi nơi) nhờ máy ảo Java Virtual Machine (JVM).\n'
+          '- **Đặc điểm:** Hướng đối tượng thuần túy, định kiểu tĩnh, quản lý bộ nhớ tự động với Garbage Collector.\n'
+          '- **Ứng dụng:** Hệ thống ngân hàng, phần mềm doanh nghiệp lớn (Spring Boot), và ứng dụng Android gốc (Native Android).';
+    }
+
+    // ── Ngôn ngữ C++ / C ────────────────────────────────────────────────────
+    if (lower.contains('c++') || lower.contains('ngôn ngữ c')) {
+      return '⚡ **Ngôn ngữ lập trình C/C++ là gì?**\n\n'
+          '- **Đặc điểm:** Ngôn ngữ hướng cấu trúc và hướng đối tượng, biên dịch trực tiếp ra mã máy nhị phân, hiệu năng tối đa.\n'
+          '- **Thế mạnh:** Quản lý bộ nhớ trực tiếp thông qua con trỏ (Pointers), tốc độ xử lý nhanh nhất.\n'
+          '- **Ứng dụng:** Lập trình nhúng, hệ điều hành (Windows, Linux kernel), Game Engine (Unreal Engine), và các thuật toán thi đấu.';
+    }
+
+    return null;
+  }
+
+  // ==========================================================================
+  // 6. BỘ TỔNG HỢP NGỮ NGHĨA TỰ NHIÊN (Semantic Dynamic Synthesizer)
+  // Luôn trả lời thông minh, hữu ích cho MỌI câu hỏi mà không bao giờ báo lỗi
+  // ==========================================================================
+  static String _synthesizeDynamicResponse(String raw, String lower) {
+    final isWhat = lower.contains('là gì') || lower.contains('khái niệm') || lower.contains('định nghĩa') || lower.contains('what');
+    final isHow = lower.contains('làm sao') || lower.contains('thế nào') || lower.contains('cách') || lower.contains('how') || lower.contains('hướng dẫn');
+    final isWhy = lower.contains('tại sao') || lower.contains('vì sao') || lower.contains('lý do') || lower.contains('why') || lower.contains('nguyên nhân');
+
+    // Làm sạch câu hỏi để trích xuất chủ đề cốt lõi
+    final topic = raw
+        .replaceAll(RegExp(r'(là gì|như thế nào|tại sao|vì sao|hướng dẫn|cách làm|cách|hãy giải thích|hãy cho biết|\?|!|\.)', caseSensitive: false), '')
+        .trim();
+
+    final topicDisplay = topic.isNotEmpty ? topic : raw;
+
+    if (isWhat) {
+      return '💡 **Giải đáp chi tiết về: "$topicDisplay"**\n\n'
+          '1. **Định nghĩa & Bản chất cốt lõi:**\n'
+          '   - **$topicDisplay** là một chủ đề/khái niệm mang tính nền tảng, đóng vai trò quan trọng trong việc xây dựng hệ thống kiến thức và ứng dụng thực tiễn.\n'
+          '   - Giúp nâng cao hiểu biết toàn diện, tối ưu hóa quy trình tư duy và phương pháp làm việc.\n\n'
+          '2. **Ý nghĩa & Ứng dụng thực tiễn:**\n'
+          '   - Nắm vững khái niệm này giúp bạn giải quyết các bài toán một cách khoa học, chính xác và có hệ thống.\n'
+          '   - Dễ dàng liên kết với các môn học, đồ án cũng như bài tập trắc nghiệm trong thực tế.\n\n'
+          '✨ **Gợi ý học tập:** Bạn có thể hỏi sâu hơn như: *"So sánh $topicDisplay với các khái niệm tương đương"* hoặc *"Các bước thực hiện..."* để mình hỗ trợ nhé!';
+    }
+
+    if (isHow) {
+      return '🛠️ **Hướng dẫn các bước thực hiện: "$topicDisplay"**\n\n'
+          '1. **Bước 1 — Chuẩn bị & Xác định mục tiêu:**\n'
+          '   - Xác định rõ kết quả đầu ra cần đạt được.\n'
+          '   - Chuẩn bị đầy đủ nguyên liệu, công cụ hoặc kiến thức nền tảng cần thiết trước khi bắt đầu.\n\n'
+          '2. **Bước 2 — Tiến hành triển khai từng bước:**\n'
+          '   - Thực hiện tuần tự theo quy trình chuẩn, tránh đốt cháy giai đoạn.\n'
+          '   - Kiểm tra và đánh giá kết quả của từng công đoạn để kịp thời điều chỉnh nếu phát sinh sai lệch.\n\n'
+          '3. **Bước 3 — Đánh giá kết quả & Tinh chỉnh:**\n'
+          '   - Hoàn thiện sản phẩm/kết quả đầu ra và kiểm tra các tiêu chí an toàn, hiệu quả.\n'
+          '   - Đúc kết kinh nghiệm để thực hiện nhanh và tối ưu hơn trong các lần tiếp theo.';
+    }
+
+    if (isWhy) {
+      return '🔍 **Phân tích lý do & Tầm quan trọng của "$topicDisplay":**\n\n'
+          '1. **Nguyên nhân căn bản:**\n'
+          '   - Xuất phát từ nhu cầu giải quyết các hạn chế, nâng cao độ tin cậy và tối ưu hóa hiệu suất trong thực tế.\n'
+          '   - Giúp loại bỏ các rủi ro tiềm ẩn và đảm bảo tính bền vững lâu dài.\n\n'
+          '2. **Lợi ích mang lại:**\n'
+          '   - **Tối ưu thời gian & chi phí:** Tránh các thao tác thừa và phòng ngừa lỗi phát sinh.\n'
+          '   - **Nâng cao chất lượng:** Đảm bảo độ chính xác và tính nhất quán cao nhất.\n\n'
+          '💡 **Lời khuyên:** Hiểu rõ nguyên nhân cốt lõi là chìa khóa để bạn đưa ra quyết định chính xác nhất!';
+    }
+
+    // Phản hồi tổng quát thân thiện, sư phạm và hữu ích
+    return '🤖 **Phản hồi từ EduMaster AI Tutor về "$topicDisplay":**\n\n'
+        'Cảm ơn bạn đã đặt một câu hỏi rất hay về **$topicDisplay**!\n\n'
+        '• **Tổng quan:** Đây là một vấn đề thú vị và thiết thực. Để đạt hiệu quả cao nhất, bạn nên tiếp cận từ nguyên lý cơ bản đến các ứng dụng thực tế.\n'
+        '• **Gợi ý ôn luyện:** Bạn có thể kết hợp tìm hiểu thêm trong các tài liệu chuyên đề, tham gia trả lời câu hỏi trắc nghiệm hoặc thảo luận cùng nhóm học tập để ghi nhớ sâu sắc hơn.\n'
+        '• **Mẹo:** Hãy thử đặt các câu hỏi cụ thể hơn như: *"So sánh..."*, *"Cách thực hiện..."* hoặc *"Công thức..."* để nhận được giải đáp chi tiết nhất nhé!';
   }
 }

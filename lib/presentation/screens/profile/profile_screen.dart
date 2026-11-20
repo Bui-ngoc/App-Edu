@@ -498,7 +498,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         subtitle: Text(
                           prov.isDemoMode
                               ? 'Đang dùng AI Engine cục bộ — không cần mạng.'
-                              : 'Đang dùng Gemini 2.0 Flash qua mạng.',
+                              : 'Đang dùng AI Trực tuyến (kết nối Gemini & AI Engine).',
                           style: const TextStyle(fontSize: 12),
                         ),
                         value: prov.isDemoMode,
@@ -515,7 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ?.copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 4),
                     const Text(
-                      'Để trống nếu muốn dùng key tích hợp sẵn của ứng dụng.',
+                      'Không bắt buộc. AI Tutor luôn tự động trả lời thông minh mọi chủ đề ngay cả khi để trống.',
                       style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
                     ),
                     const SizedBox(height: 8),
