@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/leaderboard_entry.dart';
+import 'app_database.dart';
 
 class LeaderboardDataSource {
   static const String _profileKeyPrefix = 'edumaster_user_profile_v8_';
@@ -9,26 +10,16 @@ class LeaderboardDataSource {
   static const String _globalGroupsListKey = 'edumaster_global_study_groups_list_v8';
   static const String _groupOwnersKey = 'edumaster_group_creators_map_v8';
 
-  String _userId = 'default';
-  String _activeEmail = '';
-
   String get _leaderboardKey => _globalLeaderboardKey;
   String get _groupsListKey => _globalGroupsListKey;
 
   void switchUser(String userId, {String? email}) {
-    final cleanId = userId.trim().toLowerCase();
-    _userId = cleanId.isEmpty ? 'default' : cleanId;
-    if (email != null && email.trim().isNotEmpty) {
-      _activeEmail = email.trim().toLowerCase();
-      _currentActiveEmail = _activeEmail;
-    }
     _cachedEntries = null;
   }
 
   SharedPreferences? _prefs;
   List<LeaderboardEntry>? _cachedEntries;
   final Map<String, UserProfile> _profileCache = {};
-  String? _currentActiveEmail;
 
   final StreamController<List<LeaderboardEntry>> _streamController =
       StreamController<List<LeaderboardEntry>>.broadcast();
@@ -53,8 +44,7 @@ class LeaderboardDataSource {
     }
   }
 
-  // Không khởi tạo dữ liệu mẫu mock (tránh tự động hiển thị Nhóm 01 cho giảng viên mới)
-  static List<LeaderboardEntry> _createDefault30Members() => const [];
+
 
   Future<List<LeaderboardEntry>> getEntries() async {
     if (_cachedEntries != null && _cachedEntries!.isNotEmpty) {
@@ -219,6 +209,9 @@ class LeaderboardDataSource {
       owners[clean] = teacherId.trim().toLowerCase();
       await _saveGroupOwners(owners);
     }
+    try {
+      await AppDatabase.instance.insertStudyGroup(clean, teacherId ?? 'teacher');
+    } catch (_) {}
   }
 
   Future<void> deleteGroup(String groupName, {String? teacherId}) async {
@@ -538,11 +531,15 @@ class LeaderboardDataSource {
 
     // Also keep general fallback key in sync
     await prefs.setString('edumaster_user_profile', json.encode(profile.toMap()));
+
+    // Sync to SQLite AppDatabase for Database Inspector
+    try {
+      await AppDatabase.instance.insertUserProfile(profile);
+    } catch (_) {}
   }
 
   void clearProfileCache() {
     _profileCache.clear();
-    _currentActiveEmail = null;
   }
 
   void dispose() {}

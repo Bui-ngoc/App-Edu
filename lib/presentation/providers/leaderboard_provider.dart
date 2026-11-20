@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 import '../../domain/repositories/interfaces.dart';
 import '../../data/datasources/auth_local_datasource.dart';
-import '../../data/datasources/leaderboard_datasource.dart';
 
 enum LeaderboardUiState { initial, loading, success, error }
 

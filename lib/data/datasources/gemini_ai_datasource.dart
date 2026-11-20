@@ -1,260 +1,606 @@
+
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../domain/entities/quiz_question.dart';
 import 'local_ai_engine.dart';
 
-/// EduMaster AI DataSource
-///
-/// Thứ tự ưu tiên phản hồi:
-///   1. OFFLINE / DEMO MODE: Người dùng chủ động bật chế độ Ngoại tuyến -> dùng ngay LocalAiEngine
-///   2. ONLINE MODE: Thử gọi Google Gemini API (gemini-1.5-flash / gemini-2.0-flash)
-///   3. THÔNG MINH TỰ ĐỘNG FALLBACK: Nếu không có API key, mạng gián đoạn, timeout hoặc lỗi từ máy chủ
-///      -> Luôn luôn phản hồi mượt mà qua Bộ não AI LocalAiEngine mà KHÔNG BAO GIỜ báo lỗi hay từ chối!
+/// ============================================================
+/// GEMINI AI DATA SOURCE - EDUMASTER AI TUTOR
+/// Kết nối Google Gemini API thật bằng API Key.
+/// ============================================================
+
 class GeminiAiDataSource {
+  // SharedPreferences keys
   static const String _geminiKeyPref = 'edumaster_gemini_api_key';
   static const String _demoModePref = 'edumaster_demo_mode';
 
-  // Khóa API nạp từ môi trường nếu có (--dart-define=GEMINI_API_KEY=...)
-  static const String _envApiKey =
-      String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+  // Model Gemini
+  static const String _model = 'gemini-3.8-flash';
 
-  // Khóa API mặc định
-  static String get _defaultApiKey {
-    if (_envApiKey.isNotEmpty) return _envApiKey;
-    return '';
-  }
-
-  // Danh sách model Google Gemini theo thứ tự ưu tiên
-  static const List<String> _preferredModels = [
-    'gemini-1.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-pro',
-  ];
-
-  static const bool _buildDemoMode =
-      bool.fromEnvironment('DEMO_MODE', defaultValue: false);
+  // Gemini REST API
+  static const String _baseUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models/';
 
   final http.Client _client;
 
-  GeminiAiDataSource({http.Client? client}) : _client = client ?? http.Client();
+  GeminiAiDataSource({http.Client? client})
+      : _client = client ?? http.Client();
+
+  /// ============================================================
+  /// 1. SANITIZE API KEY
+  /// ============================================================
 
   static String sanitizeKey(String raw) {
-    var k = raw.trim();
-    if (k.contains(':')) {
-      k = k.split(':').last.trim();
+    var key = raw.trim();
+
+    // Loại bỏ tiền tố API Key nếu người dùng dán cả nhãn.
+    key = key.replaceFirst(
+      RegExp(
+        r'^(?:gemini[\s_-]*api[\s_-]*key|api[\s_-]*key)\s*[:=]\s*',
+        caseSensitive: false,
+      ),
+      '',
+    );
+
+    // Loại bỏ Bearer nếu người dùng dán kèm.
+    key = key.replaceFirst(
+      RegExp(r'^Bearer\s+', caseSensitive: false),
+      '',
+    );
+
+    key = key.trim();
+
+    // Loại bỏ dấu ngoặc kép bao quanh key.
+    if (key.length >= 2) {
+      final first = key[0];
+      final last = key[key.length - 1];
+
+      if ((first == '"' && last == '"') ||
+          (first == "'" && last == "'") ||
+          (first == '`' && last == '`')) {
+        key = key.substring(1, key.length - 1);
+      }
     }
-    k = k.replaceAll('"', '').replaceAll("'", '').replaceAll('`', '').trim();
-    return k;
+
+    return key.trim();
   }
 
-  // ── Getters / Setters ─────────────────────────────────────────────────────
+  /// ============================================================
+  /// 2. GET API KEY
+  /// ============================================================
 
   Future<String> getApiKey() async {
     final prefs = await SharedPreferences.getInstance();
+
     final saved = prefs.getString(_geminiKeyPref);
+
     if (saved != null && saved.trim().isNotEmpty) {
-      final clean = sanitizeKey(saved);
-      if (clean.isNotEmpty) return clean;
+      return sanitizeKey(saved);
     }
-    return _defaultApiKey;
+
+    // Không sử dụng API Key mặc định trong source code.
+    return '';
   }
+
+  /// ============================================================
+  /// 3. SAVE API KEY
+  /// ============================================================
 
   Future<void> saveApiKey(String key) async {
     final prefs = await SharedPreferences.getInstance();
-    final clean = sanitizeKey(key);
-    if (clean.isEmpty) {
+
+    final cleanKey = sanitizeKey(key);
+
+    if (cleanKey.isEmpty) {
       await prefs.remove(_geminiKeyPref);
-    } else {
-      await prefs.setString(_geminiKeyPref, clean);
+      return;
     }
+
+    await prefs.setString(_geminiKeyPref, cleanKey);
   }
+
+  /// ============================================================
+  /// 4. CLEAR API KEY
+  /// ============================================================
 
   Future<void> clearSavedApiKey() async {
     final prefs = await SharedPreferences.getInstance();
+
     await prefs.remove(_geminiKeyPref);
   }
 
+  /// ============================================================
+  /// 5. CHECK DEMO MODE
+  /// ============================================================
+
   Future<bool> isDemoMode() async {
-    if (_buildDemoMode) return true;
     final prefs = await SharedPreferences.getInstance();
+
     return prefs.getBool(_demoModePref) ?? false;
   }
 
+  /// ============================================================
+  /// 6. SET DEMO MODE
+  /// ============================================================
+
   Future<void> setDemoMode(bool value) async {
     final prefs = await SharedPreferences.getInstance();
+
     await prefs.setBool(_demoModePref, value);
   }
 
-  // ── Main AI entry point ───────────────────────────────────────────────────
+  /// ============================================================
+  /// 7. MAIN AI FUNCTION
+  /// ============================================================
 
-  /// askAi: Phản hồi thông minh cho MỌI câu hỏi học viên.
-  /// Luôn hoạt động ổn định và tức thì ngay cả khi không nhập bất kỳ khóa API nào!
   Future<String> askAi(String prompt) async {
     final cleanPrompt = prompt.trim();
+
     if (cleanPrompt.isEmpty) {
-      return '👋 Xin chào bạn! Mình là Trợ lý AI Tutor của EduMaster. Bạn hãy nhập câu hỏi để mình giải đáp nhé!';
+      throw Exception('Vui lòng nhập nội dung câu hỏi.');
     }
 
-    // 1) Nếu người dùng chủ động chọn chế độ Ngoại tuyến (Demo / Offline)
+    // Demo Mode: sử dụng AI Local.
     if (await isDemoMode()) {
       return LocalAiEngine.processQuery(cleanPrompt);
     }
 
-    // 2) Chế độ Trực tuyến — Thử kết nối Google Gemini API nếu có API key hợp lệ
-    try {
-      final apiKey = await getApiKey();
-      if (apiKey.isNotEmpty && !apiKey.startsWith('AQ.')) {
-        final onlineAnswer = await _callGeminiWithFallback(apiKey, cleanPrompt);
-        if (onlineAnswer.trim().isNotEmpty) {
-          return onlineAnswer;
-        }
-      }
-    } catch (_) {
-      // Khi gặp sự cố mạng, HTTP error, timeout hoặc key cá nhân chưa kích hoạt,
-      // tự động chuyển tiếp ngay sang Bộ não tri thức AI cục bộ
+    // Real AI Mode: sử dụng Gemini API.
+    final apiKey = await getApiKey();
+
+    if (apiKey.isEmpty) {
+      throw Exception(
+        'Chưa có Gemini API Key.\n'
+            'Vui lòng nhập và lưu API Key trong phần cài đặt AI.',
+      );
     }
 
-    // 3) Phản hồi thông minh: Dùng Bộ não AI LocalAiEngine
-    // Tự động giải đáp ĐỘNG và TOÀN DIỆN cho MỌI câu hỏi (CNTT, Toán, đời sống, cách làm...)
-    // Không bao giờ hiện thông báo lỗi hay từ chối!
-    return LocalAiEngine.processQuery(cleanPrompt);
+    return _callRealGeminiApi(apiKey, cleanPrompt);
   }
 
-  // ── Gọi Gemini API với cơ chế tự động chuyển model ─────────────────────────
+  /// ============================================================
+  /// 8. CALL REAL GEMINI API
+  /// ============================================================
 
-  Future<String> _callGeminiWithFallback(String apiKey, String userPrompt) async {
-    final cleanApiKey = sanitizeKey(apiKey);
-    final cleanDefault = sanitizeKey(_defaultApiKey);
+  Future<String> _callRealGeminiApi(
+      String apiKey,
+      String userPrompt,
+      ) async {
+    final cleanKey = sanitizeKey(apiKey);
 
-    // Danh sách các key hợp lệ sẽ thử
-    final candidateKeys = <String>[];
-    if (cleanApiKey.isNotEmpty && !cleanApiKey.startsWith('AQ.')) candidateKeys.add(cleanApiKey);
-    if (!candidateKeys.contains(cleanDefault) && cleanDefault.isNotEmpty && !cleanDefault.startsWith('AQ.')) {
-      candidateKeys.add(cleanDefault);
+    if (cleanKey.isEmpty) {
+      throw Exception('Gemini API Key không hợp lệ.');
     }
 
-    if (candidateKeys.isEmpty) {
-      throw Exception('Chưa có khóa Google Gemini API hợp lệ.');
-    }
+    final Uri url = Uri.parse(
+      '$_baseUrl$_model:generateContent',
+    );
 
-    final promptText =
-        'Bạn là EduMaster AI Tutor — trợ lý học tập thông minh. '
-        'Trả lời ngắn gọn, chính xác, dễ hiểu bằng tiếng Việt. '
-        'Hỗ trợ mọi chủ đề: Flutter/Dart, lập trình, toán, khoa học, đời sống.\n\n'
-        'Câu hỏi: $userPrompt';
+    final Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': cleanKey,
+    };
 
-    final body = jsonEncode({
+    // System Instruction dành riêng cho EduMaster AI Tutor.
+    final Map<String, dynamic> requestBody = {
+      'systemInstruction': {
+        'parts': [
+          {
+            'text': '''
+Bạn là EduMaster AI Tutor - một gia sư AI thông minh
+được tích hợp trong ứng dụng học tập EduMaster.
+
+VAI TRÒ:
+- Trợ lý học tập cá nhân của học viên.
+- Giải đáp các câu hỏi thuộc nhiều lĩnh vực.
+- Hỗ trợ học lập trình, toán học, tiếng Anh và công nghệ thông tin.
+- Hướng dẫn giải bài tập và phân tích lỗi sai.
+- Giúp học viên hiểu bản chất kiến thức thay vì chỉ ghi nhớ đáp án.
+
+NGUYÊN TẮC TRẢ LỜI:
+
+1. Ngôn ngữ:
+- Ưu tiên tiếng Việt.
+- Có thể sử dụng tiếng Anh khi học viên yêu cầu.
+- Giải thích thuật ngữ chuyên ngành bằng ngôn ngữ dễ hiểu.
+
+2. Giải thích kiến thức:
+- Trình bày rõ ràng, chính xác.
+- Chia thành các phần khi nội dung dài.
+- Đưa ra ví dụ minh họa phù hợp.
+- Không trả lời chung chung khi có thể giải thích cụ thể.
+
+3. Giải bài tập:
+- Phân tích đề bài.
+- Xác định dữ kiện.
+- Trình bày phương pháp giải.
+- Giải thích từng bước.
+- Đưa ra kết quả cuối cùng.
+
+4. Hỗ trợ lập trình:
+- Đưa ra code khi cần thiết.
+- Giải thích từng đoạn code.
+- Phân tích lỗi và nguyên nhân.
+- Đề xuất cách sửa.
+- Ưu tiên code dễ hiểu, phù hợp với người mới học.
+
+5. Vai trò gia sư:
+- Thân thiện, kiên nhẫn.
+- Không đánh giá tiêu cực người học.
+- Khuyến khích tư duy độc lập.
+- Nếu câu hỏi thiếu dữ kiện, hãy hỏi lại.
+- Không tự bịa thông tin hoặc đáp án.
+
+6. Định dạng:
+- Sử dụng tiêu đề khi cần.
+- Dùng danh sách để trình bày các ý.
+- Dùng Markdown cho công thức và code.
+- Tránh câu trả lời quá dài nếu không cần thiết.
+
+Mục tiêu:
+Giúp người học tiếp thu kiến thức hiệu quả
+và có trải nghiệm như đang học cùng một gia sư AI thực thụ.
+'''
+          }
+        ]
+      },
+
       'contents': [
         {
+          'role': 'user',
           'parts': [
-            {'text': promptText},
-          ],
-        },
+            {
+              'text': userPrompt,
+            }
+          ]
+        }
       ],
+
       'generationConfig': {
         'temperature': 0.7,
-      },
-    });
+        'topP': 0.9,
+        'maxOutputTokens': 4096,
+      }
+    };
 
-    String lastError = '';
+    try {
+      // Dùng late để khai báo response trước vòng lặp retry.
+      late http.Response response;
 
-    for (final currentKey in candidateKeys) {
-      for (final model in _preferredModels) {
-        final url = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$currentKey',
-        );
-
+      // Thử tối đa 2 lần.
+      for (int attempt = 0; attempt < 2; attempt++) {
         try {
-          final response = await _client
+          response = await _client
               .post(
-                url,
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: body,
-              )
-              .timeout(const Duration(seconds: 10));
+            url,
+            headers: headers,
+            body: jsonEncode(requestBody),
+          )
+              .timeout(const Duration(seconds: 60));
 
-          if (response.statusCode == 200) {
-            final data = jsonDecode(response.body) as Map<String, dynamic>;
-            final candidates = data['candidates'] as List<dynamic>?;
-            if (candidates != null && candidates.isNotEmpty) {
-              final content = candidates[0]['content'] as Map<String, dynamic>?;
-              final parts = content?['parts'] as List<dynamic>?;
-              if (parts != null && parts.isNotEmpty) {
-                final text = (parts[0]['text'] as String? ?? '').trim();
-                if (text.isNotEmpty) {
-                  return text;
-                }
-              }
+          // Retry khi máy chủ gặp lỗi tạm thời.
+          if (response.statusCode == 429 ||
+              response.statusCode == 500 ||
+              response.statusCode == 502 ||
+              response.statusCode == 503) {
+            if (attempt == 0) {
+              await Future.delayed(
+                const Duration(seconds: 3),
+              );
+              continue;
             }
-          } else {
-            final keyMask = currentKey.length > 8
-                ? '${currentKey.substring(0, 5)}...${currentKey.substring(currentKey.length - 4)}'
-                : currentKey;
-            lastError = '[Key: $keyMask, Model: $model] HTTP ${response.statusCode}: ${response.body}';
+          }
+
+          break;
+        } on TimeoutException {
+          if (attempt == 0) {
+            await Future.delayed(
+              const Duration(seconds: 3),
+            );
             continue;
           }
-        } catch (e) {
-          lastError = e.toString();
-          continue;
+
+          rethrow;
         }
       }
-    }
 
-    throw Exception('Gemini API không phản hồi: $lastError');
+      // ========================================================
+      // PARSE RESPONSE JSON
+      // ========================================================
+
+      Map<String, dynamic> data;
+
+      try {
+        final decoded = jsonDecode(response.body);
+
+        if (decoded is! Map<String, dynamic>) {
+          throw Exception(
+            'Gemini trả về dữ liệu không hợp lệ.',
+          );
+        }
+
+        data = decoded;
+      } on FormatException {
+        throw Exception(
+          'Không thể đọc phản hồi JSON từ Gemini API.',
+        );
+      }
+
+      // ========================================================
+      // CHECK HTTP STATUS
+      // ========================================================
+
+      if (response.statusCode != 200) {
+        final error = data['error'];
+
+        final message = error is Map
+            ? error['message']?.toString() ??
+            'Không rõ nguyên nhân'
+            : 'Không rõ nguyên nhân';
+
+        final status = error is Map
+            ? error['status']?.toString() ?? ''
+            : '';
+
+        switch (response.statusCode) {
+          case 400:
+            throw Exception(
+              'HTTP 400 - Yêu cầu không hợp lệ.\n$message',
+            );
+
+          case 401:
+            throw Exception(
+              'HTTP 401 - API Key không hợp lệ hoặc không được '
+                  'Google chấp nhận.\n$message',
+            );
+
+          case 403:
+            throw Exception(
+              'HTTP 403 - API Key không có quyền truy cập '
+                  'Gemini API hoặc bị giới hạn.\n$message',
+            );
+
+          case 404:
+            throw Exception(
+              'HTTP 404 - Không tìm thấy model hoặc endpoint.\n'
+                  'Model hiện tại: $_model\n$message',
+            );
+
+          case 429:
+            throw Exception(
+              'HTTP 429 - Đã vượt giới hạn sử dụng API.\n$message',
+            );
+
+          case 500:
+          case 502:
+          case 503:
+            throw Exception(
+              'Lỗi máy chủ Google Gemini. Vui lòng thử lại sau.\n'
+                  '$message',
+            );
+
+          default:
+            throw Exception(
+              'Gemini API HTTP ${response.statusCode}'
+                  '${status.isNotEmpty ? ' ($status)' : ''}:\n$message',
+            );
+        }
+      }
+
+      // ========================================================
+      // GET CANDIDATES
+      // ========================================================
+
+      final candidates = data['candidates'];
+
+      if (candidates is! List || candidates.isEmpty) {
+        final feedback = data['promptFeedback'];
+
+        final blockReason = feedback is Map
+            ? feedback['blockReason']?.toString()
+            : null;
+
+        if (blockReason != null && blockReason.isNotEmpty) {
+          throw Exception(
+            'Gemini không thể xử lý câu hỏi: $blockReason',
+          );
+        }
+
+        throw Exception(
+          'Gemini API không trả về câu trả lời.',
+        );
+      }
+
+      final candidate = candidates.first;
+
+      if (candidate is! Map) {
+        throw Exception(
+          'Cấu trúc Candidate không hợp lệ.',
+        );
+      }
+
+      // ========================================================
+      // GET RESPONSE CONTENT
+      // ========================================================
+
+      final content = candidate['content'];
+
+      if (content is! Map) {
+        final finishReason =
+            candidate['finishReason']?.toString() ?? '';
+
+        throw Exception(
+          'Gemini không tạo được nội dung trả lời.\n'
+              'Finish reason: $finishReason',
+        );
+      }
+
+      final parts = content['parts'];
+
+      if (parts is! List || parts.isEmpty) {
+        throw Exception(
+          'Gemini trả về nội dung rỗng.',
+        );
+      }
+
+      // Ghép tất cả phần text.
+      final String answer = parts
+          .whereType<Map>()
+          .map((part) => part['text'])
+          .whereType<String>()
+          .join('\n')
+          .trim();
+
+      if (answer.isEmpty) {
+        throw Exception(
+          'Gemini không trả về nội dung văn bản.',
+        );
+      }
+
+      return answer;
+    } on TimeoutException {
+      throw Exception(
+        'Kết nối Gemini quá thời gian chờ. '
+            'Vui lòng kiểm tra Internet và thử lại.',
+      );
+    } on SocketException {
+      throw Exception(
+        'Không có kết nối Internet. '
+            'Vui lòng kiểm tra mạng của bạn.',
+      );
+    } on http.ClientException catch (e) {
+      throw Exception(
+        'Lỗi HTTP Client khi kết nối Gemini: ${e.message}',
+      );
+    }
   }
 
-  // ── Giải thích câu trả lời sai trong bài trắc nghiệm ─────────────────────
+  /// ============================================================
+  /// 9. TEST GEMINI CONNECTION
+  /// ============================================================
+
+  Future<String> testConnection() async {
+    final apiKey = await getApiKey();
+
+    if (apiKey.isEmpty) {
+      throw Exception(
+        'Chưa có API Key. Hãy nhập và lưu API Key trước.',
+      );
+    }
+
+    // Kiểm tra Gemini thật, không phụ thuộc Demo Mode.
+    return _callRealGeminiApi(
+      apiKey,
+      'Hãy trả lời đúng một câu: '
+          'EduMaster AI Tutor đã kết nối thành công.',
+    );
+  }
+
+  /// ============================================================
+  /// 10. EXPLAIN WRONG ANSWER
+  /// ============================================================
 
   Future<String> explainWrongAnswer({
     required QuizQuestion question,
     required int selectedIndex,
     required bool isEnglish,
   }) async {
-    final selectedOpt = isEnglish
-        ? (selectedIndex < question.optionsEn.length
-            ? question.optionsEn[selectedIndex]
-            : '')
-        : (selectedIndex < question.optionsVi.length
-            ? question.optionsVi[selectedIndex]
-            : '');
+    final selectedOptions = isEnglish
+        ? question.optionsEn
+        : question.optionsVi;
 
-    final correctOpt = isEnglish
-        ? (question.correctIndex < question.optionsEn.length
-            ? question.optionsEn[question.correctIndex]
-            : '')
-        : (question.correctIndex < question.optionsVi.length
-            ? question.optionsVi[question.correctIndex]
-            : '');
+    final correctOptions = isEnglish
+        ? question.optionsEn
+        : question.optionsVi;
 
-    final prompt = isEnglish
-        ? 'Question: "${question.questionEn}"\n'
-            'The student chose: "$selectedOpt" (incorrect).\n'
-            'Correct answer: "$correctOpt".\n'
-            'Reference: ${question.explanationEn}\n'
-            'Briefly explain why the chosen answer is wrong and why the correct answer is right.'
-        : 'Câu hỏi: "${question.questionVi}"\n'
-            'Học viên chọn: "$selectedOpt" (sai).\n'
-            'Đáp án đúng: "$correctOpt".\n'
-            'Tham khảo: ${question.explanationVi}\n'
-            'Giải thích ngắn gọn tại sao đáp án đã chọn sai và đáp án đúng là chính xác.';
+    // Kiểm tra selectedIndex.
+    if (selectedIndex < 0 ||
+        selectedIndex >= selectedOptions.length) {
+      throw Exception(
+        'Đáp án học viên chọn không hợp lệ.',
+      );
+    }
 
-    try {
-      final res = await askAi(prompt);
-      if (res.isNotEmpty) return res;
-    } catch (_) {}
+    // Kiểm tra correctIndex.
+    if (question.correctIndex < 0 ||
+        question.correctIndex >= correctOptions.length) {
+      throw Exception(
+        'Đáp án đúng của câu hỏi không hợp lệ.',
+      );
+    }
 
-    return isEnglish
-        ? '💡 **Explanation:**\n- Correct answer: **$correctOpt**\n'
-            '- Why: ${question.explanationEn}\n'
-            '- Tip: Double check keywords before selecting!'
-        : '💡 **Giải thích chi tiết:**\n- Đáp án chính xác là: **$correctOpt**\n'
-            '- Lý do: ${question.explanationVi}\n'
-            '- Lời khuyên: Đọc kỹ từ khóa phân biệt giữa các lựa chọn để tránh nhầm lẫn.';
+    final selectedOpt = selectedOptions[selectedIndex];
+
+    final correctOpt = correctOptions[question.correctIndex];
+
+    final String prompt;
+
+    if (isEnglish) {
+      prompt = '''
+You are an English learning tutor.
+
+Question:
+"${question.questionEn}"
+
+Student's selected answer:
+"$selectedOpt"
+
+Correct answer:
+"$correctOpt"
+
+Reference explanation:
+${question.explanationEn}
+
+Please explain:
+
+1. Why is the student's selected answer incorrect?
+2. Why is the correct answer right?
+3. What knowledge should the student remember?
+
+Use simple and clear English.
+Give examples if necessary.
+''';
+    } else {
+      prompt = '''
+Bạn là gia sư AI của EduMaster.
+
+CÂU HỎI:
+"${question.questionVi}"
+
+ĐÁP ÁN HỌC VIÊN ĐÃ CHỌN:
+"$selectedOpt"
+
+ĐÁP ÁN CHÍNH XÁC:
+"$correctOpt"
+
+GIẢI THÍCH THAM KHẢO:
+${question.explanationVi}
+
+YÊU CẦU:
+
+1. Giải thích tại sao đáp án học viên chọn chưa đúng.
+2. Giải thích tại sao đáp án chính xác là đúng.
+3. Phân tích kiến thức liên quan.
+4. Nêu điều học viên cần ghi nhớ.
+
+Hãy giải thích ngắn gọn, dễ hiểu và có tính sư phạm.
+Đóng vai trò như một gia sư đang hướng dẫn học viên.
+''';
+    }
+
+    // Gọi AI thật hoặc Local AI tùy Demo Mode.
+    // Không tự động trả về đáp án tĩnh khi API lỗi.
+    return askAi(prompt);
   }
+
+  /// ============================================================
+  /// 11. DISPOSE HTTP CLIENT
+  /// ============================================================
 
   void dispose() {
     _client.close();

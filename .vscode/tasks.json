@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Flutter Analyze & Test",
+      "type": "shell",
+      "command": "flutter analyze && flutter test",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Run App with Pre-checks",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File ./run_app.ps1",
+      "problemMatcher": []
+    }
+  ]
+}

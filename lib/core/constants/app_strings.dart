@@ -4,7 +4,6 @@ class AppStrings {
 
   // Navigation tabs
   static const String navQuiz = 'Trắc nghiệm';
-  static const String navFlashcard = 'Flashcards';
   static const String navExam = 'Phòng thi';
   static const String navDictionary = 'Từ điển IT';
   static const String navLeaderboard = 'Xếp hạng';

@@ -19,6 +19,11 @@ class LocalAiEngine {
 
     final lower = clean.toLowerCase();
 
+    // 0. Xử lý lời chào / giao tiếp thông thường
+    if (lower == 'hello' || lower == 'hi' || lower == 'xin chào' || lower.contains('chào bạn') || lower.contains('giúp tôi') || lower == 'chào') {
+      return '👋 Xin chào! Tôi là Trợ lý Gia sư AI EduMaster. Tôi có thể giúp gì cho bạn trong việc học tập, lập trình Flutter/Dart, thuật toán SM-2 hoặc giải đáp câu hỏi hôm nay?';
+    }
+
     // 1. Phép toán số học hoặc công thức tính điểm thi
     final mathResult = _tryEvaluateMath(clean, lower);
     if (mathResult != null) return mathResult;

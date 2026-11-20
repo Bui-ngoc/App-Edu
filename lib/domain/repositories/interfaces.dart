@@ -1,5 +1,4 @@
 import '../entities/quiz_question.dart';
-import '../entities/flashcard.dart';
 import '../entities/exam.dart';
 import '../entities/dictionary_word.dart';
 import '../entities/leaderboard_entry.dart';
@@ -28,15 +27,6 @@ abstract class IQuizRepository {
   Future<List<QuizQuestion>> getWrongQuestions();
   Future<void> saveWrongQuestionId(int id);
   Future<void> removeWrongQuestionId(int id);
-}
-
-abstract class IFlashcardRepository {
-  Future<List<FlashcardDeck>> getDecks();
-  Future<void> saveDeck(FlashcardDeck deck);
-  Future<List<FlashcardItem>> getCardsInDeck(String deckId);
-  Future<void> saveCard(FlashcardItem card);
-  Future<void> updateCardSM2(String cardId, FlashcardItem updatedCard);
-  Future<int> importCardsFromCsv(String deckId, String csvContent);
 }
 
 abstract class IExamRepository {

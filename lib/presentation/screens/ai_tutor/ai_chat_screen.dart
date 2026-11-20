@@ -45,10 +45,17 @@ class _AiChatScreenState extends State<AiChatScreen> {
   }
 
   void _sendMessage([String? quickText]) {
+    final aiProv = context.read<AiTutorProvider>();
+
+    if (aiProv.isGenerating) return;
+
     final text = quickText ?? _textController.text;
+
     if (text.trim().isEmpty) return;
+
     _textController.clear();
-    context.read<AiTutorProvider>().sendMessage(text);
+    aiProv.sendMessage(text);
+
     _scrollToBottom();
   }
 
@@ -133,7 +140,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Làm mới hội thoại',
-            onPressed: () => aiProv.clearHistory(),
+            onPressed: aiProv.isGenerating
+                ? null
+                : () => aiProv.clearHistory(),
           )
         ],
       ),
@@ -246,6 +255,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                         children: [
                           Expanded(
                             child: TextField(
+                              enabled: !aiProv.isGenerating,
                               controller: _textController,
                               maxLines: 4,
                               minLines: 1,
@@ -290,7 +300,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
         side: BorderSide(color: AppColors.primary.withOpacity(0.2)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         label: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
-        onPressed: () => _sendMessage(label.replaceAll(RegExp(r'^[^\w\s]+\s*'), '')),
+        onPressed: context.read<AiTutorProvider>().isGenerating
+            ? null
+            : () => _sendMessage(
+          label.replaceAll(RegExp(r'^[^\w\s]+\s*'), ''),
+        ),
       ),
     );
   }

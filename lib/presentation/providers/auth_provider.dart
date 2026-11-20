@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/interfaces.dart';
 import '../../data/datasources/quiz_local_datasource.dart';
-import '../../data/datasources/sm2_storage_datasource.dart';
 import '../../data/datasources/exam_storage_datasource.dart';
 
 class AuthProvider extends ChangeNotifier {
   final IAuthRepository _authRepo;
   final QuizLocalDataSource _quizDataSource;
-  final Sm2StorageDataSource _sm2DataSource;
   final ExamStorageDataSource _examDataSource;
 
   bool _isLoggedIn = false;
@@ -29,11 +27,9 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider({
     required IAuthRepository authRepo,
     required QuizLocalDataSource quizDataSource,
-    required Sm2StorageDataSource sm2DataSource,
     required ExamStorageDataSource examDataSource,
   })  : _authRepo = authRepo,
         _quizDataSource = quizDataSource,
-        _sm2DataSource = sm2DataSource,
         _examDataSource = examDataSource {
     checkAuthStatus();
   }
@@ -41,7 +37,6 @@ class AuthProvider extends ChangeNotifier {
   /// Thông báo đúng userId cho datasources để tách biệt dữ liệu giữa các user
   void _notifyDatasourcesUserChanged(String userId) {
     _quizDataSource.switchUser(userId);
-    _sm2DataSource.switchUser(userId);
     _examDataSource.switchUser(userId);
   }
 
@@ -140,10 +135,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-
-
-
-
   Future<void> logout() async {
     _isPerformingAction = true;
     notifyListeners();
@@ -153,7 +144,7 @@ class AuthProvider extends ChangeNotifier {
       _isLoggedIn = false;
       _currentUser = null;
       _errorMessage = '';
-      _notifyDatasourcesUserChanged('default'); // reset data isolation
+      _notifyDatasourcesUserChanged('default');
     } catch (_) {}
 
     _isPerformingAction = false;

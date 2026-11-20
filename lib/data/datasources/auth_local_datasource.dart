@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/auth_user.dart';
 import 'leaderboard_datasource.dart';
+import 'app_database.dart';
 
 class AuthLocalDataSource {
   static const String _usersKey = 'edumaster_registered_users_v2';
@@ -122,6 +123,11 @@ class AuthLocalDataSource {
     await prefs.setString(_currentSessionKey, cleanEmail);
     await prefs.setBool(_isLoggedInKey, true);
 
+    // Sync to SQLite AppDatabase for Database Inspector
+    try {
+      await AppDatabase.instance.insertUser(newUser);
+    } catch (_) {}
+
     // Sync to UserProfile in LeaderboardDataSource
     await _syncProfile(newUser);
 
@@ -161,13 +167,16 @@ class AuthLocalDataSource {
     await prefs.setString(_currentSessionKey, cleanEmail);
     await prefs.setBool(_isLoggedInKey, true);
 
+    // Sync to SQLite AppDatabase for Database Inspector
+    try {
+      await AppDatabase.instance.insertUser(user);
+    } catch (_) {}
+
     // Sync to UserProfile
     await _syncProfile(user);
 
     return user;
   }
-
-
 
   /// Find a user by Student/Teacher ID, Email, or Name
   Future<AuthUser?> getUserById(String idOrEmail) async {
@@ -211,6 +220,9 @@ class AuthLocalDataSource {
       _cachedUsers = users;
       final prefs = await _getPrefs();
       await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
+      try {
+        await AppDatabase.instance.insertUser(updated);
+      } catch (_) {}
       await _syncProfile(updated);
       return updated;
     }
@@ -230,6 +242,9 @@ class AuthLocalDataSource {
 
     final prefs = await _getPrefs();
     await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
+    try {
+      await AppDatabase.instance.insertUser(newUser);
+    } catch (_) {}
     await _syncProfile(newUser);
     return newUser;
   }
@@ -248,6 +263,9 @@ class AuthLocalDataSource {
 
       final prefs = await _getPrefs();
       await prefs.setString(_usersKey, json.encode(users.map((e) => e.toMap()).toList()));
+      try {
+        await AppDatabase.instance.insertUser(updated);
+      } catch (_) {}
       await _syncProfile(updated);
     }
   }
