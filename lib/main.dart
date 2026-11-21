@@ -1,9 +1,18 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'firebase_options.dart';
+
+// Core
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_strings.dart';
 import 'core/constants/app_colors.dart';
+
+// DataSources
 import 'data/datasources/quiz_local_datasource.dart';
 import 'data/datasources/exam_storage_datasource.dart';
 import 'data/datasources/dictionary_sqlite_datasource.dart';
@@ -11,12 +20,16 @@ import 'data/datasources/leaderboard_datasource.dart';
 import 'data/datasources/gemini_ai_datasource.dart';
 import 'data/datasources/auth_local_datasource.dart';
 import 'data/datasources/app_database.dart';
+
+// Repositories
 import 'data/repositories/quiz_repository_impl.dart';
 import 'data/repositories/exam_repository_impl.dart';
 import 'data/repositories/dictionary_repository_impl.dart';
 import 'data/repositories/leaderboard_repository_impl.dart';
 import 'data/repositories/ai_tutor_repository_impl.dart';
 import 'data/repositories/auth_repository_impl.dart';
+
+// Providers
 import 'presentation/providers/quiz_provider.dart';
 import 'presentation/providers/exam_provider.dart';
 import 'presentation/providers/dictionary_provider.dart';
@@ -24,102 +37,223 @@ import 'presentation/providers/leaderboard_provider.dart';
 import 'presentation/providers/profile_provider.dart';
 import 'presentation/providers/ai_tutor_provider.dart';
 import 'presentation/providers/auth_provider.dart';
+
+// Screens
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/main_navigation_screen.dart';
+
+
+// ==========================================
+// XÓA DỮ LIỆU CŨ TRONG LẦN CHẠY ĐẦU TIÊN
+// ==========================================
 
 Future<void> _clearAllDataOnFirstRun() async {
   try {
     final prefs = await SharedPreferences.getInstance();
+
     const cleanFlagKey = 'edumaster_fresh_clean_v12';
+
     if (!(prefs.getBool(cleanFlagKey) ?? false)) {
       final keys = prefs.getKeys().toList();
-      for (final k in keys) {
-        await prefs.remove(k);
+
+      for (final key in keys) {
+        await prefs.remove(key);
       }
+
       await prefs.setBool(cleanFlagKey, true);
+
       try {
         await AppDatabase.instance.clearAllTables();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Clear database error: $e');
+      }
     }
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('Clear preferences error: $e');
+  }
 }
 
-void main() async {
+
+// ==========================================
+// MAIN
+// ==========================================
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Eagerly initialize SQLite AppDatabase for Database Inspector
+  // 1. Khởi tạo Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  debugPrint('Firebase initialized successfully');
+
+  // 2. Khởi tạo Firebase App Check
+  // Dành cho Android Emulator trong quá trình phát triển
+  try {
+    await FirebaseAppCheck.instance.activate(
+      providerAndroid: const AndroidDebugProvider(),
+    );
+
+    debugPrint('Firebase App Check initialized');
+  } catch (e) {
+    debugPrint('Firebase App Check initialization error: $e');
+  }
+
+  // 3. Khởi tạo SQLite
   try {
     await AppDatabase.instance.database;
-  } catch (_) {}
+    debugPrint('SQLite initialized successfully');
+  } catch (e) {
+    debugPrint('SQLite initialization error: $e');
+  }
 
+  // 4. Xóa dữ liệu cũ trong lần chạy đầu tiên
   await _clearAllDataOnFirstRun();
 
-  // Instantiate data sources
-  final quizLocalDataSource = QuizLocalDataSource();
-  final examStorageDataSource = ExamStorageDataSource();
-  final dictionarySqliteDataSource = DictionarySqliteDataSource();
-  final leaderboardDataSource = LeaderboardDataSource();
-  final geminiAiDataSource = GeminiAiDataSource();
-  final authLocalDataSource = AuthLocalDataSource(leaderboardDataSource: leaderboardDataSource);
+  // ==========================================
+  // 5. KHỞI TẠO DATASOURCES
+  // ==========================================
 
-  // Instantiate repositories (Clean Architecture)
-  final quizRepo = QuizRepositoryImpl(dataSource: quizLocalDataSource);
-  final examRepo = ExamRepositoryImpl(dataSource: examStorageDataSource);
-  final dictionaryRepo = DictionaryRepositoryImpl(dataSource: dictionarySqliteDataSource);
-  final leaderboardRepo = LeaderboardRepositoryImpl(dataSource: leaderboardDataSource);
-  final aiTutorRepo = AiTutorRepositoryImpl(dataSource: geminiAiDataSource);
-  final authRepo = AuthRepositoryImpl(dataSource: authLocalDataSource);
+  final quizLocalDataSource = QuizLocalDataSource();
+
+  final examStorageDataSource = ExamStorageDataSource();
+
+  final dictionarySqliteDataSource =
+  DictionarySqliteDataSource();
+
+  final leaderboardDataSource = LeaderboardDataSource();
+
+  final geminiAiDataSource = GeminiAiDataSource();
+
+  final authLocalDataSource = AuthLocalDataSource(
+    leaderboardDataSource: leaderboardDataSource,
+  );
+
+  // ==========================================
+  // 6. KHỞI TẠO REPOSITORIES
+  // ==========================================
+
+  final quizRepository = QuizRepositoryImpl(
+    dataSource: quizLocalDataSource,
+  );
+
+  final examRepository = ExamRepositoryImpl(
+    dataSource: examStorageDataSource,
+  );
+
+  final dictionaryRepository = DictionaryRepositoryImpl(
+    dataSource: dictionarySqliteDataSource,
+  );
+
+  final leaderboardRepository = LeaderboardRepositoryImpl(
+    dataSource: leaderboardDataSource,
+  );
+
+  final aiTutorRepository = AiTutorRepositoryImpl(
+    dataSource: geminiAiDataSource,
+  );
+
+  final authRepository = AuthRepositoryImpl(
+    dataSource: authLocalDataSource,
+  );
+
+  // ==========================================
+  // 7. KHỞI CHẠY ỨNG DỤNG
+  // ==========================================
+
 
   runApp(
     MultiProvider(
       providers: [
+        // AUTH PROVIDER
         ChangeNotifierProvider(
           create: (_) => AuthProvider(
-            authRepo: authRepo,
+            authRepo: authRepository,
             quizDataSource: quizLocalDataSource,
             examDataSource: examStorageDataSource,
           ),
         ),
+
+        // QUIZ PROVIDER
         ChangeNotifierProvider(
-          create: (_) => QuizProvider(quizRepo: quizRepo, aiRepo: aiTutorRepo),
+          create: (_) => QuizProvider(
+            aiRepo: aiTutorRepository,
+            quizRepo: quizRepository,
+          ),
         ),
+
+        // EXAM PROVIDER
         ChangeNotifierProvider(
-          create: (_) => ExamProvider(examRepo: examRepo, leaderboardRepo: leaderboardRepo),
+          create: (_) => ExamProvider(
+            examRepo: examRepository,
+            leaderboardRepo: leaderboardRepository,
+          ),
         ),
+
+        // DICTIONARY PROVIDER
         ChangeNotifierProvider(
-          create: (_) => DictionaryProvider(repo: dictionaryRepo),
+          create: (_) => DictionaryProvider(
+            repo: dictionaryRepository,
+          ),
         ),
+
+        // LEADERBOARD PROVIDER
         ChangeNotifierProvider(
-          create: (_) => LeaderboardProvider(repo: leaderboardRepo),
+          create: (_) => LeaderboardProvider(
+            repo: leaderboardRepository,
+          ),
         ),
+
+        // PROFILE PROVIDER
         ChangeNotifierProvider(
-          create: (_) => ProfileProvider(repo: leaderboardRepo, aiDataSource: geminiAiDataSource),
+          create: (_) => ProfileProvider(
+            repo: leaderboardRepository,
+            aiDataSource: geminiAiDataSource,
+          ),
         ),
+
+        // AI TUTOR PROVIDER
         ChangeNotifierProvider(
-          create: (_) => AiTutorProvider(aiRepo: aiTutorRepo),
+          create: (_) => AiTutorProvider(
+            aiRepo: aiTutorRepository,
+          ),
         ),
       ],
       child: const EduMasterApp(),
     ),
   );
+
 }
+
+
+// ==========================================
+// EDUMASTER APP
+// ==========================================
 
 class EduMasterApp extends StatelessWidget {
   const EduMasterApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Select ONLY isDarkMode so MaterialApp is NEVER rebuilt on profile/XP/avatar updates
-    final isDarkMode = context.select<ProfileProvider, bool>((p) => p.isDarkMode);
+    final isDarkMode = context.select<ProfileProvider, bool>(
+          (provider) => provider.isDarkMode,
+    );
 
     return MaterialApp(
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
+
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+
+      themeMode: isDarkMode
+          ? ThemeMode.dark
+          : ThemeMode.light,
+
       builder: (context, child) {
         final mq = MediaQuery.of(context);
+
         return MediaQuery(
           data: mq.copyWith(
             textScaler: mq.textScaler.clamp(
@@ -130,10 +264,16 @@ class EduMasterApp extends StatelessWidget {
           child: child ?? const SizedBox.shrink(),
         );
       },
+
       home: const AuthWrapper(),
     );
   }
 }
+
+
+// ==========================================
+// AUTH WRAPPER
+// ==========================================
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -146,7 +286,9 @@ class AuthWrapper extends StatelessWidget {
       return const Scaffold(
         backgroundColor: Colors.white,
         body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+          ),
         ),
       );
     }

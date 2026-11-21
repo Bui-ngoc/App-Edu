@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../domain/entities/leaderboard_entry.dart';
 import '../../domain/repositories/interfaces.dart';
 import '../../data/datasources/gemini_ai_datasource.dart';
@@ -14,6 +16,7 @@ class ProfileProvider extends ChangeNotifier {
     name: 'Sinh viên CNTT',
     email: 'student@edumaster.edu.vn',
   );
+
   UserProfile get profile => _profile;
 
   bool _isDarkMode = false;
@@ -22,15 +25,13 @@ class ProfileProvider extends ChangeNotifier {
   String _apiKey = '';
   String get apiKey => _apiKey;
 
-  String _proxyUrl = '';
-  String get proxyUrl => _proxyUrl;
-
   bool _isDemoMode = false;
   bool get isDemoMode => _isDemoMode;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  // Constructor
   ProfileProvider({
     required ILeaderboardRepository repo,
     required GeminiAiDataSource aiDataSource,
@@ -44,33 +45,37 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _profile   = await _repo.getUserProfile(email: email);
-      _apiKey    = await _aiDataSource.getApiKey();
-      _proxyUrl  = await _aiDataSource.getProxyUrl();
+      _profile = await _repo.getUserProfile(email: email);
+      _apiKey = await _aiDataSource.getApiKey();
       _isDemoMode = await _aiDataSource.isDemoMode();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Load profile error: $e');
+    }
+
     _isLoading = false;
     notifyListeners();
   }
 
-  /// Record daily streak on user login / app launch
+  // Record daily streak
   Future<bool> checkDailyStreak({String? email}) async {
     try {
       final res = await _repo.checkAndRecordDailyStreak(email: email);
       _profile = res.profile;
       notifyListeners();
       return res.isNewStreak;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Check daily streak error: $e');
       return false;
     }
   }
 
+  // Toggle theme
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
     notifyListeners();
   }
 
-  /// Pick avatar directly from Camera or Gallery
+  // Update avatar
   Future<bool> updateAvatar(ImageSource source) async {
     try {
       final XFile? photo = await _picker.pickImage(
@@ -86,56 +91,66 @@ class ProfileProvider extends ChangeNotifier {
         notifyListeners();
         return true;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Update avatar error: $e');
+    }
+
     return false;
   }
 
+  // Update name and group
   Future<void> updateNameAndGroup(String name, String group) async {
-    _profile = _profile.copyWith(name: name.trim(), currentGroup: group.trim());
+    _profile = _profile.copyWith(
+      name: name.trim(),
+      currentGroup: group.trim(),
+    );
+
     await _repo.saveUserProfile(_profile);
+
     await _repo.updateUserLeaderboard(
       userId: _profile.uid,
       userName: _profile.name,
       groupName: _profile.currentGroup,
       xp: _profile.totalXp,
     );
+
     notifyListeners();
   }
 
-  /// Ghi nhận điểm hoạt động (EXP) của sinh viên (khi làm quiz, bài tập, flashcards)
-  /// và cập nhật thời gian thực vào bảng xếp hạng Firestore của nhóm học.
+  // Add activity XP
   Future<void> addActivityXp(int xpAmount) async {
     if (xpAmount <= 0) return;
+
     final newXp = _profile.totalXp + xpAmount;
     _profile = _profile.copyWith(totalXp: newXp);
+
     await _repo.saveUserProfile(_profile);
+
     await _repo.updateUserLeaderboard(
       userId: _profile.uid,
       userName: _profile.name,
       groupName: _profile.currentGroup,
       xp: _profile.totalXp,
     );
+
     notifyListeners();
   }
 
+  // Save API key (temporary compatibility with old settings UI)
   Future<void> saveApiKey(String key) async {
     _apiKey = key.trim();
     await _aiDataSource.saveApiKey(_apiKey);
     notifyListeners();
   }
 
-  Future<void> saveProxyUrl(String url) async {
-    _proxyUrl = url.trim();
-    await _aiDataSource.saveProxyUrl(_proxyUrl);
-    notifyListeners();
-  }
-
+  // Reset API key (temporary compatibility with old settings UI)
   Future<void> resetApiKeyToDefault() async {
     await _aiDataSource.clearSavedApiKey();
     _apiKey = await _aiDataSource.getApiKey();
     notifyListeners();
   }
 
+  // Toggle demo mode
   Future<void> setDemoMode(bool value) async {
     _isDemoMode = value;
     await _aiDataSource.setDemoMode(value);
