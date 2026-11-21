@@ -42,18 +42,21 @@ class QuizHubScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          'Ngân hàng 300 câu hỏi song ngữ',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Ngân hàng 300 câu hỏi song ngữ',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       const Icon(Icons.school_rounded, color: Colors.white),
                     ],
                   ),
@@ -96,18 +99,21 @@ class QuizHubScreen extends StatelessWidget {
                         child: const Icon(Icons.alarm_on_rounded, color: AppColors.warning, size: 30),
                       ),
                       const SizedBox(width: 14),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  'Thi thử tính giờ',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                const Flexible(
+                                  child: Text(
+                                    'Thi thử tính giờ',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                SizedBox(width: 6),
-                                Chip(
+                                const SizedBox(width: 6),
+                                const Chip(
                                   padding: EdgeInsets.zero,
                                   labelPadding: EdgeInsets.symmetric(horizontal: 6),
                                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -116,8 +122,8 @@ class QuizHubScreen extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            SizedBox(height: 4),
-                            Text(
+                            const SizedBox(height: 4),
+                            const Text(
                               'Tùy chọn khối thi, mức độ (Dễ/Vừa/Khó), số câu và số phút theo yêu cầu.',
                               style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight, height: 1.3),
                             ),

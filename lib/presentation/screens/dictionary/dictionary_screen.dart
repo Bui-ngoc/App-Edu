@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../domain/entities/dictionary_word.dart';
 import '../../providers/dictionary_provider.dart';
 
 class DictionaryScreen extends StatefulWidget {
@@ -19,6 +20,10 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
   @override
   void initState() {
     super.initState();
+    final currentQ = context.read<DictionaryProvider>().currentQuery;
+    if (currentQ.isNotEmpty) {
+      _searchController.text = currentQ;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DictionaryProvider>().init();
     });
@@ -40,7 +45,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
     });
   }
 
-  void _showWordDetails(BuildContext context, dynamic word) {
+  void _showWordDetails(BuildContext context, DictionaryWord word) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -205,6 +210,8 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                             Text(
                               '${prov.wordOfTheDay!.word} - ${prov.wordOfTheDay!.vietnamese}',
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
@@ -255,22 +262,26 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                               final word = prov.words[index];
                               return ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                title: Row(
-                                  children: [
-                                    Text(
-                                      word.word,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      word.phonetic,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontStyle: FontStyle.italic,
-                                        color: AppColors.textSecondaryLight,
+                                title: Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: word.word,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                       ),
-                                    ),
-                                  ],
+                                      if (word.phonetic.isNotEmpty)
+                                        TextSpan(
+                                          text: '  ${word.phonetic}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontStyle: FontStyle.italic,
+                                            color: AppColors.textSecondaryLight,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 subtitle: Text(
                                   '${word.vietnamese} • ${word.definition}',
@@ -285,6 +296,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                                       icon: const Icon(Icons.volume_up_outlined, size: 20),
                                       onPressed: () => prov.speakWord(word.word),
                                       tooltip: 'Phát âm TTS',
+                                      visualDensity: VisualDensity.compact,
                                     ),
                                     IconButton(
                                       icon: Icon(
@@ -294,6 +306,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                                       ),
                                       onPressed: () => prov.toggleBookmark(word),
                                       tooltip: 'Đánh dấu',
+                                      visualDensity: VisualDensity.compact,
                                     ),
                                   ],
                                 ),
