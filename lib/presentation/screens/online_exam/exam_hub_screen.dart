@@ -684,6 +684,7 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                   // ── TYPE 1: TRÍCH XUẤT TỪ NGÂN HÀNG 300 CÂU ───────
                   if (_examSourceType == 1) ...[
                     DropdownButtonFormField<int>(
+                      isExpanded: true,
                       value: _extractorGrade,
                       decoration: const InputDecoration(
                         labelText: 'Khối kiến thức',
@@ -711,6 +712,7 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
+                            isExpanded: true,
                             value: _extractorDifficulty,
                             decoration: const InputDecoration(
                               labelText: 'Mức độ',
@@ -730,6 +732,7 @@ class _ExamHubScreenState extends State<ExamHubScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: DropdownButtonFormField<int>(
+                            isExpanded: true,
                             value: _extractorQuestionCount,
                             decoration: const InputDecoration(
                               labelText: 'Số câu',

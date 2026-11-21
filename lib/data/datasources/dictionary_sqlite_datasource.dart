@@ -8,8 +8,12 @@ class DictionarySqliteDataSource {
   static Database? _database;
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
+    if (_database != null) {
+      await _ensureDataSeeded(_database!);
+      return _database!;
+    }
     _database = await _initDb();
+    await _ensureDataSeeded(_database!);
     return _database!;
   }
 
@@ -19,43 +23,71 @@ class DictionarySqliteDataSource {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE words (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            word TEXT NOT NULL UNIQUE,
-            phonetic TEXT,
-            vietnamese TEXT NOT NULL,
-            definition TEXT,
-            example TEXT,
-            is_bookmarked INTEGER DEFAULT 0
-          )
-        ''');
-
-        await db.execute('CREATE INDEX idx_word ON words(word)');
-        await db.execute('CREATE INDEX idx_vi ON words(vietnamese)');
-
-        // Populate initial IT terms from assets
+        await _createTables(db);
+        await _seedInitialData(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        await _createTables(db);
         await _seedInitialData(db);
       },
     );
   }
 
+  Future<void> _createTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS words (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        word TEXT NOT NULL UNIQUE,
+        phonetic TEXT,
+        vietnamese TEXT NOT NULL,
+        definition TEXT,
+        example TEXT,
+        is_bookmarked INTEGER DEFAULT 0
+      )
+    ''');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_word ON words(word)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_vi ON words(vietnamese)');
+  }
+
+  Future<void> _ensureDataSeeded(Database db) async {
+    try {
+      final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM words')) ?? 0;
+      if (count == 0) {
+        await _seedInitialData(db);
+      }
+    } catch (_) {}
+  }
+
   Future<void> _seedInitialData(Database db) async {
     try {
       final jsonStr = await rootBundle.loadString('assets/data/it_dictionary.json');
-      final List<dynamic> list = json.decode(jsonStr);
+      final dynamic decoded = json.decode(jsonStr);
+      final List<dynamic> list = [];
+      if (decoded is List) {
+        for (final item in decoded) {
+          if (item is List) {
+            list.addAll(item);
+          } else if (item is Map) {
+            list.add(item);
+          }
+        }
+      }
       final batch = db.batch();
       for (final item in list) {
+        if (item is! Map) continue;
+        final word = (item['word'] ?? '').toString().trim();
+        if (word.isEmpty) continue;
         batch.insert(
           'words',
           {
-            'word': item['word'] ?? '',
-            'phonetic': item['phonetic'] ?? '',
-            'vietnamese': item['vi'] ?? '',
-            'definition': item['def'] ?? '',
-            'example': item['example'] ?? '',
+            'word': word,
+            'phonetic': (item['phonetic'] ?? '').toString().trim(),
+            'vietnamese': (item['vi'] ?? item['vietnamese'] ?? '').toString().trim(),
+            'definition': (item['def'] ?? item['definition'] ?? '').toString().trim(),
+            'example': (item['example'] ?? '').toString().trim(),
             'is_bookmarked': 0,
           },
           conflictAlgorithm: ConflictAlgorithm.ignore,
@@ -71,7 +103,7 @@ class DictionarySqliteDataSource {
     final db = await database;
     final clean = query.trim();
     if (clean.isEmpty) {
-      final results = await db.query('words', orderBy: 'word ASC', limit: 50);
+      final results = await db.query('words', orderBy: 'word ASC', limit: 200);
       return results.map((e) => DictionaryWord.fromMap(e)).toList();
     }
     final results = await db.rawQuery('''
@@ -84,7 +116,7 @@ class DictionarySqliteDataSource {
           ELSE 3
         END,
         word ASC
-      LIMIT 50
+      LIMIT 200
     ''', ['%$clean%', '%$clean%', '%$clean%', '$clean%', '%$clean%']);
 
     return results.map((e) => DictionaryWord.fromMap(e)).toList();

@@ -15,21 +15,25 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final TextEditingController _nameController   = TextEditingController();
-  final TextEditingController _apiKeyController = TextEditingController();
+  final TextEditingController _nameController     = TextEditingController();
+  final TextEditingController _apiKeyController   = TextEditingController();
+  final TextEditingController _proxyUrlController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     final prov = context.read<ProfileProvider>();
-    _nameController.text   = prov.profile.name;
-    _apiKeyController.text = prov.apiKey;
+    _nameController.text     = prov.profile.name;
+    _apiKeyController.text   = prov.apiKey;
+    _proxyUrlController.text = prov.proxyUrl;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final authProv = context.read<AuthProvider>();
       await authProv.refreshUser();
       await prov.loadProfile(email: authProv.currentUser?.email);
       if (mounted) {
-        _nameController.text = prov.profile.name;
+        _nameController.text     = prov.profile.name;
+        _apiKeyController.text   = prov.apiKey;
+        _proxyUrlController.text = prov.proxyUrl;
       }
     });
   }
@@ -38,6 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _apiKeyController.dispose();
+    _proxyUrlController.dispose();
     super.dispose();
   }
 
@@ -218,12 +223,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: isTeacher ? AppColors.secondary : AppColors.primary,
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    isTeacher ? 'Giáo viên (GV)' : 'Sinh viên (SV)',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: isTeacher ? AppColors.secondary : AppColors.primary,
+                  Flexible(
+                    child: Text(
+                      isTeacher ? 'Giáo viên (GV)' : 'Sinh viên (SV)',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: isTeacher ? AppColors.secondary : AppColors.primary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -257,9 +265,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     const Icon(Icons.badge_rounded, size: 16, color: AppColors.primary),
                     const SizedBox(width: 6),
-                    Text(
-                      'Mã ID: ${user?.id ?? profile.uid}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    Flexible(
+                      child: Text(
+                        'Mã ID: ${user?.id ?? profile.uid}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     const Icon(Icons.copy_rounded, size: 14, color: AppColors.primary),
@@ -476,7 +487,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Đang dùng: Google Gemini 2.0 Flash\nKey tích hợp sẵn — hoạt động ngay, không cần cấu hình.',
+                                'Mô hình: Google Gemini (1.5 Flash / 2.0 Flash) kết nối qua khóa.\nTrực tuyến: Suy ngẫm sâu & Đa lĩnh vực • Ngoại tuyến: Giới hạn môn học.',
                                 style: TextStyle(fontSize: 12, color: AppColors.primary, height: 1.4),
                               ),
                             ),
@@ -493,12 +504,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           prov.isDemoMode ? Icons.offline_bolt_rounded : Icons.cloud_rounded,
                           color: prov.isDemoMode ? AppColors.warning : AppColors.success,
                         ),
-                        title: const Text('Chế độ Ngoại tuyến (Offline)',
+                        title: const Text('Chế độ Ngoại tuyến (Offline / Demo)',
                             style: TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text(
                           prov.isDemoMode
-                              ? 'Đang dùng AI Engine cục bộ — không cần mạng.'
-                              : 'Đang dùng AI Trực tuyến (kết nối Gemini & AI Engine).',
+                              ? 'Đang dùng AI Engine cục bộ — chỉ cho phép hỏi về Môn học.'
+                              : 'Đang dùng AI Trực tuyến — suy ngẫm sâu & giải đáp Đa lĩnh vực.',
                           style: const TextStyle(fontSize: 12),
                         ),
                         value: prov.isDemoMode,
@@ -507,15 +518,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const Divider(height: 20),
 
-                    // Tùy chọn nhập key riêng
-                    Text('Khóa API cá nhân (tùy chọn)',
+                    // 1. Mẫu máy chủ giữ khóa (Key Proxy Server)
+                    Text('1. Máy chủ giữ khóa (Key Proxy Server)',
                         style: Theme.of(context)
                             .textTheme
                             .labelLarge
                             ?.copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 4),
                     const Text(
-                      'Không bắt buộc. AI Tutor luôn tự động trả lời thông minh mọi chủ đề ngay cả khi để trống.',
+                      'Mẫu bảo mật chuẩn: Máy chủ trung gian lưu giữ API Key an toàn và chuyển tiếp yêu cầu sang Gemini.',
+                      style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _proxyUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'URL Máy chủ giữ khóa (tùy chọn)',
+                        hintText: 'Ví dụ: https://my-proxy-server.com/api/chat',
+                        prefixIcon: Icon(Icons.dns_rounded),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.save_rounded, size: 18),
+                        label: const Text('Lưu URL máy chủ'),
+                        onPressed: () {
+                          prov.saveProxyUrl(_proxyUrlController.text);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                _proxyUrlController.text.trim().isEmpty
+                                    ? 'Đã xóa cấu hình máy chủ giữ khóa.'
+                                    : 'Đã lưu URL máy chủ giữ khóa thành công!',
+                              ),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const Divider(height: 20),
+
+                    // 2. Khóa API trực tiếp (Direct Key)
+                    Text('2. Khóa API trực tiếp (Direct Gemini Key)',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelLarge
+                            ?.copyWith(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Kết nối trực tiếp Google AI Studio bằng API Key cá nhân (hoặc dùng khóa mặc định tích hợp sẵn).',
                       style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
                     ),
                     const SizedBox(height: 8),
@@ -535,14 +590,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Expanded(
                           child: OutlinedButton.icon(
                             icon: const Icon(Icons.save_rounded, size: 18),
-                            label: const Text('Lưu khóa'),
+                            label: const Text('Lưu khóa API'),
                             onPressed: () {
                               prov.saveApiKey(_apiKeyController.text);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     _apiKeyController.text.trim().isEmpty
-                                        ? 'Đã xóa key — dùng key tích hợp sẵn!'
+                                        ? 'Đã xóa key riêng — dùng key tích hợp sẵn!'
                                         : 'Đã lưu khóa API thành công!',
                                   ),
                                   backgroundColor: AppColors.success,

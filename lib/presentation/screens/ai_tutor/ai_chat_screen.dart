@@ -68,11 +68,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
       SnackBar(
         content: Text(
           !newDemoMode
-              ? '🌐 Đã chuyển sang chế độ AI Trực tuyến (Google Gemini 1.5 Flash)'
-              : '📴 Đã chuyển sang chế độ AI Ngoại tuyến (Offline AI Engine)',
+              ? '🌐 Trực tuyến: AI suy ngẫm sâu, giải đáp đa lĩnh vực & môn học.'
+              : '📴 Ngoại tuyến: AI cục bộ, giới hạn giải đáp trong phạm vi Môn học.',
         ),
-        backgroundColor: !newDemoMode ? AppColors.success : AppColors.primary,
-        duration: const Duration(seconds: 2),
+        backgroundColor: !newDemoMode ? AppColors.success : const Color(0xFFFF9800),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -111,20 +111,25 @@ class _AiChatScreenState extends State<AiChatScreen> {
               ],
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('AI Tutor 24/7', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text(
-                  isOnline ? 'Trực tuyến • Gemini Flash' : 'Ngoại tuyến • AI Thông minh',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isOnline ? AppColors.success : const Color(0xFFFF9800),
-                    fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('AI Tutor 24/7', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                  Text(
+                    isOnline
+                        ? 'Trực tuyến • Gemini AI (Đa lĩnh vực)'
+                        : 'Ngoại tuyến • AI Cục bộ (Giới hạn môn học)',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isOnline ? AppColors.success : const Color(0xFFFF9800),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

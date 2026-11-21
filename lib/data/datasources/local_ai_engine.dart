@@ -10,42 +10,129 @@
 //   6. Phân tích ngữ nghĩa tự nhiên linh hoạt (Semantic Dynamic Synthesizer)
 
 class LocalAiEngine {
-  /// Entry point chính: Phân tích prompt và giải đáp ngay lập tức
+  /// Tách câu hỏi thực tế của người dùng ra khỏi wrapper ngữ cảnh (nếu có)
+  static String extractQuestion(String prompt) {
+    if (prompt.contains('CÂU HỎI MỚI NHẤT:')) {
+      final parts = prompt.split('CÂU HỎI MỚI NHẤT:');
+      if (parts.length > 1) {
+        return parts.last
+            .replaceAll('Hãy trả lời trực tiếp câu hỏi mới nhất.', '')
+            .trim();
+      }
+    }
+    return prompt.trim();
+  }
+
+  /// Entry point chính: Phân tích prompt và giải đáp (Chế độ Ngoại tuyến / Demo Mode)
+  /// Theo yêu cầu: Ở chế độ ngoại tuyến, CHỈ CHO PHÉP HỎI VỀ MÔN HỌC & CÔNG NGHỆ.
+  /// Mọi câu hỏi ngoài môn học sẽ được từ chối lịch sự và hướng dẫn chuyển sang Online.
   static String processQuery(String prompt) {
-    final clean = prompt.trim();
+    final clean = extractQuestion(prompt);
     if (clean.isEmpty) {
-      return '👋 Xin chào bạn! Mình là Trợ lý AI Tutor của EduMaster. Bạn hãy nhập câu hỏi để mình giải đáp nhé!';
+      return '👋 Xin chào bạn! Mình là Trợ lý AI Tutor của EduMaster (Chế độ Ngoại tuyến). Hãy nhập câu hỏi thuộc môn học để mình giải đáp nhé!';
     }
 
     final lower = clean.toLowerCase();
 
     // 0. Xử lý lời chào / giao tiếp thông thường
-    if (lower == 'hello' || lower == 'hi' || lower == 'xin chào' || lower.contains('chào bạn') || lower.contains('giúp tôi') || lower == 'chào') {
-      return '👋 Xin chào! Tôi là Trợ lý Gia sư AI EduMaster. Tôi có thể giúp gì cho bạn trong việc học tập, lập trình Flutter/Dart, thuật toán SM-2 hoặc giải đáp câu hỏi hôm nay?';
+    if (lower == 'hello' ||
+        lower == 'hi' ||
+        lower == 'xin chào' ||
+        lower.contains('chào bạn') ||
+        lower.contains('giúp tôi') ||
+        lower == 'chào') {
+      return '👋 Xin chào! Tôi là Trợ lý Gia sư AI EduMaster (Đang chạy ở **Chế độ Ngoại tuyến**).\n\n'
+          '📚 Ở chế độ này, tôi chuyên tâm giải đáp các nội dung thuộc **Chương trình Môn học & Công nghệ**:\n'
+          '- 📱 **Lập trình Flutter & Ngôn ngữ Dart** (Widget, State, Provider, Async/Await...)\n'
+          '- 🧠 **Thuật toán SuperMemo SM-2** & Cấu trúc dữ liệu ôn tập\n'
+          '- 💾 **Cơ sở dữ liệu SQLite** & Bảng ảo tìm kiếm FTS\n'
+          '- 🏛️ **Kiến trúc phần mềm Clean Architecture** & Repository Pattern\n'
+          '- 📝 **Giải thích trắc nghiệm** & Công thức tính điểm thi thang 10\n\n'
+          '💡 *Gợi ý: Nếu bạn muốn đặt câu hỏi mở rộng về các chủ đề đời sống, xã hội hay kiến thức tổng quát khác, hãy bấm biểu tượng đám mây ☁️ ở góc trên để chuyển sang **Chế độ Trực tuyến** nhé!*';
     }
 
-    // 1. Phép toán số học hoặc công thức tính điểm thi
+    // 1. Kiểm tra giới hạn: Ở chế độ ngoại tuyến, CHỈ CHO PHÉP HỎI VỀ MÔN HỌC
+    if (!isCourseworkTopic(clean, lower)) {
+      return '📴 **Chế độ Ngoại tuyến (Offline Mode) — Giới hạn phạm vi Môn học:**\n\n'
+          'Hiện tại Trợ lý AI đang hoạt động ở **Chế độ Ngoại tuyến** trên thiết bị và chỉ được thiết lập để hỗ trợ các câu hỏi liên quan đến **Môn học & Công nghệ**:\n'
+          '- 📱 **Lập trình ứng dụng:** Flutter, Ngôn ngữ Dart, Quản lý trạng thái (Provider), Vòng đời Widget.\n'
+          '- 🧠 **Thuật toán & Ghi nhớ:** Thuật toán SuperMemo SM-2, Cấu trúc dữ liệu & Giải thuật.\n'
+          '- 💾 **Cơ sở dữ liệu:** SQLite, Bảng ảo FTS (Full-Text Search), Truy vấn dữ liệu.\n'
+          '- 🏛️ **Kiến trúc phần mềm:** Clean Architecture, Repository Pattern, Dependency Inversion.\n'
+          '- 📝 **Ôn luyện thi cử:** Giải thích đáp án trắc nghiệm, công thức tính điểm thi thang 10.\n\n'
+          '💡 **Để hỏi đáp mở rộng về mọi chủ đề đời sống, xã hội và các lĩnh vực kiến thức khác:**\n'
+          'Bạn vui lòng bấm vào biểu tượng **Đám mây (☁️)** ở góc phải màn hình để chuyển sang **Chế độ Trực tuyến (Online)** có kết nối với Mô hình AI bên ngoài qua Khóa nhé!';
+    }
+
+    // 2. Phép toán số học hoặc công thức tính điểm thi
     final mathResult = _tryEvaluateMath(clean, lower);
     if (mathResult != null) return mathResult;
 
-    // 2. So sánh / Phân biệt các khái niệm (List vs Tuple, final vs const...)
+    // 3. So sánh / Phân biệt các khái niệm chuyên ngành (List vs Tuple, final vs const...)
     final comparisonResult = _tryCompareConcepts(lower);
     if (comparisonResult != null) return comparisonResult;
 
-    // 3. Giải thích câu hỏi trắc nghiệm (cho tính năng "Xem AI giải thích")
+    // 4. Giải thích câu hỏi trắc nghiệm (cho tính năng "Xem AI giải thích")
     final quizResult = _tryExplainQuizQuestion(clean, lower);
     if (quizResult != null) return quizResult;
 
-    // 4. Kho tri thức CNTT chuyên sâu (Flutter, Dart, Clean Architecture, SM-2, SQLite FTS...)
+    // 5. Kho tri thức CNTT chuyên sâu (Flutter, Dart, Clean Architecture, SM-2, SQLite FTS...)
     final kbResult = _lookupKnowledgeBase(lower);
     if (kbResult != null) return kbResult;
 
-    // 5. Các chủ đề đời sống, sức khỏe, mẹo học tập & công nghệ (Mặt nạ tự nhiên, Pomodoro...)
-    final lifeResult = _lookupLifeAndGeneralTopics(clean, lower);
-    if (lifeResult != null) return lifeResult;
+    // 6. Tổng hợp phân tích cho câu hỏi môn học hợp lệ
+    return _synthesizeCourseResponse(clean, lower);
+  }
 
-    // 6. Tổng hợp ngữ nghĩa tự nhiên linh hoạt cho MỌI câu hỏi tự do khác (Không bao giờ từ chối)
-    return _synthesizeDynamicResponse(clean, lower);
+  /// Kiểm tra xem câu hỏi có thuộc phạm vi môn học và công nghệ hay không
+  static bool isCourseworkTopic(String clean, String lower) {
+    // Luôn cho phép giải thích câu hỏi trắc nghiệm
+    if (lower.contains('học viên chọn') ||
+        lower.contains('the student chose') ||
+        lower.contains('đáp án đúng') ||
+        lower.contains('correct answer') ||
+        lower.contains('giải thích')) {
+      return true;
+    }
+
+    // Cho phép tính điểm hoặc biểu thức số học
+    if (lower.contains('tính điểm') ||
+        lower.contains('thang điểm') ||
+        lower.contains('điểm thi') ||
+        RegExp(r'\d+\s*[\+\-\*\/xX:]\s*\d+').hasMatch(clean)) {
+      return true;
+    }
+
+    // Tập từ khóa Môn học & Công nghệ EduMaster
+    const courseKeywords = [
+      'flutter', 'dart', 'widget', 'stateful', 'stateless', 'buildcontext', 'setstate',
+      'provider', 'changenotifier', 'bloc', 'getx', 'state management', 'quản lý trạng thái',
+      'sm-2', 'sm2', 'supermemo', 'lặp lại ngắt quãng', 'spaced repetition',
+      'sqlite', 'fts', 'fts4', 'fts5', 'database', 'csdl', 'cơ sở dữ liệu', 'query', 'bảng ảo',
+      'clean architecture', 'kiến trúc sạch', 'kiến trúc phần mềm', 'repository', 'datasource',
+      'entity', 'domain', 'usecase', 'dependency inversion', 'di',
+      'oop', 'hướng đối tượng', 'kế thừa', 'đóng gói', 'đa hình', 'trừu tượng',
+      'encapsulation', 'inheritance', 'polymorphism', 'abstraction', 'interface', 'abstract class',
+      'async', 'await', 'future', 'stream', 'event loop', 'isolate', 'bất đồng bộ', 'đồng bộ',
+      'hot reload', 'hot restart', 'null safety', 'record', 'tuple', 'list', 'map', 'set',
+      'final', 'const', 'var', 'late',
+      'git', 'github', 'commit', 'branch', 'pull request', 'merge', 'ci/cd',
+      'api', 'rest', 'restful', 'http', 'json', 'post', 'get', 'endpoint',
+      'trắc nghiệm', 'quiz', 'câu hỏi', 'đáp án', 'phòng thi', 'exam', 'thí sinh',
+      'flashcard', 'từ điển', 'dictionary', 'bxh', 'leaderboard', 'bảng xếp hạng', 'xp', 'streak',
+      'lập trình', 'code', 'coding', 'ngôn ngữ lập trình', 'software', 'phần mềm',
+      'python', 'java', 'c++', 'c#', 'javascript', 'typescript', 'sql', 'nosql', 'firebase',
+      'thuật toán', 'algorithm', 'cấu trúc dữ liệu', 'data structure', 'big o', 'độ phức tạp',
+      'đệ quy', 'recursion', 'binary search', 'sắp xếp', 'tìm kiếm', 'cache', 'bộ nhớ đệm',
+      'edumaster', 'ptit', 'học phần', 'môn học', 'bài tập', 'đề thi', 'ôn tập', 'giảng viên', 'sinh viên',
+      'pomodoro', 'phương pháp học'
+    ];
+
+    for (final kw in courseKeywords) {
+      if (lower.contains(kw)) return true;
+    }
+
+    return false;
   }
 
   // ==========================================================================
@@ -66,6 +153,12 @@ class LocalAiEngine {
     }
 
     // Nhận diện biểu thức số học đơn giản: ví dụ "2 + 2", "5 * 10", "100 / 4"
+    final isExplicitMath = RegExp(r'^\s*=?\s*(\d+(?:\.\d+)?)\s*([\+\-\*\/xX:])\s*(\d+(?:\.\d+)?)\s*=?\s*$').hasMatch(raw) ||
+        (lower.contains('tính') && RegExp(r'(\d+(?:\.\d+)?)\s*([\+\-\*\/xX:])\s*(\d+(?:\.\d+)?)').hasMatch(raw)) ||
+        (lower.contains('bằng bao nhiêu') && RegExp(r'(\d+(?:\.\d+)?)\s*([\+\-\*\/xX:])\s*(\d+(?:\.\d+)?)').hasMatch(raw));
+
+    if (!isExplicitMath) return null;
+
     final mathRegex = RegExp(r'(\d+(?:\.\d+)?)\s*([\+\-\*\/xX:])\s*(\d+(?:\.\d+)?)');
     final match = mathRegex.firstMatch(raw);
     if (match != null) {
@@ -538,10 +631,10 @@ class LocalAiEngine {
   }
 
   // ==========================================================================
-  // 6. BỘ TỔNG HỢP NGỮ NGHĨA TỰ NHIÊN (Semantic Dynamic Synthesizer)
-  // Luôn trả lời thông minh, hữu ích cho MỌI câu hỏi mà không bao giờ báo lỗi
+  // 6. BỘ TỔNG HỢP KIẾN THỨC MÔN HỌC (Coursework Semantic Synthesizer)
+  // Giải đáp có cấu trúc sư phạm cho các câu hỏi thuộc môn học
   // ==========================================================================
-  static String _synthesizeDynamicResponse(String raw, String lower) {
+  static String _synthesizeCourseResponse(String raw, String lower) {
     final isWhat = lower.contains('là gì') || lower.contains('khái niệm') || lower.contains('định nghĩa') || lower.contains('what');
     final isHow = lower.contains('làm sao') || lower.contains('thế nào') || lower.contains('cách') || lower.contains('how') || lower.contains('hướng dẫn');
     final isWhy = lower.contains('tại sao') || lower.contains('vì sao') || lower.contains('lý do') || lower.contains('why') || lower.contains('nguyên nhân');

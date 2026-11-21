@@ -54,8 +54,8 @@ class DictionaryWord {
       id: (map['id'] as num?)?.toInt(),
       word: map['word']?.toString() ?? '',
       phonetic: map['phonetic']?.toString() ?? '',
-      vietnamese: map['vietnamese']?.toString() ?? '',
-      definition: map['definition']?.toString() ?? '',
+      vietnamese: (map['vietnamese'] ?? map['vi'])?.toString() ?? '',
+      definition: (map['definition'] ?? map['def'])?.toString() ?? '',
       example: map['example']?.toString() ?? '',
       isBookmarked: (map['is_bookmarked'] as num?)?.toInt() == 1,
     );

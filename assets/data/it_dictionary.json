@@ -195,146 +195,130 @@
     "def": "The fundamental building block of a Flutter user interface.",
     "example": "In Flutter, everything visual is composed of widgets."
   },
-  [
-    {
-      "word": "Encapsulation",
-      "phonetic": "/ɪnˌkæp.sjəˈleɪ.ʃən/",
-      "vi": "Tính đóng gói",
-      "def": "The bundling of data and methods that operate on that data within a single unit.",
-      "example": "Encapsulation protects an object's internal state from direct access."
-    },
-    {
-      "word": "Inheritance",
-      "phonetic": "/ɪnˈher.ɪ.təns/",
-      "vi": "Tính kế thừa",
-      "def": "The mechanism by which one class acquires properties and methods from another class.",
-      "example": "Inheritance allows a child class to reuse methods from its parent class."
-    },
-    {
-      "word": "Abstraction",
-      "phonetic": "/æbˈstræk.ʃən/",
-      "vi": "Tính trừu tượng",
-      "def": "The process of hiding implementation details and exposing only essential features.",
-      "example": "Abstraction simplifies complex systems by hiding unnecessary implementation details."
-    },
-    {
-      "word": "Interface",
-      "phonetic": "/ˈɪn.tə.feɪs/",
-      "vi": "Giao diện",
-      "def": "A contract that defines methods or operations that implementing entities must provide.",
-      "example": "The interface defines how different services communicate with each other."
-    },
-    {
-      "word": "Implementation",
-      "phonetic": "/ˌɪm.plɪ.menˈteɪ.ʃən/",
-      "vi": "Sự triển khai",
-      "def": "The process of putting a design, specification, or algorithm into practice.",
-      "example": "The implementation of the authentication feature is almost complete."
-    },
-    {
-      "word": "Instantiation",
-      "phonetic": "/ɪnˌstæn.ʃiˈeɪ.ʃən/",
-      "vi": "Sự khởi tạo đối tượng",
-      "def": "The process of creating an instance of a class.",
-      "example": "Instantiation creates a new object from the User class."
-    },
-    {
-      "word": "Dependency",
-      "phonetic": "/dɪˈpen.dən.si/",
-      "vi": "Sự phụ thuộc",
-      "def": "A relationship in which one component relies on another component to function.",
-      "example": "The service has a dependency on the database repository."
-    },
-    {
-      "word": "Composition",
-      "phonetic": "/ˌkɒm.pəˈzɪʃ.ən/",
-      "vi": "Tính hợp thành",
-      "def": "A design principle in which complex objects are built by combining smaller objects.",
-      "example": "Composition allows a class to reuse functionality from multiple components."
-    },
-    {
-      "word": "Abstraction Layer",
-      "phonetic": "/æbˈstræk.ʃən ˈleɪ.ər/",
-      "vi": "Lớp trừu tượng",
-      "def": "A layer that hides lower-level implementation details and provides a simplified interface.",
-      "example": "The data access abstraction layer separates business logic from database operations."
-    },
-    {
-      "word": "Repository",
-      "phonetic": "/rɪˈpɒz.ɪ.tər.i/",
-      "vi": "Kho lưu trữ",
-      "def": "A component that provides an abstraction for accessing and managing data.",
-      "example": "The repository handles database queries and returns user records."
-    },
-    {
-      "word": "Middleware",
-      "phonetic": "/ˈmɪd.lweər/",
-      "vi": "Phần mềm trung gian",
-      "def": "Software that connects different components or processes requests between application layers.",
-      "example": "Middleware validates authentication tokens before processing API requests."
-    },
-    {
-      "word": "Authentication",
-      "phonetic": "/ɔːˌθen.tɪˈkeɪ.ʃən/",
-      "vi": "Xác thực",
-      "def": "The process of verifying the identity of a user or system.",
-      "example": "Authentication ensures that only valid users can access the application."
-    },
-    {
-      "word": "Authorization",
-      "phonetic": "/ˌɔː.θər.aɪˈzeɪ.ʃən/",
-      "vi": "Phân quyền",
-      "def": "The process of determining what resources or actions an authenticated user is allowed to access.",
-      "example": "Authorization prevents regular users from accessing administrator functions."
-    },
-    {
-      "word": "Serialization",
-      "phonetic": "/ˌsɪə.ri.ə.laɪˈzeɪ.ʃən/",
-      "vi": "Tuần tự hóa",
-      "def": "The process of converting data structures into a format that can be stored or transmitted.",
-      "example": "Serialization converts an object into JSON before sending it through an API."
-    },
-    {
-      "word": "Deserialization",
-      "phonetic": "/ˌdiː.sɪə.ri.ə.laɪˈzeɪ.ʃən/",
-      "vi": "Giải tuần tự hóa",
-      "def": "The process of reconstructing data structures from a serialized format.",
-      "example": "Deserialization converts the received JSON response into an application object."
-    },
-    {
-      "word": "Concurrency",
-      "phonetic": "/kənˈkʌr.ən.si/",
-      "vi": "Tính đồng thời",
-      "def": "The ability of a system to manage multiple tasks that make progress during overlapping periods.",
-      "example": "Concurrency allows the server to handle multiple client requests efficiently."
-    },
-    {
-      "word": "Consistency",
-      "phonetic": "/kənˈsɪs.tən.si/",
-      "vi": "Tính nhất quán",
-      "def": "The property of maintaining valid and reliable data across operations or system components.",
-      "example": "Database consistency ensures that transactions preserve data integrity."
-    },
-    {
-      "word": "Redundancy",
-      "phonetic": "/rɪˈdʌn.dən.si/",
-      "vi": "Tính dự phòng",
-      "def": "The duplication of critical components to improve system reliability and availability.",
-      "example": "Server redundancy helps maintain service availability when the primary server fails."
-    },
-    {
-      "word": "Replication",
-      "phonetic": "/ˌrep.lɪˈkeɪ.ʃən/",
-      "vi": "Sự sao chép dữ liệu",
-      "def": "The process of copying and maintaining data across multiple database systems.",
-      "example": "Database replication keeps data synchronized between primary and secondary servers."
-    },
-    {
-      "word": "Scalability",
-      "phonetic": "/ˌskeɪ.ləˈbɪl.ə.ti/",
-      "vi": "Khả năng mở rộng",
-      "def": "The ability of a system to handle increasing workloads by adding resources.",
-      "example": "Scalability allows the application to support more users as demand increases."
-    }
-  ]
+  {
+    "word": "Abstraction",
+    "phonetic": "/æbˈstræk.ʃən/",
+    "vi": "Tính trừu tượng",
+    "def": "The process of hiding implementation details and exposing only essential features.",
+    "example": "Abstraction simplifies complex systems by hiding unnecessary implementation details."
+  },
+  {
+    "word": "Interface",
+    "phonetic": "/ˈɪn.tə.feɪs/",
+    "vi": "Giao diện",
+    "def": "A contract that defines methods or operations that implementing entities must provide.",
+    "example": "The interface defines how different services communicate with each other."
+  },
+  {
+    "word": "Implementation",
+    "phonetic": "/ˌɪm.plɪ.menˈteɪ.ʃən/",
+    "vi": "Sự triển khai",
+    "def": "The process of putting a design, specification, or algorithm into practice.",
+    "example": "The implementation of the authentication feature is almost complete."
+  },
+  {
+    "word": "Instantiation",
+    "phonetic": "/ɪnˌstæn.ʃiˈeɪ.ʃən/",
+    "vi": "Sự khởi tạo đối tượng",
+    "def": "The process of creating an instance of a class.",
+    "example": "Instantiation creates a new object from the User class."
+  },
+  {
+    "word": "Dependency",
+    "phonetic": "/dɪˈpen.dən.si/",
+    "vi": "Sự phụ thuộc",
+    "def": "A relationship in which one component relies on another component to function.",
+    "example": "The service has a dependency on the database repository."
+  },
+  {
+    "word": "Composition",
+    "phonetic": "/ˌkɒm.pəˈzɪʃ.ən/",
+    "vi": "Tính hợp thành",
+    "def": "A design principle in which complex objects are built by combining smaller objects.",
+    "example": "Composition allows a class to reuse functionality from multiple components."
+  },
+  {
+    "word": "Abstraction Layer",
+    "phonetic": "/æbˈstræk.ʃən ˈleɪ.ər/",
+    "vi": "Lớp trừu tượng",
+    "def": "A layer that hides lower-level implementation details and provides a simplified interface.",
+    "example": "The data access abstraction layer separates business logic from database operations."
+  },
+  {
+    "word": "Repository",
+    "phonetic": "/rɪˈpɒz.ɪ.tər.i/",
+    "vi": "Kho lưu trữ",
+    "def": "A component that provides an abstraction for accessing and managing data.",
+    "example": "The repository handles database queries and returns user records."
+  },
+  {
+    "word": "Middleware",
+    "phonetic": "/ˈmɪd.lweər/",
+    "vi": "Phần mềm trung gian",
+    "def": "Software that connects different components or processes requests between application layers.",
+    "example": "Middleware validates authentication tokens before processing API requests."
+  },
+  {
+    "word": "Authentication",
+    "phonetic": "/ɔːˌθen.tɪˈkeɪ.ʃən/",
+    "vi": "Xác thực",
+    "def": "The process of verifying the identity of a user or system.",
+    "example": "Authentication ensures that only valid users can access the application."
+  },
+  {
+    "word": "Authorization",
+    "phonetic": "/ˌɔː.θər.aɪˈzeɪ.ʃən/",
+    "vi": "Phân quyền",
+    "def": "The process of determining what resources or actions an authenticated user is allowed to access.",
+    "example": "Authorization prevents regular users from accessing administrator functions."
+  },
+  {
+    "word": "Serialization",
+    "phonetic": "/ˌsɪə.ri.ə.laɪˈzeɪ.ʃən/",
+    "vi": "Tuần tự hóa",
+    "def": "The process of converting data structures into a format that can be stored or transmitted.",
+    "example": "Serialization converts an object into JSON before sending it through an API."
+  },
+  {
+    "word": "Deserialization",
+    "phonetic": "/ˌdiː.sɪə.ri.ə.laɪˈzeɪ.ʃən/",
+    "vi": "Giải tuần tự hóa",
+    "def": "The process of reconstructing data structures from a serialized format.",
+    "example": "Deserialization converts the received JSON response into an application object."
+  },
+  {
+    "word": "Concurrency",
+    "phonetic": "/kənˈkʌr.ən.si/",
+    "vi": "Tính đồng thời",
+    "def": "The ability of a system to manage multiple tasks that make progress during overlapping periods.",
+    "example": "Concurrency allows the server to handle multiple client requests efficiently."
+  },
+  {
+    "word": "Consistency",
+    "phonetic": "/kənˈsɪs.tən.si/",
+    "vi": "Tính nhất quán",
+    "def": "The property of maintaining valid and reliable data across operations or system components.",
+    "example": "Database consistency ensures that transactions preserve data integrity."
+  },
+  {
+    "word": "Redundancy",
+    "phonetic": "/rɪˈdʌn.dən.si/",
+    "vi": "Tính dự phòng",
+    "def": "The duplication of critical components to improve system reliability and availability.",
+    "example": "Server redundancy helps maintain service availability when the primary server fails."
+  },
+  {
+    "word": "Replication",
+    "phonetic": "/ˌrep.lɪˈkeɪ.ʃən/",
+    "vi": "Sự sao chép dữ liệu",
+    "def": "The process of copying and maintaining data across multiple database systems.",
+    "example": "Database replication keeps data synchronized between primary and secondary servers."
+  },
+  {
+    "word": "Scalability",
+    "phonetic": "/ˌskeɪ.ləˈbɪl.ə.ti/",
+    "vi": "Khả năng mở rộng",
+    "def": "The ability of a system to handle increasing workloads by adding resources.",
+    "example": "Scalability allows the application to support more users as demand increases."
+  }
 ]
